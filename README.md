@@ -18,6 +18,8 @@ The recorded hardware has a failed fan. Keep it in the measured 10W operating en
 - [Use cases](bench/USE_CASES.md)
 - [Full use case catalog](bench/USE_CASES_FULL.md)
 - [RLR sidecar design](bench/RLR_SIDECAR_DESIGN.md)
+- [RLR design v2](bench/RLR_DESIGN_v2.md)
+- [Thermal guard operations](ops/README.md)
 
 ## Run
 
