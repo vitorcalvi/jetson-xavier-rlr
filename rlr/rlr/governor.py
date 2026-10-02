@@ -30,14 +30,14 @@ class Governor:
         return None
 
     def veto(self, action, sample, settings):
+        # Abstention has no external side effect and is the runtime's fail-safe
+        # response to uncertainty. It must always remain executable, including
+        # when telemetry is missing/stale or a thermal cooldown is active.
+        if action["action"] == "abstain":
+            return None
+
         reason = self.stale_reason(sample, time.monotonic())
         if reason:
-            # Abstention is the fail-safe response to missing/stale evidence.
-            # It must remain executable even when temperature itself is absent;
-            # otherwise the comparison below would raise TypeError exactly when
-            # the loop is trying to fail closed.
-            if action["action"] == "abstain":
-                return None
             return reason
 
         temperature = self.max_temp(sample)
