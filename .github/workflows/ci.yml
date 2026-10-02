@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "chatgpt/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python-version }} tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install test dependency
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Byte-compile Python
+        run: python -m compileall -q rlr/rlr bench prototype
+
+      - name: RLR tests
+        working-directory: rlr
+        run: python -m pytest -q
+
+      - name: Benchmark tests
+        working-directory: bench
+        env:
+          PYTHONPATH: ${{ github.workspace }}/rlr:${{ github.workspace }}/bench
+        run: python -m pytest -q
+
+      - name: Prototype tests
+        working-directory: prototype
+        run: python -m pytest -q
+
+      - name: Shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in scripts/*.sh ops/*.sh bench/*.sh; do
+            bash -n "$file"
+          done
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --platform linux/amd64 -t jetson-build:ci .
