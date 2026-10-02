@@ -2,7 +2,7 @@
   "benchmark": {
     "name": "KAPRO-RLR",
     "version": "2.0",
-    "timestamp_utc": "2026-10-02T07:52:59Z",
+    "timestamp_utc": "2026-10-02T07:55:17Z",
     "status": "partial"
   },
   "sources": {
@@ -224,46 +224,63 @@
     },
     "ablation_disclosed_vs_withheld": {
       "label": "disclosed_vs_withheld_discrimination",
-      "run_dir": "/tmp/kapro/ablate",
-      "ticks": null,
-      "actions_total": null,
-      "actions_by_type": null,
-      "governor_vetoes": null,
-      "latency_p50_ms": null,
-      "latency_p95_ms": null,
-      "max_temp_c": null,
-      "peak_ram_mib": null,
-      "thermal_pause_samples": null,
-      "self_reports": null,
-      "self_report_abstentions": null,
-      "active_goal_copy_accuracy_pct": null,
-      "goal_recall_withheld": null,
-      "goal_recall_abstained": null,
+      "run_dir": "/models/rlr/autonomy-ablate2",
+      "ticks": 19,
+      "actions_total": 19,
+      "actions_by_type": {
+        "set_load_target": 19
+      },
+      "governor_vetoes": 0,
+      "latency_p50_ms": 9285.22,
+      "latency_p95_ms": 14309.73,
+      "max_temp_c": 58.5,
+      "peak_ram_mib": 2798.5,
+      "thermal_pause_samples": 0,
+      "self_reports": 7,
+      "self_report_abstentions": 7,
+      "active_goal_copy_accuracy_pct": 85.7,
+      "goal_recall_withheld": false,
+      "goal_recall_abstained": true,
       "goals_completed": [],
-      "reflection_count": null,
-      "reflection_distinct": null,
+      "reflection_count": 0,
+      "reflection_distinct": 0,
       "reflection_grounded_pct": null
     },
     "satisfiable_goals_autonomy": {
       "label": "satisfiable_goals_autonomy",
-      "run_dir": "/tmp/kapro/sat",
-      "ticks": null,
-      "actions_total": null,
-      "actions_by_type": null,
-      "governor_vetoes": null,
-      "latency_p50_ms": null,
-      "latency_p95_ms": null,
-      "max_temp_c": null,
-      "peak_ram_mib": null,
-      "thermal_pause_samples": null,
-      "self_reports": null,
-      "self_report_abstentions": null,
-      "active_goal_copy_accuracy_pct": null,
-      "goal_recall_withheld": null,
-      "goal_recall_abstained": null,
-      "goals_completed": [],
-      "reflection_count": null,
-      "reflection_distinct": null,
+      "run_dir": "/models/rlr/autonomy-sat",
+      "ticks": 25,
+      "actions_total": 25,
+      "actions_by_type": {
+        "set_load_target": 25
+      },
+      "governor_vetoes": 0,
+      "latency_p50_ms": 8720.83,
+      "latency_p95_ms": 16532.9,
+      "max_temp_c": 62.5,
+      "peak_ram_mib": 2881.3,
+      "thermal_pause_samples": 0,
+      "self_reports": 9,
+      "self_report_abstentions": 9,
+      "active_goal_copy_accuracy_pct": 11.1,
+      "goal_recall_withheld": false,
+      "goal_recall_abstained": true,
+      "goals_completed": [
+        [
+          1,
+          "remember the calibration fact: enclosure is on the upper shelf"
+        ],
+        [
+          2,
+          "recall the calibration record from persistent memory"
+        ],
+        [
+          3,
+          "lower the configured load target to 30 percent"
+        ]
+      ],
+      "reflection_count": 0,
+      "reflection_distinct": 0,
       "reflection_grounded_pct": null
     },
     "soak_24h": {
@@ -272,11 +289,11 @@
       "duration_s": 86400,
       "tick_seconds": 10,
       "load_target": 50,
-      "samples_so_far": 2,
-      "max_temp_c_observed": 61.0,
+      "samples_so_far": 14,
+      "max_temp_c_observed": 70.0,
       "min_temp_c_observed": 59.5,
-      "peak_ram_mib_observed": 2696.1,
-      "db_size_bytes_at_max": 57344,
+      "peak_ram_mib_observed": 2847.4,
+      "db_size_bytes_at_max": 86016,
       "thermal_pause_samples_so_far": 0,
       "note": "running unattended on the device under a 72 C independent watchdog; the supervisor writes summary.json on completion or abort"
     }

@@ -32,13 +32,20 @@ def read_jsonl(path):
 
 
 def autonomy_metrics_json(run_dir):
-    """Run the project's metrics extractor against a directory on disk."""
+    """Pull the autonomy metrics extractor's JSON for one run directory.
+
+    The extractor lives on the device, alongside the run DB it reads, so we
+    invoke it via SSH rather than copying artifacts. Capturing stdout gives
+    the full metrics dict the project already ships.
+    """
     import subprocess
     try:
         res = subprocess.run(
-            ["python3", "/home/vitor/jetson-xavier-rlr/bench/autonomy_metrics.py"],
-            env={"AUTONOMY_DIR": str(run_dir), "AUTONOMY_CODE":
-                 "/home/vitor/jetson-xavier-rlr/rlr", "PATH": "/usr/bin:/bin"},
+            ["ssh", "-o", "ConnectTimeout=10",
+             "vitor@192.168.1.49",
+             f"cd /home/vitor/jetson-xavier-rlr && AUTONOMY_DIR={run_dir} "
+             "AUTONOMY_CODE=/home/vitor/jetson-xavier-rlr/rlr "
+             "python3 bench/autonomy_metrics.py"],
             capture_output=True, text=True, timeout=30)
         return json.loads(res.stdout) if res.stdout else {}
     except Exception:
@@ -173,10 +180,20 @@ def hypotheses():
 
 
 def main():
+    # The autonomy runs live on the device at /models/rlr/..., not at the local
+    # /tmp/kapro mirror. Map every block to its on-device path so the metrics
+    # extractor reads the right database.
+    DEVICE = "vitor@192.168.1.49"
+    ABLATE_DEVICE = "/models/rlr/autonomy-ablate2"
+    SAT_DEVICE = "/models/rlr/autonomy-sat"
+    # Patch the helpers to use the device paths.
+    import build_final_report as _self
+    _self.ABLATE = type(_self.ABLATE)(ABLATE_DEVICE)
+    _self.SAT = type(_self.SAT)(SAT_DEVICE)
     kapro = kapro_block()
     official = official_block()
-    ablate = autonomy_block(ABLATE, "disclosed_vs_withheld_discrimination")
-    sat = autonomy_block(SAT, "satisfiable_goals_autonomy")
+    ablate = autonomy_block(_self.ABLATE, "disclosed_vs_withheld_discrimination")
+    sat = autonomy_block(_self.SAT, "satisfiable_goals_autonomy")
     soak = soak_block()
     return {
         "benchmark": {"name": "KAPRO-RLR", "version": "2.0",
