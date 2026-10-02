@@ -21,17 +21,25 @@ class Governor:
         if self.max_temp(sample) is None or sample.get("ram_total_mib") is None:
             return "temperature or RAM telemetry is unavailable"
         try:
-            age = now - float(sample["sampled_monotonic"])
+            sampled_monotonic = float(sample["sampled_monotonic"])
         except (KeyError, TypeError, ValueError):
-            age = 0
+            return "telemetry capture time is unavailable"
+        age = now - sampled_monotonic
         if age > self.stale_seconds:
             return "telemetry is stale (%ds old)" % int(age)
         return None
 
     def veto(self, action, sample, settings):
+        # Abstention has no external side effect and is the runtime's fail-safe
+        # response to uncertainty. It must always remain executable, including
+        # when telemetry is missing/stale or a thermal cooldown is active.
+        if action["action"] == "abstain":
+            return None
+
         reason = self.stale_reason(sample, time.monotonic())
-        if reason and action["action"] != "abstain":
+        if reason:
             return reason
+
         temperature = self.max_temp(sample)
         if temperature >= self.COOLDOWN_C:
             return "thermal cooldown is active at %.1f°C" % temperature

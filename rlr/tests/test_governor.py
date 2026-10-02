@@ -25,3 +25,20 @@ def test_missing_telemetry_requires_abstention(tmp_path):
     action = {"action": "set_vision_fps", "fps": 1, "rationale": "x"}
     assert governor.veto(action, {"zones_c": []}, {})
     store.close()
+
+
+def test_abstain_is_always_allowed_as_fail_safe(tmp_path):
+    """The no-op fail-safe must survive missing evidence and thermal cooldown."""
+    store, governor = make_governor(tmp_path)
+    action = {"action": "abstain", "reason": "unsafe evidence", "rationale": "fail closed"}
+    assert governor.veto(action, {"zones_c": []}, {}) is None
+    assert governor.veto(action, sample(80), {}) is None
+    store.close()
+
+
+def test_missing_capture_timestamp_is_stale(tmp_path):
+    """Unknown freshness must be treated as unsafe rather than silently fresh."""
+    store, governor = make_governor(tmp_path)
+    unsafe = {"zones_c": [60], "ram_used_mib": 1200, "ram_total_mib": 6833}
+    assert "capture time" in governor.stale_reason(unsafe, 123.0)
+    store.close()
