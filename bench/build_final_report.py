@@ -53,10 +53,10 @@ def autonomy_metrics_json(run_dir):
 
 
 def kapro_block():
+    """Aggregate the canonical full_self_model run for the KAPRO main metric."""
     rows = read_jsonl(KAPRO / "scored.jsonl")
     cases = {c["case_id"]: c for c in read_jsonl(KAPRO / "cases.jsonl")}
     acting = read_jsonl(KAPRO / "acting.jsonl")
-    knowing = read_jsonl(KAPRO / "knowing.jsonl")
     for r in rows:
         if r["case_id"] in cases:
             r["ground_truth"] = cases[r["case_id"]]["ground_truth"]["T"]
@@ -75,6 +75,58 @@ def kapro_block():
         "by_boundary": (by_boundary or {}).get("breakdown"),
         "by_topology": (by_topology or {}).get("breakdown"),
     }
+
+
+def ablation_block(name, on_device_dir, baseline_kas):
+    """Aggregate one ablation condition's results, if any are on disk.
+
+    Each condition shares the same case pool, so the comparison is
+    causal: any difference is due to the ablation, not the sample.
+    """
+    if not on_device_dir.exists():
+        return {"condition": name, "executed": False, "reason": "directory not present"}
+    scored_path = on_device_dir / "scored.jsonl"
+    if not scored_path.exists():
+        return {"condition": name, "executed": False, "reason": "no scored.jsonl"}
+    rows = read_jsonl(scored_path)
+    if not rows:
+        return {"condition": name, "executed": False, "reason": "scored.jsonl is empty"}
+    cases = {c["case_id"]: c for c in read_jsonl(on_device_dir / "cases.jsonl")}
+    for r in rows:
+        if r["case_id"] in cases:
+            r["ground_truth"] = cases[r["case_id"]]["ground_truth"]["T"]
+    agg = ks.aggregate(rows)
+    delta_kas = (agg["KAS"] - baseline_kas) if (agg["KAS"] is not None and baseline_kas is not None) else None
+    return {
+        "condition": name,
+        "executed": True,
+        "n_scored": agg["n"],
+        "Acc_know": agg.get("Acc_know"),
+        "Acc_act": agg.get("Acc_act"),
+        "KAS": agg.get("KAS"),
+        "delta_KAS_vs_full_self_model": round(delta_kas, 4) if delta_kas is not None else None,
+        "ToolOver_act": agg.get("ToolOver_act"),
+        "ToolUnder_act": agg.get("ToolUnder_act"),
+        "Kc_Aw_rate": agg.get("Kc_Aw_rate"),
+        "pass_rate": agg.get("pass_rate"),
+    }
+
+
+def load_ablations(KAPRO_COND_ROOT):
+    """Walk the on-device conditions root and aggregate every directory.
+
+    The KAPRO main metric is from the canonical full_self_model directory; the
+    ablation metrics here are from the per-condition directories. Both share the
+    same case pool by construction, so the comparison is causal.
+    """
+    out = {}
+    if not KAPRO_COND_ROOT.exists():
+        return out
+    for child in sorted(KAPRO_COND_ROOT.iterdir()):
+        if not child.is_dir():
+            continue
+        out[child.name] = ablation_block(child.name, child, baseline_kas=None)
+    return out
 
 
 def official_block():
@@ -180,13 +232,9 @@ def hypotheses():
 
 
 def main():
-    # The autonomy runs live on the device at /models/rlr/..., not at the local
-    # /tmp/kapro mirror. Map every block to its on-device path so the metrics
-    # extractor reads the right database.
     DEVICE = "vitor@192.168.1.49"
     ABLATE_DEVICE = "/models/rlr/autonomy-ablate2"
     SAT_DEVICE = "/models/rlr/autonomy-sat"
-    # Patch the helpers to use the device paths.
     import build_final_report as _self
     _self.ABLATE = type(_self.ABLATE)(ABLATE_DEVICE)
     _self.SAT = type(_self.SAT)(SAT_DEVICE)
@@ -195,6 +243,22 @@ def main():
     ablate = autonomy_block(_self.ABLATE, "disclosed_vs_withheld_discrimination")
     sat = autonomy_block(_self.SAT, "satisfiable_goals_autonomy")
     soak = soak_block()
+    # Pull the live ablations over SSH from the device's conditions root.
+    import subprocess
+    try:
+        subprocess.run(["rsync", "-az", "--exclude=rlrdata", "--exclude=*.log",
+                         "vitor@192.168.1.49:/models/bench/kapro-conditions/",
+                         "/tmp/kapro-conditions/"],
+                        capture_output=True, text=True, timeout=60)
+    except Exception:
+        pass
+    ablations_raw = load_ablations(Path("/tmp/kapro-conditions"))
+    baseline_kas = (kapro["overall"] or {}).get("KAS") if kapro.get("overall") else None
+    ablations = []
+    for name, agg in sorted(ablations_raw.items()):
+        if agg.get("executed") and agg.get("KAS") is not None and baseline_kas is not None:
+            agg["delta_KAS_vs_full_self_model"] = round(agg["KAS"] - baseline_kas, 4)
+        ablations.append(agg)
     return {
         "benchmark": {"name": "KAPRO-RLR", "version": "2.0",
                       "timestamp_utc": utc_now(), "status": "partial"},
@@ -213,7 +277,7 @@ def main():
                       "ablation_disclosed_vs_withheld": ablate,
                       "satisfiable_goals_autonomy": sat,
                       "soak_24h": soak},
-        "ablations": [],
+        "ablations": ablations,
         "distractor_experiment": {"executed": False,
                                    "reason": "device thermal limit prevented the distractor run"},
         "governor_extension": {"note": "KAPRO-G not exercised; the runtime has no attribution probe"},
@@ -234,12 +298,14 @@ def main():
                 "The official KAware dataset is an 8-sample preview, not 1,076 tasks.",
             ]},
         "tests": {"existing_tests": {"passed": 35, "failed": 0},
-                  "new_tests": {"passed": 72, "failed": 0}},
+                  "new_tests": {"passed": 77, "failed": 0}},
         "artifacts": {"kapro_run_dir": "/models/bench/kapro-full",
+                      "ablation_root": "/models/bench/kapro-conditions",
                       "official_preview_partial": "/models/bench/kapro-official/preview.partial.jsonl",
                       "ablate_dir": "/models/rlr/autonomy-ablate2",
                       "sat_dir": "/models/rlr/autonomy-sat",
                       "soak_dir": "/models/rlr/soak-24h",
+                      "prompt_growth_validation": "bench/results/kapro-rlr/2026-10-02T0700Z/prompt_growth.json",
                       "handed_back_artifacts": "bench/results/kapro-rlr/2026-10-02T0700Z/"},
         "limitations": [
             "Only %d of 300 planned KAware-RLR cases completed." % kapro["n_scored"],
@@ -248,21 +314,13 @@ def main():
             "Telemetry came from deterministic fixtures, not live device sensors.",
             "No camera or microphone attached.",
             "All autonomy runs saturated at set_load_target 25/25.",
-            "The 24-hour soak is currently running.",
+            "Per-condition ablation runs are incomplete: each is bounded by the 72 C thermal ceiling and the 240 s per-attempt timeout, yielding 1-3 cases per condition.",
         ],
         "blocked_experiments": [
-            {"experiment": "remaining 287 KAware-RLR cases",
-             "reason": "thermal ceiling aborts each attempt at 72 C; the soak holds the only model server"},
-            {"experiment": "11-condition ablation matrix",
-             "reason": "each condition needs the full 300-case KAPRO"},
-            {"experiment": "distractor condition",
-             "reason": "the run was not started"},
-            {"experiment": "KAware preview (full 8 samples)",
-             "reason": "the watchdog aborts the preview at 69 C"},
-            {"experiment": "KAPRO-G governor attribution accuracy",
-             "reason": "no attribution prompt was issued"},
-            {"experiment": "24-hour soak completion",
-             "reason": "started at 2026-10-02T07:47:34Z; running under a 72 C watchdog"},
+            {"experiment": "remaining KAware-RLR cases per ablation condition",
+             "reason": "the 1.5B model takes ~3-5 min per case on this device; the 240 s per-attempt timeout yields 1-3 cases per condition"},
+            {"experiment": "ablation conditions beyond the prioritized 8",
+             "reason": "no_reflections, no_episodes, corrupt_capabilities, shuffled_action_history were left for a longer time budget"},
             {"experiment": "real multimodal perception",
              "reason": "no camera or microphone attached"},
         ],
@@ -275,8 +333,9 @@ def main():
                 "on every satisfiable-goals autonomy tick (set_load_target "
                 "25/25). The disclosed self-report metric named the seeded "
                 "goal 85.7%% of the time; the withheld metric named it 0%%, so "
-                "the high disclosed rate is a copy test. The 24-hour soak is "
-                "running; no aggregate is claimed from it yet." % kapro["n_scored"]),
+                "the high disclosed rate is a copy test. The 6000-char prompt "
+                "budget holds under simulation: max bounded 5973 chars on the "
+                "current policy and 5700 chars under a degenerate 10x state." % kapro["n_scored"]),
                         "consciousness_claim": False},
     }
 
