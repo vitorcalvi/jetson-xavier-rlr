@@ -27,11 +27,12 @@ def test_missing_telemetry_requires_abstention(tmp_path):
     store.close()
 
 
-def test_abstain_is_allowed_when_telemetry_is_missing(tmp_path):
-    """The fail-safe action must not crash or be vetoed when evidence is absent."""
+def test_abstain_is_always_allowed_as_fail_safe(tmp_path):
+    """The no-op fail-safe must survive missing evidence and thermal cooldown."""
     store, governor = make_governor(tmp_path)
-    action = {"action": "abstain", "reason": "telemetry unavailable", "rationale": "fail closed"}
+    action = {"action": "abstain", "reason": "unsafe evidence", "rationale": "fail closed"}
     assert governor.veto(action, {"zones_c": []}, {}) is None
+    assert governor.veto(action, sample(80), {}) is None
     store.close()
 
 
