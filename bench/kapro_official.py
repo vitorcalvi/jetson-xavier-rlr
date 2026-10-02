@@ -218,27 +218,35 @@ def main():
     samples = read_preview(args.dataset)
     client = OpenAICompat(args.server, args.model)
     records, rows = [], []
-    for sample in samples:
-        try:
-            record = run_sample(sample, client, args.model)
-        except OSError as exc:
-            record = {"index": sample.get("index"), "bucket": sample["_bucket"],
-                      "boundary": BOUNDARY_MAP[sample["_bucket"]],
-                      "hop": sample.get("hop"), "T": target_names(sample),
-                      "E_know": None, "E_act": None,
-                      "knowing_error": "transport: %s" % exc, "acting_raw": None}
-        records.append(record)
-        if record.get("E_know") is None or record.get("E_act") is None:
-            continue
-        rows.append({"case_id": "kaware-%s" % record["index"],
-                     "boundary": record["boundary"], "topology": record["hop"],
-                     "condition": "kaware_preview",
-                     "ground_truth": record["T"],
-                     "knowing": {"required_actions": record["E_know"]},
-                     "acting": {"E_act": record["E_act"],
-                                "tool_call_count": sum(1 for a in record["acting_raw"]
-                                                       if a)},
-                     "pass": True})
+    partial = Path(args.out).with_suffix(".partial.jsonl")
+    partial.parent.mkdir(parents=True, exist_ok=True)
+    # Write each record as it completes. The preview run shares the device with
+    # the main benchmark and the thermal watchdog aborts it partway through, so
+    # writing only at the end would discard every completed sample.
+    with open(partial, "a", encoding="utf-8") as sink:
+        for sample in samples:
+            try:
+                record = run_sample(sample, client, args.model)
+            except OSError as exc:
+                record = {"index": sample.get("index"), "bucket": sample["_bucket"],
+                          "boundary": BOUNDARY_MAP[sample["_bucket"]],
+                          "hop": sample.get("hop"), "T": target_names(sample),
+                          "E_know": None, "E_act": None,
+                          "knowing_error": "transport: %s" % exc, "acting_raw": None}
+            records.append(record)
+            sink.write(json.dumps(record, ensure_ascii=False) + "\n")
+            sink.flush()
+            if record.get("E_know") is None or record.get("E_act") is None:
+                continue
+            rows.append({"case_id": "kaware-%s" % record["index"],
+                         "boundary": record["boundary"], "topology": record["hop"],
+                         "condition": "kaware_preview",
+                         "ground_truth": record["T"],
+                         "knowing": {"required_actions": record["E_know"]},
+                         "acting": {"E_act": record["E_act"],
+                                    "tool_call_count": sum(1 for a in record["acting_raw"]
+                                                           if a)},
+                         "pass": True})
     summary = {
         "scope": "preview_reproduction",
         "samples_available": len(samples), "samples_scored": len(rows),
