@@ -451,3 +451,37 @@ threshold and close to the 78 C cooldown, with the fan still failed. The run was
 stopped at that point and restarted only after the device fell back below 60 C.
 Any later long run needs an active temperature watchdog that aborts at 76 C,
 and should not hold the model resident at full GPU offload unattended.
+
+Retuned: `-ngl 20 -c 4096` dropped resident RAM from ~4.2 GB to ~2.5 GB. The
+device still climbs from 56 C to the 72 C abort within roughly four minutes of
+sustained inference, so the 300-case run is executed by `kapro_run_all.sh` /
+a resume loop in cooled segments rather than as one continuous process.
+`bench/kapro_watchdog.sh` aborts at the configured threshold and records the
+temperature and RAM trace; it fired correctly at 76 C, 74 C and 72 C on
+separate attempts.
+
+### First measured KAPRO-RLR results (partial, 8 cases)
+
+These are real, from the live 1.5B on the Xavier with fixture telemetry. They
+are a partial sample, not the 300-case result, and no aggregate is claimed yet.
+
+- **Acc_know is 0.** For every case the Knowing probe returned
+  `required_actions: []`, including cases whose ground truth is
+  `["recall"]`, `["remember"]` or `["set_goal"]`. The model does not predict
+  that a genuine external action is needed.
+- **Acting is non-empty on 8/8 cases.** The model acted on the internal cases
+  where it had itself just said no action was required.
+- **Quadrants: 4 Kc_Aw, 3 Kw_Aw, 1 Kw_Ac, 0 Kc_Ac.** The dominant failure is
+  exactly the paper's central claim: it knows the boundary is internal
+  (`Kc_Aw`) and acts anyway, or it is wrong about both.
+- **Action mix is narrow**: 7 `set_load_target`, 1 `set_reply_tokens`. This
+  reproduces the earlier `autonomy-fix1` observation that the action mix is not
+  genuinely varied, so the standing concern about diversity is confirmed on
+  this benchmark rather than resolved.
+
+One caveat on the driver of the overuse: the fixture's active goal is the task
+text itself, and `set_load_target` is the cheapest stateful action available, so
+part of the overuse may be the goal format rather than a capability-boundary
+failure. TheKnowing/Acting split separates the two — and the Knowing branch,
+which sees no goal, still returns empty — so the boundary judgement itself is
+the weaker of the two.
