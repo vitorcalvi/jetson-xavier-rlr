@@ -368,9 +368,9 @@ def main():
     (out_dir / "scores.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps({"scored": summary["scored_cases"],
                       "blocked": summary["blocked_cases"],
-                      "Acc_know": summary["overall"]["Acc_know"],
-                      "Acc_act": summary["overall"]["Acc_act"],
-                      "KAS": summary["overall"]["KAS"]}, indent=2))
+                      "Acc_know": (summary["overall"] or {}).get("Acc_know"),
+                      "Acc_act": (summary["overall"] or {}).get("Acc_act"),
+                      "KAS": (summary["overall"] or {}).get("KAS")}, indent=2))
     return 0
 
 

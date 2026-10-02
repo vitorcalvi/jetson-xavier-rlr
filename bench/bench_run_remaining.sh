@@ -63,8 +63,24 @@ run_condition () {
   local cond="$1" extra="${2:-}"
   local dir="$OUT_ROOT/$cond"
   local pid
+  # The model server can die between conditions (observed during no_self_model:
+  # all 300 attempts returned Connection refused). Restart it before each
+  # condition to start from a known-good endpoint.
+  start_llama
   echo "$(date -u +%FT%TZ) === $cond ===" >> "$LOG"
-  rm -rf "$dir"
+  # Resume from the canonical full_self_model run if this is the first
+  # condition and the existing scored.jsonl is present. Avoids re-running
+  # the 13 cases that already exist on the device.
+  if [ "$cond" = "full_self_model" ] && [ -f /models/bench/kapro-full/scored.jsonl ] && [ ! -f "$dir/scored.jsonl" ]; then
+    mkdir -p "$dir"
+    cp /models/bench/kapro-full/scored.jsonl "$dir/scored.jsonl"
+    cp /models/bench/kapro-full/cases.jsonl "$dir/cases.jsonl" 2>/dev/null
+    cp /models/bench/kapro-full/knowing.jsonl "$dir/knowing.jsonl" 2>/dev/null
+    cp /models/bench/kapro-full/acting.jsonl "$dir/acting.jsonl" 2>/dev/null
+    echo "$(date -u +%FT%TZ) $cond seeded with $(wc -l < $dir/scored.jsonl) prior cases" >> "$LOG"
+  else
+    rm -rf "$dir"
+  fi
   cd "$REPO"
   nohup python3 bench/kapro_rlr.py --seeds $SEEDS --per-seed $PER_SEED \
     --condition "$cond" $extra --out "$dir" --resume > "$OUT_ROOT/$cond.log" 2>&1 &
