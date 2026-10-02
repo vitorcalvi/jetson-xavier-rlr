@@ -537,3 +537,75 @@ The official reproduction therefore remains **partial**: 3 of 8 samples
 attempted, 1 scorable, 0 internal-function samples reached. The internal
 bucket is where the paper's central claim lives, so nothing about internal
 overuse can be said from the preview at all.
+
+## Disclosed/withheld discrimination re-run
+
+Fresh database, standard 30 s autonomy supervisor, 540 s wall clock,
+self_report_every=5, reflect_every=10 min. Outcome:
+
+- 19 ticks, 19/19 actions are `set_load_target` — the action-diversity
+  blocker reproduces with **no** goals seeded, so it is not a goal-content
+  artefact.
+- `active_goal_copy_accuracy_pct = 85.7` (copy test, high), but
+  `goal_recall_withheld = false` (honest measurement, low). The gap is
+  the whole disclosure story; the high disclosed rate alone would have been
+  read as self-knowledge.
+- `self_report_abstentions: 7/7`. Every self-report abstained on
+  temperature, RAM, and power mode.
+
+This is a **confirmatory** re-run of the prior ablation, not a new finding.
+The reward is that it now runs against the new sober reasoning boundary
+(`goal_recall_abstained: true`) and confirms it still holds.
+
+## Satisfiable-goals autonomy run (Phase 3)
+
+Three goals seeded through the public Store API so the migration completes
+before the seed (the pre-seed schema caused a `table capabilities already
+exists` error on the first attempt). Goals:
+
+1. `remember the calibration fact: enclosure is on the upper shelf`
+2. `recall the calibration record from persistent memory`
+3. `lower the configured load target to 30 percent`
+
+12-minute wall clock, 25 ticks, every action `set_load_target` (25/25).
+All three seeded goals were completed, but only by the probe's
+discrimination round, not by the loop's own choices. Same blocker, same
+behaviour, satisfiable goals in scope. **The action-diversity problem is
+a model behaviour, not a goal content issue.**
+
+## 24-hour soak (started, in flight)
+
+Launched at 2026-10-02T07:47:34Z UTC under `bench/soak_supervisor.py` and
+the 72 C independent watchdog `bench/soak_watchdog.sh`. Five monitoring
+paths:
+
+- llama-server `/v1/models` health at every watchdog tick
+- thermal zones (`/sys/class/thermal/thermal_zone*/temp`) excluding PMIC
+- RAM from `/proc/meminfo` (system, not the loop's own telemetry)
+- RLR database size on every supervisor sample
+- supervisor `RUNNING` sentinel file refuses a second concurrent soak
+
+Initial state (at the time of this writing):
+
+- 14 of the supervisor's 30-second samples recorded (max 70 C, RAM 2849 MiB,
+  DB 86 KB)
+- max temperature observed: 70.0 C (below the 76 C pause threshold; the
+  device did not need to pause)
+- 0 thermal pauses, 0 thermal aborts
+- nvpmodel `MODE_10W_DESKTOP` confirmed, both `nvargus-daemon` and
+  `thermal-guard.service` active
+
+The soak is running **unattended** on the device under the watchdog. It
+will produce `summary.json` on completion or abort, and `soak.jsonl` with a
+sample every 30 seconds. The reporter (`bench/build_final_report.py`)
+reads both, so the next regeneration of `final_report.json` will contain the
+live numbers without me having to keep polling.
+
+## Tests, commits, clean state
+
+- 113 tests pass (35 rlr, 72 bench, 6 prototype)
+- 7 commits landed, working tree clean
+- The device holds the soak (3 processes), `MODE_10W_DESKTOP`, guard
+  active, no test artifacts left running.
+- The soakevice has no KAPRO or preview workload, so a future KAPRO
+  continuation will need the soak to release the model server first.
