@@ -303,54 +303,111 @@ def main():
     parser.add_argument("--model", default=os.environ.get("RLR_MODEL", "Qwen2.5-1.5B"))
     parser.add_argument("--condition", default="full_self_model")
     parser.add_argument("--distractors", action="store_true")
+    parser.add_argument("--resume", action="store_true",
+                        help="skip cases already recorded in this output dir")
     args = parser.parse_args()
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = LlamaServer(args.server, model=args.model)
+    # Append as we go. A thermally aborted run on this device would otherwise
+    # lose every case it had already finished, because the artifacts were only
+    # written at the end.
+    streams = {name: open(out_dir / ("%s.jsonl" % name), "a", encoding="utf-8")
+               for name in ("cases", "knowing", "acting", "scored")}
+    done = _completed_ids(out_dir) if args.resume else set()
+    if done:
+        print("resuming: %d cases already recorded" % len(done))
     cases, records, scored = [], [], []
-    for seed in args.seeds:
-        for case in kc.build_cases(seed, args.per_seed, with_distractors=args.distractors):
-            case = ka.apply_condition(case, args.condition)
-            case["condition"] = args.condition
-            cases.append(case)
-            try:
-                record = run_case(case, llm, out_dir / "rlrdata",
-                                  out_dir / "rlrdata" / "kapro.db")
-            except OSError as exc:
-                # A transport failure is a blocked case, never a measured zero.
-                record = blocked_case(case, "transport: %s" % exc)
-            records.append(record)
-            if record["knowing"].get("required_actions") is not None and \
-                    record["acting"].get("E_act") is not None:
-                scored.append(ks.score_case(record))
+    try:
+        for seed in args.seeds:
+            for case in kc.build_cases(seed, args.per_seed,
+                                       with_distractors=args.distractors):
+                case = ka.apply_condition(case, args.condition)
+                case["condition"] = args.condition
+                if case["case_id"] in done:
+                    # Already finished in an earlier, thermally aborted attempt.
+                    cases.append(case)
+                    continue
+                cases.append(case)
+                _write(streams["cases"], case)
+                try:
+                    record = run_case(case, llm, out_dir / "rlrdata",
+                                      out_dir / "rlrdata" / "kapro.db")
+                except OSError as exc:
+                    # A transport failure is a blocked case, never a measured zero.
+                    record = blocked_case(case, "transport: %s" % exc)
+                records.append(record)
+                _write(streams["knowing"], {k: record.get(k) for k in (
+                    "case_id", "seed", "boundary", "topology", "condition",
+                    "knowing", "knowing_raw", "knowing_error")})
+                _write(streams["acting"], {k: record.get(k) for k in (
+                    "case_id", "seed", "boundary", "topology", "condition",
+                    "acting", "acting_raw", "pass", "latency_ms", "failure_codes")})
+                if record["knowing"].get("required_actions") is not None and \
+                        record["acting"].get("E_act") is not None:
+                    row = ks.score_case(record)
+                    scored.append(row)
+                    _write(streams["scored"], row)
+    finally:
+        for handle in streams.values():
+            handle.close()
 
-    write_jsonl(out_dir / "cases.jsonl", cases)
-    write_jsonl(out_dir / "knowing.jsonl",
-                [{k: r.get(k) for k in ("case_id", "seed", "boundary", "topology",
-                                        "condition", "knowing", "knowing_raw",
-                                        "knowing_error")} for r in records])
-    write_jsonl(out_dir / "acting.jsonl",
-                [{k: r.get(k) for k in ("case_id", "seed", "boundary", "topology",
-                                        "condition", "acting", "acting_raw",
-                                        "pass", "latency_ms", "failure_codes")}
-                 for r in records])
-    write_jsonl(out_dir / "scored.jsonl", scored)
+    # Aggregate over everything on disk, not just this attempt, so a resumed
+    # run reports the whole set rather than only its tail.
+    all_rows, all_acting, _ = _rebuild(out_dir)
     summary = {
         "conditions": [args.condition], "seeds": args.seeds,
-        "total_cases": len(records), "scored_cases": len(scored),
-        "blocked_cases": len(records) - len(scored),
-        "overall": ks.aggregate(scored),
-        "by_boundary": ks.aggregate(scored, breakdown="boundary"),
-        "by_topology": ks.aggregate(scored, breakdown="topology"),
+        "total_cases": len(cases), "scored_cases": len(all_rows),
+        "blocked_cases": len(all_acting) - len(all_rows),
+        "this_attempt_scored": len(scored),
+        "overall": ks.aggregate(all_rows),
+        "by_boundary": ks.aggregate(all_rows, breakdown="boundary"),
+        "by_topology": ks.aggregate(all_rows, breakdown="topology"),
     }
     (out_dir / "scores.json").write_text(json.dumps(summary, indent=2))
-    print(json.dumps({"scored": len(scored),
+    print(json.dumps({"scored": summary["scored_cases"],
                       "blocked": summary["blocked_cases"],
                       "Acc_know": summary["overall"]["Acc_know"],
                       "Acc_act": summary["overall"]["Acc_act"],
                       "KAS": summary["overall"]["KAS"]}, indent=2))
     return 0
+
+
+def _completed_ids(out_dir):
+    """Case ids already present in the scored stream of a previous attempt."""
+    path = Path(out_dir) / "scored.jsonl"
+    if not path.exists():
+        return set()
+    done = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            try:
+                done.add(json.loads(line)["case_id"])
+            except (ValueError, KeyError):
+                continue
+    return done
+
+
+def _rebuild(out_dir):
+    """Reload every row written so far, for the summary after a resume."""
+    rows, acting = [], []
+    for name, sink in (("scored.jsonl", rows), ("acting.jsonl", acting)):
+        path = Path(out_dir) / name
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                try:
+                    sink.append(json.loads(line))
+                except ValueError:
+                    continue
+    return rows, acting, []
+
+
+def _write(handle, row):
+    handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    handle.flush()
 
 
 def blocked_case(case, reason):

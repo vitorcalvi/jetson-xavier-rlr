@@ -171,6 +171,41 @@ class GroundTruthEnvelopeTests(unittest.TestCase):
         self.assertEqual(row["quadrant"], "Kc_Ac")
 
 
+class ResumeTests(unittest.TestCase):
+    """A thermally aborted run must not lose the cases it already finished."""
+
+    def test_completed_ids_reads_existing_scored_rows(self):
+        import tempfile
+        from pathlib import Path
+        import kapro_rlr as kr
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "scored.jsonl"
+            path.write_text('{"case_id": "a"}\n{"case_id": "b"}\n'
+                            'not json\n', encoding="utf-8")
+            self.assertEqual(kr._completed_ids(tmp), {"a", "b"})
+
+    def test_completed_ids_is_empty_for_a_fresh_dir(self):
+        import tempfile
+        import kapro_rlr as kr
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(kr._completed_ids(tmp), set())
+
+    def test_rebuild_tolerates_a_truncated_final_line(self):
+        # An abort mid-write can leave a partial line; it must be skipped, not
+        # raise, so the summary can still be produced for everything finished.
+        import tempfile
+        from pathlib import Path
+        import kapro_rlr as kr
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "scored.jsonl").write_text(
+                '{"case_id": "a"}\n{"case_id": "b", "know', encoding="utf-8")
+            (Path(tmp) / "acting.jsonl").write_text('{"case_id": "a"}\n',
+                                                     encoding="utf-8")
+            rows, acting, _ = kr._rebuild(tmp)
+            self.assertEqual([r["case_id"] for r in rows], ["a"])
+            self.assertEqual(len(acting), 1)
+
+
 class AggregateTests(unittest.TestCase):
     def test_empty_input_is_none_not_zero(self):
         # A missing experiment must never be reported as a measured zero.
