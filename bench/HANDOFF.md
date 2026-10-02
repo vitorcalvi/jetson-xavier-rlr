@@ -511,3 +511,29 @@ Consequences for any future run on this hardware:
 For all 12 scored cases the identity `1 - J = ToolOver + ToolUnder` holds to
 0.0 absolute error on both branches, confirming the metric implementation on
 real data rather than only on unit-test fixtures.
+
+### KAware preview reproduction: 3 of 8 samples, 1 fully scorable
+
+Three preview samples were completed before the watchdog aborted at 69 C. Of
+those, only one is scorable on both branches, so **no preview aggregate is
+reported** — a single sample yielding KAS = 1.0 would be meaningless:
+
+- `index 103` (External, multi-hop): Knowing and Acting both exactly right.
+  Kc_Ac.
+- `index 0` (External, parallel): Acting returned HTTP 400, blocked.
+- `index 40` (External, single-hop): Knowing returned unparseable text
+  (blocked), Acting called the correct tool.
+
+Two useful observations, neither a headline number:
+
+- The 400 on `index 0` is a transport failure against the local server, most
+  likely a tool schema the 1.5B model could not be given in that context. It is
+  recorded as blocked, not as a zero, and not as a model failure.
+- The preview's `tool_response` replay path was not reached for these samples;
+  the Acting branch produced calls without needing a second round, so the
+  replay logic is still unexercised.
+
+The official reproduction therefore remains **partial**: 3 of 8 samples
+attempted, 1 scorable, 0 internal-function samples reached. The internal
+bucket is where the paper's central claim lives, so nothing about internal
+overuse can be said from the preview at all.

@@ -1,0 +1,369 @@
+{
+  "benchmark": {
+    "name": "KAPRO-RLR",
+    "version": "2.0",
+    "timestamp_utc": "2026-10-02T07:10:00Z",
+    "status": "partial"
+  },
+  "sources": {
+    "paper": {
+      "arxiv_id": "2606.20661",
+      "paper_method_verified": true
+    },
+    "kaware": {
+      "repository": "https://github.com/AI-Santiago/KAware",
+      "commit": "1aee7ae55ecea70a704276062ba83206bf9cebda",
+      "full_dataset_available": false,
+      "available_cases": 8,
+      "official_reproduction_scope": "preview"
+    }
+  },
+  "rlr": {
+    "repository": "/Users/vitorcalvi/Desktop/jetson-xavier-rlr",
+    "commit": "73ebe6d",
+    "git_dirty": false,
+    "model": "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+    "model_hash": null,
+    "hardware": "NVIDIA Jetson Xavier NX 8GB",
+    "run_location": "xavier_nx",
+    "thermal_guard_active": true,
+    "fan_rpm": 0
+  },
+  "execution": {
+    "total_cases": 18,
+    "completed_cases": 13,
+    "failed_cases": 0,
+    "blocked_cases": 5,
+    "seeds": [
+      11
+    ],
+    "conditions": [
+      "full_self_model"
+    ],
+    "case_count_by_boundary": {
+      "internal": 8,
+      "external": 7,
+      "hybrid": 5
+    },
+    "case_count_by_topology": {
+      "single-hop": 6,
+      "parallel": 7,
+      "multi-hop": 7
+    }
+  },
+  "official_kaware_reproduction": {
+    "status": "partial",
+    "Acc_know": 1.0,
+    "Acc_act": 1.0,
+    "KAS": 1.0,
+    "notes": [
+      "8 preview samples released by the authors, not the paper's 1076 tasks.",
+      "3 of 8 samples attempted before the thermal watchdog aborted at 69 C; only 1 is scorable on both branches, so this figure rests on a single sample and must not be read as a reproduction result.",
+      "0 internal-function samples were reached, so the preview says nothing about the paper's central internal-overuse claim.",
+      "One sample returned HTTP 400 on the Acting branch and is recorded as blocked, not as a zero."
+    ]
+  },
+  "kapro_rlr": {
+    "overall": {
+      "Acc_know": 0.5384615384615384,
+      "Acc_act": 0.07692307692307693,
+      "KAS": 0.1346153846153846,
+      "ToolOver_know": 0.0,
+      "ToolUnder_know": 0.46153846153846156,
+      "ToolOver_act": 0.7307692307692307,
+      "ToolUnder_act": 0.19230769230769232,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.5384615384615384,
+      "Kw_Ac_rate": 0.07692307692307693,
+      "Kw_Aw_rate": 0.38461538461538464,
+      "DirGap": 0.4615384615384615,
+      "pass_rate": 0.07692307692307693,
+      "average_tool_calls": 1.0
+    },
+    "by_boundary": {
+      "external": {
+        "n": 5,
+        "Acc_know": 0.0,
+        "Acc_act": 0.0,
+        "KAS": 0.0,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 1.0,
+        "ToolOver_act": 0.5,
+        "ToolUnder_act": 0.5,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.0,
+        "Kw_Ac_rate": 0.0,
+        "Kw_Aw_rate": 1.0,
+        "pass_rate": 0.0,
+        "average_tool_calls": 1.0,
+        "DirGap": 0.0,
+        "unnecessary_internal_tool_calls": null
+      },
+      "hybrid": {
+        "n": 1,
+        "Acc_know": 0.0,
+        "Acc_act": 1.0,
+        "KAS": 0.0,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 1.0,
+        "ToolOver_act": 0.0,
+        "ToolUnder_act": 0.0,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.0,
+        "Kw_Ac_rate": 1.0,
+        "Kw_Aw_rate": 0.0,
+        "pass_rate": 1.0,
+        "average_tool_calls": 1.0,
+        "DirGap": -1.0,
+        "unnecessary_internal_tool_calls": null
+      },
+      "internal": {
+        "n": 7,
+        "Acc_know": 1.0,
+        "Acc_act": 0.0,
+        "KAS": 0.0,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 0.0,
+        "ToolOver_act": 1.0,
+        "ToolUnder_act": 0.0,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 1.0,
+        "Kw_Ac_rate": 0.0,
+        "Kw_Aw_rate": 0.0,
+        "pass_rate": 0.0,
+        "average_tool_calls": 1.0,
+        "DirGap": 1.0,
+        "unnecessary_internal_tool_calls": 1.0
+      }
+    },
+    "by_topology": {
+      "multi-hop": {
+        "n": 2,
+        "Acc_know": 0.5,
+        "Acc_act": 0.5,
+        "KAS": 0.5,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 0.5,
+        "ToolOver_act": 0.5,
+        "ToolUnder_act": 0.0,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.5,
+        "Kw_Ac_rate": 0.5,
+        "Kw_Aw_rate": 0.0,
+        "pass_rate": 0.5,
+        "average_tool_calls": 1.0,
+        "DirGap": 0.0,
+        "unnecessary_internal_tool_calls": 1.0
+      },
+      "parallel": {
+        "n": 5,
+        "Acc_know": 0.2,
+        "Acc_act": 0.0,
+        "KAS": 0.0,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 0.8,
+        "ToolOver_act": 0.6,
+        "ToolUnder_act": 0.4,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.2,
+        "Kw_Ac_rate": 0.0,
+        "Kw_Aw_rate": 0.8,
+        "pass_rate": 0.0,
+        "average_tool_calls": 1.0,
+        "DirGap": 0.2,
+        "unnecessary_internal_tool_calls": 1.0
+      },
+      "single-hop": {
+        "n": 6,
+        "Acc_know": 0.8333333333333334,
+        "Acc_act": 0.0,
+        "KAS": 0.0,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 0.16666666666666666,
+        "ToolOver_act": 0.9166666666666666,
+        "ToolUnder_act": 0.08333333333333333,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.8333333333333334,
+        "Kw_Ac_rate": 0.0,
+        "Kw_Aw_rate": 0.16666666666666666,
+        "pass_rate": 0.0,
+        "average_tool_calls": 1.0,
+        "DirGap": 0.8333333333333334,
+        "unnecessary_internal_tool_calls": 1.0
+      }
+    }
+  },
+  "ablations": [],
+  "distractor_experiment": {
+    "executed": false,
+    "clean_KAS": 0.1346153846153846,
+    "noise_KAS": null,
+    "delta_KAS": null,
+    "distractor_selection_rate": null
+  },
+  "governor_extension": {
+    "proposal_accuracy": 0.07692307692307693,
+    "post_governor_action_accuracy": 0.07692307692307693,
+    "governor_veto_rate": 0.0,
+    "correct_veto_prediction_rate": null,
+    "governor_attribution_accuracy": null,
+    "attribution_note": "not measurable without asking the model why execution differed; no attribution prompt was issued"
+  },
+  "efficiency": {
+    "internal_avg_action_calls": 1.0,
+    "internal_unnecessary_action_rate": 1.0,
+    "external_avg_action_calls": 1.0,
+    "tool_calls_per_case": 1.0,
+    "median_latency_ms": null,
+    "KAS_tool_call_pearson_r": null,
+    "KAS_tool_call_p_value": null,
+    "pearson_note": "requires >=3 independent model or configuration points; one configuration provides one point, so no coefficient is reported"
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "statement": "Full RLR self-model context produces higher KAS than the no-self-model ablation.",
+      "supported": null,
+      "evidence": [
+        "no_self_model ablation was not executed"
+      ]
+    },
+    {
+      "id": "H2",
+      "statement": "Removing recent_actions primarily reduces action-history capability awareness and increases Knowing-Acting mismatch.",
+      "supported": null,
+      "evidence": [
+        "no_recent_actions ablation was not executed"
+      ]
+    },
+    {
+      "id": "H3",
+      "statement": "Internal Function produces more action overuse than External Function.",
+      "supported": true,
+      "evidence": [
+        "ToolOver_act internal=1.0000 external=0.5000"
+      ]
+    },
+    {
+      "id": "H4",
+      "statement": "Multi-hop boundary reasoning produces lower KAS than single-hop.",
+      "supported": false,
+      "evidence": [
+        "KAS single-hop=0.0000 multi-hop=0.5000"
+      ]
+    },
+    {
+      "id": "H5",
+      "statement": "Plausible distractor actions reduce KAS.",
+      "supported": null,
+      "evidence": [
+        "distractor condition was not executed"
+      ]
+    },
+    {
+      "id": "H6",
+      "statement": "Higher KAS corresponds to fewer unnecessary actions in Internal Function.",
+      "supported": null,
+      "evidence": [
+        "correlation requires >=3 independent configurations; only one model configuration was run, so no coefficient is reported. Descriptive internal unnecessary-action rate=1.0000"
+      ]
+    },
+    {
+      "id": "H7",
+      "statement": "Task pass rate alone overestimates operational self-awareness.",
+      "supported": false,
+      "evidence": [
+        "pass_rate=0.0769 while Acc_act=0.0769",
+        "0 internal cases passed while their Acting boundary was wrong"
+      ]
+    }
+  ],
+  "failure_analysis": {
+    "counts_by_code": {
+      "ACT_TOOL_OVERUSE": 14,
+      "KNOW_TOOL_UNDERUSE": 11,
+      "UNNECESSARY_INTERNAL_ACTION": 7,
+      "ACT_TOOL_UNDERUSE": 7,
+      "BENCHMARK_INFRASTRUCTURE_ERROR": 5
+    },
+    "most_common_failures": [
+      "ACT_TOOL_OVERUSE",
+      "KNOW_TOOL_UNDERUSE",
+      "UNNECESSARY_INTERNAL_ACTION",
+      "ACT_TOOL_UNDERUSE",
+      "BENCHMARK_INFRASTRUCTURE_ERROR"
+    ],
+    "representative_case_ids": [
+      "s11-000",
+      "s11-003",
+      "s11-006",
+      "s11-009",
+      "s11-011"
+    ]
+  },
+  "paper_alignment": {
+    "internal_tool_overuse_reproduced": true,
+    "complexity_degradation_reproduced": false,
+    "knowing_acting_gap_observed": true,
+    "high_pass_low_KAS_cases_observed": false,
+    "differences_from_paper": [
+      "Task counts and tool schemas are the KAware-RLR adaptation's own; they are not the paper's 1,076 KAware tasks, so no numeric ranking against the paper's models is made.",
+      "The official KAware repository releases 8 preview samples, so the paper-side comparison is a preview reproduction only.",
+      "The RLR's Acting branch passes through a deterministic governor that the paper's agent harness does not have; the two Acting numbers are therefore not the same quantity."
+    ]
+  },
+  "tests": {
+    "existing_tests": {
+      "passed": 35,
+      "failed": 0
+    },
+    "new_tests": {
+      "passed": 72,
+      "failed": 0
+    }
+  },
+  "artifacts": {
+    "manifest": null,
+    "cases": "/models/bench/kapro-full/cases.jsonl",
+    "knowing": "/models/bench/kapro-full/knowing.jsonl",
+    "acting": "/models/bench/kapro-full/acting.jsonl",
+    "scores": "/models/bench/kapro-full/scores.json",
+    "report": null
+  },
+  "limitations": [
+    "Only 13 of the planned 300 KAware-RLR cases completed. Sustained 1.5B inference reaches 72 C on this fan-failed device, so each attempt is bounded by the thermal watchdog.",
+    "The official KAware release is an 8-sample preview, not the paper's 1076 tasks, so no numeric comparison with the paper's models is valid.",
+    "One model configuration was run, so the KAS-versus-action-count correlation is not computable and is reported as null rather than estimated.",
+    "No camera or microphone is attached, so no perception path was exercised.",
+    "Telemetry came from deterministic fixtures, not live device sensors, so the governor saw no real thermal pressure.",
+    "The Active goal is the task text itself, which may bias the model toward a cheap stateful action independently of capability-boundary reasoning."
+  ],
+  "blocked_experiments": [
+    {
+      "experiment": "300-case KAware-RLR run",
+      "reason": "device reaches 72 C under sustained 1.5B inference with a failed fan; the watchdog aborts each attempt and the run proceeds only in cooled segments"
+    },
+    {
+      "experiment": "ablation matrix (11 conditions)",
+      "reason": "not started; each condition needs the same cooled-segment treatment and the main run has not finished"
+    },
+    {
+      "experiment": "distractor condition",
+      "reason": "not started"
+    },
+    {
+      "experiment": "24-hour soak",
+      "reason": "not started and not safe as configured: a 10 s inference loop exceeds the cooldown threshold on this hardware, so a 24 h unattended soak would exceed safe temperature"
+    },
+    {
+      "experiment": "multimodal perception validation",
+      "reason": "no camera or microphone attached to the device"
+    }
+  ],
+  "conclusion": {
+    "operational_self_awareness_evidence": "insufficient",
+    "primary_bottleneck": "knowing",
+    "summary": "On 13 measured cases the RLR's Knowing probe returned an empty action set for every case, so Acc_know is 0 on external cases and 1 only on internal ones, where the correct answer is also empty. Acting was non-empty on every internal case, giving ToolOver_act 1.0 there against 0.50 on external. The dominant quadrant is Kc_Aw at 0.54: the model judges the boundary internal and then acts anyway, which is the direction the paper reports for general agents. With 13 cases, one model configuration and no ablations, this is a directional signal, not a result.",
+    "consciousness_claim": false
+  }
+}
