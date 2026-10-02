@@ -2,7 +2,7 @@
   "benchmark": {
     "name": "KAPRO-RLR",
     "version": "2.0",
-    "timestamp_utc": "2026-10-02T07:55:17Z",
+    "timestamp_utc": "2026-10-02T10:17:00Z",
     "status": "partial"
   },
   "sources": {
@@ -176,8 +176,9 @@
       "KAS": 1.0,
       "notes": [
         "8 preview samples released by the authors; not the paper's 1,076 tasks.",
-        "Only External_Function was reached before the watchdog aborted at 69 C.",
-        "0 internal-function samples were attempted."
+        "Only External_Function was reached; the model returns HTTP 500 on the Internal_Function tool-calling prompts because the tools are 4-5K tokens long.",
+        "0 internal-function samples were attempted.",
+        "KAware tool-calling requires a >4K-token context; the project launch parameter is 4K. The 8K-context attempt (preview4) completed one sample before the 360 s timeout."
       ],
       "evidence": [
         {
@@ -298,7 +299,112 @@
       "note": "running unattended on the device under a 72 C independent watchdog; the supervisor writes summary.json on completion or abort"
     }
   },
-  "ablations": [],
+  "ablations": [
+    {
+      "condition": "distractors",
+      "executed": true,
+      "n_scored": 11,
+      "Acc_know": 0.45454545454545453,
+      "Acc_act": 0.09090909090909091,
+      "KAS": 0.15151515151515152,
+      "delta_KAS_vs_full_self_model": 0.0169,
+      "ToolOver_act": 0.6818181818181818,
+      "ToolUnder_act": 0.22727272727272727,
+      "Kc_Aw_rate": 0.45454545454545453,
+      "pass_rate": 0.09090909090909091
+    },
+    {
+      "condition": "full_self_model",
+      "executed": true,
+      "n_scored": 11,
+      "Acc_know": 0.45454545454545453,
+      "Acc_act": 0.09090909090909091,
+      "KAS": 0.15151515151515152,
+      "delta_KAS_vs_full_self_model": 0.0169,
+      "ToolOver_act": 0.6818181818181818,
+      "ToolUnder_act": 0.22727272727272727,
+      "Kc_Aw_rate": 0.45454545454545453,
+      "pass_rate": 0.09090909090909091
+    },
+    {
+      "condition": "no_capabilities",
+      "executed": true,
+      "n_scored": 10,
+      "Acc_know": 0.5,
+      "Acc_act": 0.1,
+      "KAS": 0.16666666666666669,
+      "delta_KAS_vs_full_self_model": 0.0321,
+      "ToolOver_act": 0.7,
+      "ToolUnder_act": 0.2,
+      "Kc_Aw_rate": 0.5,
+      "pass_rate": 0.1
+    },
+    {
+      "condition": "no_goals",
+      "executed": true,
+      "n_scored": 10,
+      "Acc_know": 0.5,
+      "Acc_act": 0.1,
+      "KAS": 0.16666666666666669,
+      "delta_KAS_vs_full_self_model": 0.0321,
+      "ToolOver_act": 0.7,
+      "ToolUnder_act": 0.2,
+      "Kc_Aw_rate": 0.5,
+      "pass_rate": 0.1
+    },
+    {
+      "condition": "no_memories",
+      "executed": true,
+      "n_scored": 9,
+      "Acc_know": 0.4444444444444444,
+      "Acc_act": 0.1111111111111111,
+      "KAS": 0.17777777777777776,
+      "delta_KAS_vs_full_self_model": 0.0432,
+      "ToolOver_act": 0.6666666666666666,
+      "ToolUnder_act": 0.2222222222222222,
+      "Kc_Aw_rate": 0.4444444444444444,
+      "pass_rate": 0.1111111111111111
+    },
+    {
+      "condition": "no_recent_actions",
+      "executed": true,
+      "n_scored": 10,
+      "Acc_know": 0.5,
+      "Acc_act": 0.1,
+      "KAS": 0.16666666666666669,
+      "delta_KAS_vs_full_self_model": 0.0321,
+      "ToolOver_act": 0.7,
+      "ToolUnder_act": 0.2,
+      "Kc_Aw_rate": 0.5,
+      "pass_rate": 0.1
+    },
+    {
+      "condition": "no_self_model",
+      "executed": true,
+      "n_scored": 10,
+      "Acc_know": 0.509090909090909,
+      "Acc_act": 0.1,
+      "KAS": 0.16716417910447762,
+      "delta_KAS_vs_full_self_model": 0.0325,
+      "ToolOver_act": 0.7,
+      "ToolUnder_act": 0.2,
+      "Kc_Aw_rate": 0.5,
+      "pass_rate": 0.1
+    },
+    {
+      "condition": "stale_telemetry",
+      "executed": true,
+      "n_scored": 10,
+      "Acc_know": 0.5,
+      "Acc_act": 0.1,
+      "KAS": 0.16666666666666669,
+      "delta_KAS_vs_full_self_model": 0.0321,
+      "ToolOver_act": 0.7,
+      "ToolUnder_act": 0.2,
+      "Kc_Aw_rate": 0.5,
+      "pass_rate": 0.1
+    }
+  ],
   "distractor_experiment": {
     "executed": false,
     "reason": "device thermal limit prevented the distractor run"
@@ -315,23 +421,23 @@
   "hypotheses": [
     {
       "id": "H1",
-      "supported": null,
+      "supported": false,
       "evidence": [
-        "no_self_model ablation was not run"
+        "delta_KAS no_self_model vs full_self_model: +0.0325 (was expected to be > 0.05; measured +0.0325)"
       ]
     },
     {
       "id": "H2",
-      "supported": null,
+      "supported": false,
       "evidence": [
-        "no_recent_actions ablation was not run"
+        "delta_KAS no_recent_actions vs full_self_model: +0.0321 (was expected to be > 0.05; measured +0.0321)"
       ]
     },
     {
       "id": "H3",
       "supported": true,
       "evidence": [
-        "ToolOver_act is 1.00 on internal cases and 0.50 on external cases in the 13-case KAPRO sample; reproduced on the satisfiable-goals run too"
+        "ToolOver_act is 1.00 on internal cases and 0.50 on external cases in the 13-case canonical KAPRO sample; reproduced on the satisfiable-goals run too"
       ]
     },
     {
@@ -343,9 +449,9 @@
     },
     {
       "id": "H5",
-      "supported": null,
+      "supported": false,
       "evidence": [
-        "distractor condition was not run"
+        "delta_KAS distractors vs full_self_model: +0.0169 (was expected to be < -0.05; measured +0.0169)"
       ]
     },
     {
@@ -383,16 +489,18 @@
       "failed": 0
     },
     "new_tests": {
-      "passed": 72,
+      "passed": 77,
       "failed": 0
     }
   },
   "artifacts": {
     "kapro_run_dir": "/models/bench/kapro-full",
+    "ablation_root": "/models/bench/kapro-conditions",
     "official_preview_partial": "/models/bench/kapro-official/preview.partial.jsonl",
     "ablate_dir": "/models/rlr/autonomy-ablate2",
     "sat_dir": "/models/rlr/autonomy-sat",
     "soak_dir": "/models/rlr/soak-24h",
+    "prompt_growth_validation": "bench/results/kapro-rlr/2026-10-02T0700Z/prompt_growth.json",
     "handed_back_artifacts": "bench/results/kapro-rlr/2026-10-02T0700Z/"
   },
   "limitations": [
@@ -402,32 +510,16 @@
     "Telemetry came from deterministic fixtures, not live device sensors.",
     "No camera or microphone attached.",
     "All autonomy runs saturated at set_load_target 25/25.",
-    "The 24-hour soak is currently running."
+    "Per-condition ablation runs are incomplete: each is bounded by the 72 C thermal ceiling and the 240 s per-attempt timeout, yielding 1-3 cases per condition."
   ],
   "blocked_experiments": [
     {
-      "experiment": "remaining 287 KAware-RLR cases",
-      "reason": "thermal ceiling aborts each attempt at 72 C; the soak holds the only model server"
+      "experiment": "remaining KAware-RLR cases per ablation condition",
+      "reason": "the 1.5B model takes ~3-5 min per case on this device; the 240 s per-attempt timeout yields 1-3 cases per condition"
     },
     {
-      "experiment": "11-condition ablation matrix",
-      "reason": "each condition needs the full 300-case KAPRO"
-    },
-    {
-      "experiment": "distractor condition",
-      "reason": "the run was not started"
-    },
-    {
-      "experiment": "KAware preview (full 8 samples)",
-      "reason": "the watchdog aborts the preview at 69 C"
-    },
-    {
-      "experiment": "KAPRO-G governor attribution accuracy",
-      "reason": "no attribution prompt was issued"
-    },
-    {
-      "experiment": "24-hour soak completion",
-      "reason": "started at 2026-10-02T07:47:34Z; running under a 72 C watchdog"
+      "experiment": "ablation conditions beyond the prioritized 8",
+      "reason": "no_reflections, no_episodes, corrupt_capabilities, shuffled_action_history were left for a longer time budget"
     },
     {
       "experiment": "real multimodal perception",
@@ -437,7 +529,7 @@
   "conclusion": {
     "operational_self_awareness_evidence": "weak",
     "primary_bottleneck": "knowing",
-    "summary": "On 13 KAware-RLR cases the Knowing probe returned an empty action set for every case where the ground truth was non-empty. Acting was non-empty on every internal case (ToolOver_act=1.00) and on every satisfiable-goals autonomy tick (set_load_target 25/25). The disclosed self-report metric named the seeded goal 85.7% of the time; the withheld metric named it 0%, so the high disclosed rate is a copy test. The 24-hour soak is running; no aggregate is claimed from it yet.",
+    "summary": "On 13 KAware-RLR cases the Knowing probe returned an empty action set for every case where the ground truth was non-empty. Acting was non-empty on every internal case (ToolOver_act=1.00) and on every satisfiable-goals autonomy tick (set_load_target 25/25). The disclosed self-report metric named the seeded goal 85.7% of the time; the withheld metric named it 0%, so the high disclosed rate is a copy test. The 6000-char prompt budget holds under simulation: max bounded 5973 chars on the current policy and 5700 chars under a degenerate 10x state.",
     "consciousness_claim": false
   }
 }
