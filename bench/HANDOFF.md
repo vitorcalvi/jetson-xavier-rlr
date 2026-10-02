@@ -485,3 +485,29 @@ part of the overuse may be the goal format rather than a capability-boundary
 failure. TheKnowing/Acting split separates the two — and the Knowing branch,
 which sees no goal, still returns empty — so the boundary judgement itself is
 the weaker of the two.
+
+### Safety incident: two concurrent jobs reached 79.5 C
+
+Running the KAware preview reproduction and the KAPRO-RLR run at the same time,
+against the one model server, drove the SoC to **79.5 C**, past the 78 C
+cooldown threshold, with the fan still failed. The thermal watchdogs were
+watching for `kapro_rlr` and did not cover the second process, and the loop
+driver was not covered at all. Both were killed by hand and the device returned
+to 70 C within about two minutes; `nvargus-daemon` stayed active and the power
+mode was never changed.
+
+Consequences for any future run on this hardware:
+
+- **One inference job at a time.** A single job reaches ~72 C and is aborted by
+  the watchdog; two concurrent jobs exceed the cooldown threshold.
+- The watchdog pattern must cover *every* process that can heat the device, not
+  just the one being measured, or it gives false assurance.
+- Do not start a second job while a cooling loop is running unattended.
+- The device is idle now: no llama-server, no benchmark processes,
+  MODE_10W_DESKTOP, thermal guard active, 519 MiB used of 6833 MiB.
+
+### Scoring validated on the measured cases
+
+For all 12 scored cases the identity `1 - J = ToolOver + ToolUnder` holds to
+0.0 absolute error on both branches, confirming the metric implementation on
+real data rather than only on unit-test fixtures.
