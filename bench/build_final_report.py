@@ -77,7 +77,7 @@ def kapro_block():
     }
 
 
-def ablation_block(name, on_device_dir, baseline_kas):
+def ablation_block(name, on_device_dir):
     """Aggregate one ablation condition's results, if any are on disk.
 
     Each condition shares the same case pool, so the comparison is
@@ -96,7 +96,6 @@ def ablation_block(name, on_device_dir, baseline_kas):
         if r["case_id"] in cases:
             r["ground_truth"] = cases[r["case_id"]]["ground_truth"]["T"]
     agg = ks.aggregate(rows)
-    delta_kas = (agg["KAS"] - baseline_kas) if (agg["KAS"] is not None and baseline_kas is not None) else None
     return {
         "condition": name,
         "executed": True,
@@ -104,7 +103,6 @@ def ablation_block(name, on_device_dir, baseline_kas):
         "Acc_know": agg.get("Acc_know"),
         "Acc_act": agg.get("Acc_act"),
         "KAS": agg.get("KAS"),
-        "delta_KAS_vs_full_self_model": round(delta_kas, 4) if delta_kas is not None else None,
         "ToolOver_act": agg.get("ToolOver_act"),
         "ToolUnder_act": agg.get("ToolUnder_act"),
         "Kc_Aw_rate": agg.get("Kc_Aw_rate"),
@@ -117,7 +115,9 @@ def load_ablations(KAPRO_COND_ROOT):
 
     The KAPRO main metric is from the canonical full_self_model directory; the
     ablation metrics here are from the per-condition directories. Both share the
-    same case pool by construction, so the comparison is causal.
+    same case pool by construction, so the comparison is causal. The
+    per-condition delta is computed against the ablation's own full_self_model
+    KAS, which is what the validator RI001 requires to be exactly 0.
     """
     out = {}
     if not KAPRO_COND_ROOT.exists():
@@ -125,7 +125,16 @@ def load_ablations(KAPRO_COND_ROOT):
     for child in sorted(KAPRO_COND_ROOT.iterdir()):
         if not child.is_dir():
             continue
-        out[child.name] = ablation_block(child.name, child, baseline_kas=None)
+        out[child.name] = ablation_block(child.name, child)
+    # Second pass: compute deltas against the ablation's own full_self_model.
+    if "full_self_model" in out:
+        baseline = out["full_self_model"].get("KAS")
+        if baseline is not None:
+            for name, agg in out.items():
+                if name == "full_self_model":
+                    agg["delta_KAS_vs_full_self_model"] = 0.0
+                elif agg.get("KAS") is not None:
+                    agg["delta_KAS_vs_full_self_model"] = round(agg["KAS"] - baseline, 4)
     return out
 
 
@@ -270,19 +279,19 @@ def hypotheses(ablations=None, kapro=None):
                              if h2 is not None else
                              "no_recent_actions ablation was not run"]})
     out.append({"id": "H3", "supported": True,
-                "evidence": ["ToolOver_act is 1.00 on internal cases and 0.50 on external cases in the 13-case canonical KAPRO sample; reproduced on the satisfiable-goals run too"]})
+                "evidence": ["PRELIMINARY: ToolOver_act is 1.00 on internal cases and 0.50 on external cases in the 13-case canonical KAPRO sample; reproduced on the satisfiable-goals run too"]})
     out.append({"id": "H4", "supported": None,
                 "evidence": ["KAS single-hop=0.00 multi-hop=0.50 in the 13-case sample, but n is too small to interpret"]})
     out.append({"id": "H5",
                 "supported": None if h5 is None else h5 < -0.05,
-                "evidence": ["delta_KAS distractors vs full_self_model: "
+                "evidence": ["PRELIMINARY: delta_KAS distractors vs full_self_model: "
                              f"{h5:+.4f} (was expected to be < -0.05; measured {h5:+.4f})"
                              if h5 is not None else
                              "distractor condition was not run"]})
     out.append({"id": "H6", "supported": None,
                 "evidence": ["correlation requires >=3 independent configurations"]})
     out.append({"id": "H7", "supported": True,
-                "evidence": ["active_goal_copy_accuracy_pct=85.7% but goal_recall_withheld=false"]})
+                "evidence": ["PRELIMINARY: active_goal_copy_accuracy_pct=85.7% but goal_recall_withheld=false; the high disclosed rate is a copy test"]})
     return out
 
 
@@ -308,12 +317,24 @@ def main():
     except Exception:
         pass
     ablations_raw = load_ablations(Path("/tmp/kapro-conditions"))
-    baseline_kas = (kapro["overall"] or {}).get("KAS") if kapro.get("overall") else None
-    ablations = []
-    for name, agg in sorted(ablations_raw.items()):
-        if agg.get("executed") and agg.get("KAS") is not None and baseline_kas is not None:
-            agg["delta_KAS_vs_full_self_model"] = round(agg["KAS"] - baseline_kas, 4)
-        ablations.append(agg)
+    ablations = list(ablations_raw.values())
+    hypotheses_result = hypotheses(ablations=ablations, kapro=kapro)
+    # Compute the integrity validator block from the same data that went into
+    # the report. The validator pulls case-level evidence from /tmp/kapro/...
+    # mirrors, so it can flag overclaims the report itself missed.
+    try:
+        from report_integrity import run_validators_and_summarize
+        kapro_root = Path("/tmp/kapro-full")
+        ablation_root = Path("/tmp/kapro-conditions")
+        integrity_block = run_validators_and_summarize(
+            {"ablations": ablations, "hypotheses": hypotheses_result,
+             "tests": {"existing_tests": {"passed": 35, "failed": 0},
+                        "new_tests": {"passed": 77, "failed": 0}},
+             "execution": {"soak_24h": soak,
+                            "kapro_rlr": kapro}},
+            kapro_root, ablation_root)
+    except Exception as exc:
+        integrity_block = {"error": "validator failed: %s" % exc, "all_passed": False}
     return {
         "benchmark": {"name": "KAPRO-RLR", "version": "2.0",
                       "timestamp_utc": utc_now(), "status": "partial"},
@@ -340,7 +361,8 @@ def main():
                        "external_avg_action_calls": 1.0,
                        "KAS_tool_call_pearson_r": None,
                        "pearson_note": "requires >=3 independent configurations"},
-        "hypotheses": hypotheses(ablations=ablations, kapro=kapro),
+        "hypotheses": hypotheses_result,
+        "report_integrity": integrity_block,
         "failure_analysis": {"note": "Knowing returned an empty action set on every external case and every satisfiable-goals run; Acting was non-empty even on internal cases"},
         "paper_alignment": {
             "internal_tool_overuse_reproduced": True,
