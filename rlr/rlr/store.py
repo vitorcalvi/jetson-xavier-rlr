@@ -163,6 +163,19 @@ class Store:
                  int(bool(valid)), veto_reason))
         return cur.lastrowid
 
+    def recent_actions(self, limit=8):
+        """The actions actually applied, newest first.
+
+        A reflection is asked to name the actions it took, but context() did not
+        include them, so the model filled the gap with capability names it could
+        see instead. Without this, "name the actions you actually took" is an
+        unanswerable prompt and produces plausible-looking invention.
+        """
+        rows = self.db.execute("""SELECT name, args_json, outcome, rationale, veto_reason
+                                 FROM actions WHERE valid=1 ORDER BY id DESC LIMIT ?""",
+                               (limit,)).fetchall()
+        return [dict(row) for row in rows]
+
     def add_reflection(self, summary):
         with self.db:
             cur = self.db.execute("INSERT INTO reflections(ts,summary) VALUES(?,?)", (utc_now(), summary))

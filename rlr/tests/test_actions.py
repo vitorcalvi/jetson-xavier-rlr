@@ -5,8 +5,17 @@ from rlr.actions import InvalidAction, action_json_schema, validate_action
 
 def test_schema_has_exact_whitelist_actions():
     assert [v["properties"]["action"]["enum"][0] for v in action_json_schema()["oneOf"]] == [
-        "observe", "set_vision_fps", "set_reply_tokens", "remember", "recall", "reflect",
+        "observe", "set_vision_fps", "set_reply_tokens", "set_load_target",
+        "remember", "recall", "reflect",
         "set_goal", "complete_goal", "cooldown", "abstain"]
+
+
+def test_set_load_target_is_bounded_to_a_real_duty_cycle():
+    value = {"action": "set_load_target", "percent": 40, "rationale": "reduce duty cycle"}
+    assert validate_action(value) == value
+    for bad in (9, 101):
+        with pytest.raises(InvalidAction):
+            validate_action({"action": "set_load_target", "percent": bad, "rationale": "out of range"})
 
 
 def test_valid_action_and_bounds():
