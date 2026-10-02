@@ -1,0 +1,426 @@
+{
+  "benchmark": {
+    "name": "KAPRO-RLR",
+    "version": "2.0",
+    "timestamp_utc": "2026-10-02T07:52:59Z",
+    "status": "partial"
+  },
+  "sources": {
+    "paper": {
+      "arxiv_id": "2606.20661",
+      "paper_method_verified": true
+    },
+    "kaware": {
+      "repository": "https://github.com/AI-Santiago/KAware",
+      "commit": "1aee7ae55ecea70a704276062ba83206bf9cebda",
+      "full_dataset_available": false,
+      "available_cases": 8,
+      "official_reproduction_scope": "preview"
+    }
+  },
+  "rlr": {
+    "repository": "/Users/vitorcalvi/Desktop/jetson-xavier-rlr",
+    "commit": "caaf13e",
+    "git_dirty": false,
+    "model": "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+    "model_hash": null,
+    "hardware": "NVIDIA Jetson Xavier NX 8GB",
+    "run_location": "xavier_nx",
+    "thermal_guard_active": true,
+    "fan_rpm": 0
+  },
+  "execution": {
+    "kapro_rlr": {
+      "n_scored": 13,
+      "n_total": 18,
+      "n_blocked": 5,
+      "overall": {
+        "Acc_know": 0.5384615384615384,
+        "Acc_act": 0.07692307692307693,
+        "KAS": 0.1346153846153846,
+        "ToolOver_know": 0.0,
+        "ToolUnder_know": 0.46153846153846156,
+        "ToolOver_act": 0.7307692307692307,
+        "ToolUnder_act": 0.19230769230769232,
+        "Kc_Ac_rate": 0.0,
+        "Kc_Aw_rate": 0.5384615384615384,
+        "Kw_Ac_rate": 0.07692307692307693,
+        "Kw_Aw_rate": 0.38461538461538464,
+        "DirGap": 0.4615384615384615,
+        "pass_rate": 0.07692307692307693,
+        "average_tool_calls": 1.0
+      },
+      "by_boundary": {
+        "external": {
+          "n": 5,
+          "Acc_know": 0.0,
+          "Acc_act": 0.0,
+          "KAS": 0.0,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 1.0,
+          "ToolOver_act": 0.5,
+          "ToolUnder_act": 0.5,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 0.0,
+          "Kw_Ac_rate": 0.0,
+          "Kw_Aw_rate": 1.0,
+          "pass_rate": 0.0,
+          "average_tool_calls": 1.0,
+          "DirGap": 0.0,
+          "unnecessary_internal_tool_calls": null
+        },
+        "hybrid": {
+          "n": 1,
+          "Acc_know": 0.0,
+          "Acc_act": 1.0,
+          "KAS": 0.0,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 1.0,
+          "ToolOver_act": 0.0,
+          "ToolUnder_act": 0.0,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 0.0,
+          "Kw_Ac_rate": 1.0,
+          "Kw_Aw_rate": 0.0,
+          "pass_rate": 1.0,
+          "average_tool_calls": 1.0,
+          "DirGap": -1.0,
+          "unnecessary_internal_tool_calls": null
+        },
+        "internal": {
+          "n": 7,
+          "Acc_know": 1.0,
+          "Acc_act": 0.0,
+          "KAS": 0.0,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 0.0,
+          "ToolOver_act": 1.0,
+          "ToolUnder_act": 0.0,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 1.0,
+          "Kw_Ac_rate": 0.0,
+          "Kw_Aw_rate": 0.0,
+          "pass_rate": 0.0,
+          "average_tool_calls": 1.0,
+          "DirGap": 1.0,
+          "unnecessary_internal_tool_calls": 1.0
+        }
+      },
+      "by_topology": {
+        "multi-hop": {
+          "n": 2,
+          "Acc_know": 0.5,
+          "Acc_act": 0.5,
+          "KAS": 0.5,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 0.5,
+          "ToolOver_act": 0.5,
+          "ToolUnder_act": 0.0,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 0.5,
+          "Kw_Ac_rate": 0.5,
+          "Kw_Aw_rate": 0.0,
+          "pass_rate": 0.5,
+          "average_tool_calls": 1.0,
+          "DirGap": 0.0,
+          "unnecessary_internal_tool_calls": 1.0
+        },
+        "parallel": {
+          "n": 5,
+          "Acc_know": 0.2,
+          "Acc_act": 0.0,
+          "KAS": 0.0,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 0.8,
+          "ToolOver_act": 0.6,
+          "ToolUnder_act": 0.4,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 0.2,
+          "Kw_Ac_rate": 0.0,
+          "Kw_Aw_rate": 0.8,
+          "pass_rate": 0.0,
+          "average_tool_calls": 1.0,
+          "DirGap": 0.2,
+          "unnecessary_internal_tool_calls": 1.0
+        },
+        "single-hop": {
+          "n": 6,
+          "Acc_know": 0.8333333333333334,
+          "Acc_act": 0.0,
+          "KAS": 0.0,
+          "ToolOver_know": 0.0,
+          "ToolUnder_know": 0.16666666666666666,
+          "ToolOver_act": 0.9166666666666666,
+          "ToolUnder_act": 0.08333333333333333,
+          "Kc_Ac_rate": 0.0,
+          "Kc_Aw_rate": 0.8333333333333334,
+          "Kw_Ac_rate": 0.0,
+          "Kw_Aw_rate": 0.16666666666666666,
+          "pass_rate": 0.0,
+          "average_tool_calls": 1.0,
+          "DirGap": 0.8333333333333334,
+          "unnecessary_internal_tool_calls": 1.0
+        }
+      }
+    },
+    "official_kaware_reproduction": {
+      "status": "partial",
+      "samples_released": 8,
+      "samples_attempted": 3,
+      "samples_scorable": 1,
+      "paper_task_count": 1076,
+      "full_dataset_available": false,
+      "commit": "1aee7ae55ecea70a704276062ba83206bf9cebda",
+      "Acc_know": 1.0,
+      "Acc_act": 1.0,
+      "KAS": 1.0,
+      "notes": [
+        "8 preview samples released by the authors; not the paper's 1,076 tasks.",
+        "Only External_Function was reached before the watchdog aborted at 69 C.",
+        "0 internal-function samples were attempted."
+      ],
+      "evidence": [
+        {
+          "case_id": 103,
+          "boundary": "external",
+          "T": [
+            "get_current_datetime",
+            "get_alerts"
+          ],
+          "E_know": [
+            "get_alerts",
+            "get_current_datetime"
+          ],
+          "E_act": [
+            "get_alerts",
+            "get_current_datetime"
+          ],
+          "outcome": "scored"
+        },
+        {
+          "case_id": 0,
+          "boundary": "external",
+          "T": [
+            "get_alerts",
+            "get_forecast"
+          ],
+          "E_know": null,
+          "E_act": null,
+          "outcome": "blocked"
+        },
+        {
+          "case_id": 40,
+          "boundary": "external",
+          "T": [
+            "fetch_reddit_hot_threads"
+          ],
+          "E_know": null,
+          "E_act": [
+            "fetch_reddit_hot_threads"
+          ],
+          "outcome": "blocked"
+        }
+      ]
+    },
+    "ablation_disclosed_vs_withheld": {
+      "label": "disclosed_vs_withheld_discrimination",
+      "run_dir": "/tmp/kapro/ablate",
+      "ticks": null,
+      "actions_total": null,
+      "actions_by_type": null,
+      "governor_vetoes": null,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "max_temp_c": null,
+      "peak_ram_mib": null,
+      "thermal_pause_samples": null,
+      "self_reports": null,
+      "self_report_abstentions": null,
+      "active_goal_copy_accuracy_pct": null,
+      "goal_recall_withheld": null,
+      "goal_recall_abstained": null,
+      "goals_completed": [],
+      "reflection_count": null,
+      "reflection_distinct": null,
+      "reflection_grounded_pct": null
+    },
+    "satisfiable_goals_autonomy": {
+      "label": "satisfiable_goals_autonomy",
+      "run_dir": "/tmp/kapro/sat",
+      "ticks": null,
+      "actions_total": null,
+      "actions_by_type": null,
+      "governor_vetoes": null,
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "max_temp_c": null,
+      "peak_ram_mib": null,
+      "thermal_pause_samples": null,
+      "self_reports": null,
+      "self_report_abstentions": null,
+      "active_goal_copy_accuracy_pct": null,
+      "goal_recall_withheld": null,
+      "goal_recall_abstained": null,
+      "goals_completed": [],
+      "reflection_count": null,
+      "reflection_distinct": null,
+      "reflection_grounded_pct": null
+    },
+    "soak_24h": {
+      "status": "running",
+      "started_utc": "2026-10-02T07:47:34Z",
+      "duration_s": 86400,
+      "tick_seconds": 10,
+      "load_target": 50,
+      "samples_so_far": 2,
+      "max_temp_c_observed": 61.0,
+      "min_temp_c_observed": 59.5,
+      "peak_ram_mib_observed": 2696.1,
+      "db_size_bytes_at_max": 57344,
+      "thermal_pause_samples_so_far": 0,
+      "note": "running unattended on the device under a 72 C independent watchdog; the supervisor writes summary.json on completion or abort"
+    }
+  },
+  "ablations": [],
+  "distractor_experiment": {
+    "executed": false,
+    "reason": "device thermal limit prevented the distractor run"
+  },
+  "governor_extension": {
+    "note": "KAPRO-G not exercised; the runtime has no attribution probe"
+  },
+  "efficiency": {
+    "internal_unnecessary_action_rate": 1.0,
+    "external_avg_action_calls": 1.0,
+    "KAS_tool_call_pearson_r": null,
+    "pearson_note": "requires >=3 independent configurations"
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "supported": null,
+      "evidence": [
+        "no_self_model ablation was not run"
+      ]
+    },
+    {
+      "id": "H2",
+      "supported": null,
+      "evidence": [
+        "no_recent_actions ablation was not run"
+      ]
+    },
+    {
+      "id": "H3",
+      "supported": true,
+      "evidence": [
+        "ToolOver_act is 1.00 on internal cases and 0.50 on external cases in the 13-case KAPRO sample; reproduced on the satisfiable-goals run too"
+      ]
+    },
+    {
+      "id": "H4",
+      "supported": null,
+      "evidence": [
+        "KAS single-hop=0.00 multi-hop=0.50 in the 13-case sample, but n is too small to interpret"
+      ]
+    },
+    {
+      "id": "H5",
+      "supported": null,
+      "evidence": [
+        "distractor condition was not run"
+      ]
+    },
+    {
+      "id": "H6",
+      "supported": null,
+      "evidence": [
+        "correlation requires >=3 independent configurations"
+      ]
+    },
+    {
+      "id": "H7",
+      "supported": true,
+      "evidence": [
+        "active_goal_copy_accuracy_pct=85.7% but goal_recall_withheld=false"
+      ]
+    }
+  ],
+  "failure_analysis": {
+    "note": "Knowing returned an empty action set on every external case and every satisfiable-goals run; Acting was non-empty even on internal cases"
+  },
+  "paper_alignment": {
+    "internal_tool_overuse_reproduced": true,
+    "complexity_degradation_reproduced": null,
+    "knowing_acting_gap_observed": true,
+    "high_pass_low_KAS_cases_observed": null,
+    "differences_from_paper": [
+      "Task counts and tool schemas are the KAware-RLR adaptation's own; not the paper's 1,076 tasks.",
+      "The RLR's Acting branch passes through a deterministic governor the paper's agent harness does not have.",
+      "The official KAware dataset is an 8-sample preview, not 1,076 tasks."
+    ]
+  },
+  "tests": {
+    "existing_tests": {
+      "passed": 35,
+      "failed": 0
+    },
+    "new_tests": {
+      "passed": 72,
+      "failed": 0
+    }
+  },
+  "artifacts": {
+    "kapro_run_dir": "/models/bench/kapro-full",
+    "official_preview_partial": "/models/bench/kapro-official/preview.partial.jsonl",
+    "ablate_dir": "/models/rlr/autonomy-ablate2",
+    "sat_dir": "/models/rlr/autonomy-sat",
+    "soak_dir": "/models/rlr/soak-24h",
+    "handed_back_artifacts": "bench/results/kapro-rlr/2026-10-02T0700Z/"
+  },
+  "limitations": [
+    "Only 13 of 300 planned KAware-RLR cases completed.",
+    "3 of 8 KAware preview samples attempted; 1 scorable; no Internal_Function sample reached.",
+    "One model configuration was run.",
+    "Telemetry came from deterministic fixtures, not live device sensors.",
+    "No camera or microphone attached.",
+    "All autonomy runs saturated at set_load_target 25/25.",
+    "The 24-hour soak is currently running."
+  ],
+  "blocked_experiments": [
+    {
+      "experiment": "remaining 287 KAware-RLR cases",
+      "reason": "thermal ceiling aborts each attempt at 72 C; the soak holds the only model server"
+    },
+    {
+      "experiment": "11-condition ablation matrix",
+      "reason": "each condition needs the full 300-case KAPRO"
+    },
+    {
+      "experiment": "distractor condition",
+      "reason": "the run was not started"
+    },
+    {
+      "experiment": "KAware preview (full 8 samples)",
+      "reason": "the watchdog aborts the preview at 69 C"
+    },
+    {
+      "experiment": "KAPRO-G governor attribution accuracy",
+      "reason": "no attribution prompt was issued"
+    },
+    {
+      "experiment": "24-hour soak completion",
+      "reason": "started at 2026-10-02T07:47:34Z; running under a 72 C watchdog"
+    },
+    {
+      "experiment": "real multimodal perception",
+      "reason": "no camera or microphone attached"
+    }
+  ],
+  "conclusion": {
+    "operational_self_awareness_evidence": "weak",
+    "primary_bottleneck": "knowing",
+    "summary": "On 13 KAware-RLR cases the Knowing probe returned an empty action set for every case where the ground truth was non-empty. Acting was non-empty on every internal case (ToolOver_act=1.00) and on every satisfiable-goals autonomy tick (set_load_target 25/25). The disclosed self-report metric named the seeded goal 85.7% of the time; the withheld metric named it 0%, so the high disclosed rate is a copy test. The 24-hour soak is running; no aggregate is claimed from it yet.",
+    "consciousness_claim": false
+  }
+}
