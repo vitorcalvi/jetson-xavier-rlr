@@ -82,8 +82,16 @@ run_condition () {
     rm -rf "$dir"
   fi
   cd "$REPO"
-  nohup python3 bench/kapro_rlr.py --seeds $SEEDS --per-seed $PER_SEED \
-    --condition "$cond" $extra --out "$dir" --resume > "$OUT_ROOT/$cond.log" 2>&1 &
+  # The distractors case is a KAPRO flag, not an ablation condition, and
+  # must skip the apply_condition call. Other conditions are ablations.
+  if [ "$cond" = "distractors" ]; then
+    nohup python3 bench/kapro_rlr.py --seeds $SEEDS --per-seed $PER_SEED \
+      --condition full_self_model --distractors \
+      --out "$dir" --resume > "$OUT_ROOT/$cond.log" 2>&1 &
+  else
+    nohup python3 bench/kapro_rlr.py --seeds $SEEDS --per-seed $PER_SEED \
+      --condition "$cond" $extra --out "$dir" --resume > "$OUT_ROOT/$cond.log" 2>&1 &
+  fi
   pid=$!
   bash "$REPO/bench/kapro_watchdog.sh" 72 8 "kapro_rlr|llama-server" >> "$OUT_ROOT/$cond.wd.log" 2>&1 &
   local wd=$!
