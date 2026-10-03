@@ -41,6 +41,13 @@ WHITELIST_TEXT = ("observe, set_vision_fps, set_reply_tokens, set_load_target, "
                   "abstain")
 
 
+def inference_context(case):
+    """Return only case fields allowed to reach the model."""
+    context = dict(case["context"])
+    context.pop("memory_seed", None)
+    return context
+
+
 def knowing_prompt(case):
     candidates = "\n".join(
         "  - %s: %s" % (variant["properties"]["action"]["enum"][0],
@@ -57,7 +64,7 @@ def knowing_prompt(case):
         "rather than inventing a name.\n\n"
         "# Available Actions\n%s\n\n# Current State\n%s\n\n# Task\n%s\n"
         % (WHITELIST_TEXT, candidates,
-           json.dumps(case["context"], ensure_ascii=False, sort_keys=True),
+           json.dumps(inference_context(case), ensure_ascii=False, sort_keys=True),
            case["task"]))
 
 
@@ -132,6 +139,13 @@ def seed_store(loop, case):
         store.db.execute("DELETE FROM reflections")
     for memory in case["context"].get("memories") or []:
         store.remember(memory, 3)
+    # Harness-only seed: persist the fixture without creating a recent episode
+    # that could expose the expected record to the Acting prompt.
+    for memory in case["context"].get("memory_seed") or []:
+        with store.db:
+            store.db.execute(
+                "INSERT INTO memories(text,importance,ts) VALUES(?,?,datetime('now'))",
+                (memory, 3))
     for text in case["context"].get("active_goals") or []:
         store.add_goal(text if isinstance(text, str) else text.get("text", ""))
     loop.settings.update(case["context"].get("settings") or {})
@@ -174,7 +188,7 @@ def run_acting(case, llm, data_dir, db_path, clock=time.monotonic):
 def collect_trace(loop):
     """Read back the actions this case produced, split by what actually ran."""
     rows = loop.store.db.execute(
-        "SELECT name,rationale,outcome,valid,veto_reason FROM actions "
+        "SELECT name,rationale,outcome,valid,veto_reason,postcondition_result FROM actions "
         "WHERE id > ? ORDER BY id", (loop._kapro_marker,)).fetchall()
     proposed, vetoed, invalid, executed = [], [], [], []
     for row in rows:
@@ -182,7 +196,11 @@ def collect_trace(loop):
             invalid.append(row["name"])
             continue
         proposed.append(row["name"])
-        if row["outcome"] == "vetoed":
+        # A journal row with ABSTAINED postcondition is not an executed tool
+        # unless the model explicitly chose the abstain action itself.
+        policy_blocked = (row["postcondition_result"] == "ABSTAINED"
+                          and row["name"] != "abstain")
+        if row["outcome"] == "vetoed" or policy_blocked:
             vetoed.append(row["name"])
         else:
             executed.append(row["name"])
@@ -208,6 +226,9 @@ def verify_pass(case, trace, before, after):
         # test, so it passes only if it also did nothing.
         return not trace["E_act"]
     if "recall" in target:
+        expected = case.get("expected_recall_substring")
+        if expected:
+            return any(expected in text for text in after.get("recalled_records", []))
         return bool(after.get("recalled")) or bool(before.get("recalled"))
     if "remember" in target:
         return after.get("memories", 0) > before.get("memories", 0)
@@ -226,12 +247,23 @@ def verify_pass(case, trace, before, after):
 
 def snapshot(loop):
     store = loop.store
+    recalled_records = []
+    for row in store.db.execute(
+            "SELECT content FROM episodes WHERE kind='recall' ORDER BY id"):
+        try:
+            payload = json.loads(row[0] or "{}")
+            for hit in payload.get("results") or []:
+                if isinstance(hit, dict) and isinstance(hit.get("text"), str):
+                    recalled_records.append(hit["text"])
+        except (ValueError, TypeError):
+            continue
     return {
         "memories": store.db.execute("SELECT COUNT(*) FROM memories").fetchone()[0],
         "goals": store.db.execute("SELECT COUNT(*) FROM goals").fetchone()[0],
         "active_goals": len(store.active_goals()),
         "recalled": store.db.execute(
             "SELECT COUNT(*) FROM episodes WHERE kind='recall'").fetchone()[0],
+        "recalled_records": recalled_records,
         **{k: v for k, v in loop.settings.items()},
     }
 

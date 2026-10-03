@@ -904,7 +904,7 @@ class ReflectiveLoop:
         self.store.add_episode("self_report", content=json.dumps({"report": report, "score": score}, ensure_ascii=False))
         return {"valid": True, "report": report, "score": score}
 
-    def self_report_discrimination(self):
+    def self_report_discrimination(self, no_anchor=False):
         """Can the model report a state that changed after its last report?
 
         Reports once, perturbs the world, then reports again. A model that only
@@ -943,7 +943,8 @@ class ReflectiveLoop:
         # carries it without the goal being added directly to the
         # withheld prompt's notes block. A transport failure is non-fatal
         # here: the withheld call still runs and the gate can fail loudly.
-        self._guarded(self.reflect, None, "discrimination_reflection")
+        if not no_anchor:
+            self._guarded(self.reflect, None, "discrimination_reflection")
         withheld = self.self_report(sample, disclose_goals=False)
         goal_now = (self.store.active_goals() or [{}])[0].get("text")
         return {

@@ -1,0 +1,17 @@
+{
+  "conditions": ["B0", "B0F", "B1", "B2", "B2n", "NO_SELF_MODEL", "T1", "T2", "T3", "T4", "T5", "FORECAST"],
+  "repeats": 3,
+  "repeat_seeds": [1103, 2307, 4201],
+  "max_block_seconds": 300,
+  "cool_start_c": 57.0,
+  "task_temperature_flag_c": 70.0,
+  "max_infrastructure_retries": 1,
+  "forecast_horizon_seconds": 60,
+  "forecast_window_seconds": 60,
+  "forecast_dev_before_date": "2026-10-03",
+  "forecast_test_candidate_id": "hardening-791d1a7",
+  "invalid_attempt_primary": "failure",
+  "invalid_attempt_sensitivity": "exclude_and_report_count",
+  "held_out_pending": true,
+  "sealed_answer_sha256": null
+}

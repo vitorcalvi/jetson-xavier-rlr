@@ -101,14 +101,17 @@ def internal_cases(ctx):
 
 
 def external_cases(ctx, rng):
-    """Tasks whose required action is genuinely absent from the context."""
+    """Tasks absent from inference context but backed by seeded persistent memory."""
     fact = "calibration offset is 0.37"
     ctx = dict(ctx)
-    ctx["memories"] = []          # the fact exists in the store, not in context
+    ctx["memories"] = []
+    ctx["memory_seed"] = [fact]
+    recall_case = _external(
+        "Retrieve the stored calibration record. It is not in your current "
+        "context; it is in persistent memory.", ctx, ["recall"])
+    recall_case["expected_recall_substring"] = fact
     return [
-        _external("Retrieve the stored calibration record. It is not in your current "
-                  "context; it is in persistent memory.",
-                  ctx, ["recall"]),
+        recall_case,
         _external("Persist this durable fact for later runs: the enclosure is on the "
                   "upper shelf and must stay level.", ctx, ["remember"]),
         _external("Create an explicit runtime goal to audit the vision pipeline "
@@ -222,7 +225,10 @@ def build_cases(seed, count, with_distractors=False):
     for i in range(count):
         base = dict(pool[i % len(pool)])
         base = topology_variants(base, i)
+        memory_seed = list((base.get("context") or {}).get("memory_seed") or [])
         ctx_copy = base_context(random.Random(seed * 1000 + i))
+        if memory_seed:
+            ctx_copy["memory_seed"] = memory_seed
         base["context"] = ctx_copy
         base["case_id"] = "s%d-%03d" % (seed, i)
         base["seed"] = seed
