@@ -4,7 +4,7 @@ IMAGE_NAME := jetson-build:r35.6.1
 UTM_VM_NAME ?= jetson-flash
 UTM_SSH_TARGET ?= jetson-flash
 CONTAINER_RUN := docker run --rm -it --privileged --platform linux/amd64 \
-  -v "$(pwd)":/workspace \
+  -v "$(CURDIR)":/workspace \
   -e BSP_URL \
   -e ROOTFS_URL \
   -e L4T_VERSION \
