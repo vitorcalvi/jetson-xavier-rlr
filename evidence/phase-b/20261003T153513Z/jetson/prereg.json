@@ -1,0 +1,123 @@
+{
+  "action_track": {
+    "all_conditions": true,
+    "metric": "unchanged KAPRO Acc_know/Acc_act/KAS from sealed required action sets"
+  },
+  "analysis": "paired bootstrap 95% CI per comparison; effect size mean paired delta; report all invalid/thermal attempts; no dropping",
+  "authorized_by_user": true,
+  "candidate_commit": "1cdb094e2fab8353574922a791678cd7e506c5e9",
+  "claim_rule": "stop_at_first_failed_level; L3 not evaluable because F1.1/F1.2 absent; L4 not evaluable while physical fan/allow24 blocker remains",
+  "condition_block_order": [
+    "B2",
+    "NO_SELF_MODEL",
+    "B2n",
+    "B0",
+    "B1",
+    "B0F"
+  ],
+  "condition_order_seed": 61003,
+  "conditions": [
+    "B0",
+    "B0F",
+    "B1",
+    "B2",
+    "B2n",
+    "NO_SELF_MODEL",
+    "MAJORITY"
+  ],
+  "cool_start_c": 57.0,
+  "decoding": {
+    "server": "same llama-server flags as deployed smoke",
+    "temperature": 0
+  },
+  "deviations_for_1h_cap": [
+    "small N=3 held-out action tasks",
+    "no long-run L4 soak",
+    "three seeded replicates are distinct held-out cases rather than repeated decoding of every case"
+  ],
+  "fixed_seeds": [
+    1103,
+    2307,
+    4201
+  ],
+  "forecast_track": {
+    "compare": [
+      "RLR/model",
+      "persistence",
+      "linear"
+    ],
+    "enabled": true,
+    "horizon_s": 60,
+    "window_s": 60
+  },
+  "heldout_author": "operator/judge generated at user instruction; not an independent third-party benchmark",
+  "heldout_case_ids": [
+    "phaseb-1103-internal",
+    "phaseb-2307-external",
+    "phaseb-4201-hybrid"
+  ],
+  "majority_dev_artifact": {
+    "action_counts": {
+      "set_load_target": 15,
+      "set_reply_tokens": 1
+    },
+    "dev_case_ids": [
+      "s11-000",
+      "s11-001",
+      "s11-002",
+      "s11-003",
+      "s11-004",
+      "s11-005",
+      "s11-006",
+      "s11-007",
+      "s11-008",
+      "s11-009",
+      "s11-010",
+      "s11-011",
+      "s11-012",
+      "s11-013",
+      "s11-014",
+      "s11-015"
+    ],
+    "fit_split": "dev",
+    "kind": "constant_majority_E_act",
+    "selected_action": "set_load_target",
+    "sha256": "3f767258a048bd62cc528f4765688f19c23a33d9f0883ef16b5722b974fd580f"
+  },
+  "max_block_seconds": 300,
+  "max_infrastructure_retries": 1,
+  "max_total_wall_seconds": 3600,
+  "model": "Qwen2.5-1.5B-Instruct-Q4_K_M",
+  "model_alias": "Qwen2.5-1.5B",
+  "model_sha256": "1adf0b11065d8ad2e8123ea110d1ec956dab4ab038eab665614adba04b6c3370",
+  "multiple_comparisons": "95% CIs always shown; claims require every preregistered primary comparison lower CI > 0, a conservative intersection rule",
+  "no_post_result_tuning": true,
+  "primary_L1": [
+    "B2-B0",
+    "B2-B0F",
+    "B2-B1",
+    "B2-MAJORITY"
+  ],
+  "primary_L2": [
+    "B2-B2n",
+    "B2-NO_SELF_MODEL"
+  ],
+  "protocol": "RLR Phase B accelerated 1h cap",
+  "repeat_interpretation": "three fixed held-out task-seed replicates; UNDERPOWERED for strong inference",
+  "self_state_track": {
+    "conditions": [
+      "B2",
+      "B2n",
+      "NO_SELF_MODEL"
+    ],
+    "metric": "withheld active_goal exact match",
+    "seeds": [
+      1103,
+      2307,
+      4201
+    ],
+    "target_format": "discrimination_probe_<seed>"
+  },
+  "temperature_flag_c": 70.0,
+  "thermal_abort_c": 72.0
+}

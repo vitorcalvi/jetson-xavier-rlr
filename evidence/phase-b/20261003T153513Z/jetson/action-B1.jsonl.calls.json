@@ -1,0 +1,44 @@
+[
+  {
+    "latency_ms": 8928.8,
+    "prompt_sha256": "ce77a42e6709091ece9e613a1dc2ac777d20fad638ea1ad6b20cfd9fe6f61899",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 60.0,
+    "temp_before_c": 59.0
+  },
+  {
+    "latency_ms": 14703.71,
+    "prompt_sha256": "8d058025cdce7b6d82b891424f5f08cf8c75b7330ee12fd33b3f080b7a78adc0",
+    "schema": "phaseb_b1_action",
+    "temp_after_c": 61.0,
+    "temp_before_c": 59.5
+  },
+  {
+    "latency_ms": 5418.89,
+    "prompt_sha256": "f8a867622e0e3a21407639a5002cd3b2f532d2db971205180857f60b7b19acf7",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 61.5,
+    "temp_before_c": 61.0
+  },
+  {
+    "latency_ms": 11794.05,
+    "prompt_sha256": "f681777c9187eea2fffaca42a3c861689c0124f34e235f3b7dbf7c2a83d3105c",
+    "schema": "phaseb_b1_action",
+    "temp_after_c": 62.5,
+    "temp_before_c": 61.0
+  },
+  {
+    "latency_ms": 7699.12,
+    "prompt_sha256": "895e5268cddd64a536f55ae1b0248fdb75282a694501386acd3f3ed5874f155c",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 63.0,
+    "temp_before_c": 62.5
+  },
+  {
+    "latency_ms": 17606.29,
+    "prompt_sha256": "62dec955effcd2d1f334e941d85a5713a940ac08ab7d7666e1633172a026edf0",
+    "schema": "phaseb_b1_action",
+    "temp_after_c": 64.0,
+    "temp_before_c": 62.0
+  }
+]

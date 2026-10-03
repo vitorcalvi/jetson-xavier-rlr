@@ -1,0 +1,516 @@
+{
+  "aggregates": {
+    "B0": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    },
+    "B0F": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    },
+    "B1": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    },
+    "B2": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    },
+    "B2n": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    },
+    "MAJORITY": {
+      "Acc_act": 0.3333333333333333,
+      "artifact_sha256": "3f767258a048bd62cc528f4765688f19c23a33d9f0883ef16b5722b974fd580f",
+      "n": 3,
+      "selected_action": "set_load_target"
+    },
+    "NO_SELF_MODEL": {
+      "Acc_act": 0.3333333333333333,
+      "Acc_know": 0.3333333333333333,
+      "DirGap": 0.0,
+      "KAS": 0.3333333333333333,
+      "Kc_Ac_rate": 0.0,
+      "Kc_Aw_rate": 0.3333333333333333,
+      "Kw_Ac_rate": 0.3333333333333333,
+      "Kw_Aw_rate": 0.3333333333333333,
+      "ToolOver_act": 0.5,
+      "ToolOver_know": 0.0,
+      "ToolUnder_act": 0.16666666666666666,
+      "ToolUnder_know": 0.6666666666666666,
+      "average_tool_calls": 1.0,
+      "n": 3,
+      "pass_rate": 0.3333333333333333,
+      "unnecessary_internal_tool_calls": 1.0
+    }
+  },
+  "claim_ladder": {
+    "L1_raw_effect_rule_pass": false,
+    "L1_supported": false,
+    "L2_supported": false,
+    "L3": "NOT_EVALUABLE_F1.1_F1.2_ABSENT",
+    "L4": "NOT_EVALUABLE_ACCELERATED_RUN_FAN_TACH_UNRESOLVED_ALLOW24_FALSE"
+  },
+  "comparisons": {
+    "B2-B0": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "Acc_know": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "KAS_case": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    },
+    "B2-B0F": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "Acc_know": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "KAS_case": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    },
+    "B2-B1": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "Acc_know": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "KAS_case": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    },
+    "B2-B2n": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "Acc_know": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "KAS_case": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    },
+    "B2-MAJORITY": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    },
+    "B2-NO_SELF_MODEL": {
+      "Acc_act": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "Acc_know": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      },
+      "KAS_case": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "deltas": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "draws": 10000,
+        "mean": 0.0,
+        "n": 3,
+        "seed": 61003
+      }
+    }
+  },
+  "forecast": {
+    "linear": {
+      "MAE_c": 2.9154762753740804,
+      "abs_errors_c": [
+        2.8516188129976925,
+        3.5872820445716727,
+        2.3075279685528756
+      ],
+      "n": 3
+    },
+    "model": {
+      "MAE_c": 1.3333333333333333,
+      "abs_errors_c": [
+        1.5,
+        1.0,
+        1.5
+      ],
+      "n": 3
+    },
+    "model_minus_linear_MAE_c": -1.5821429420407471,
+    "model_minus_persistence_MAE_c": 0.0,
+    "persistence": {
+      "MAE_c": 1.3333333333333333,
+      "abs_errors_c": [
+        1.5,
+        1.0,
+        1.5
+      ],
+      "n": 3
+    },
+    "target_leak_count": 0
+  },
+  "limitations": [
+    "UNDERPOWERED: N=3 matched held-out action cases.",
+    "Held-out tasks were operator/judge generated at user instruction, not independent third-party authored.",
+    "Three fixed seeds are distinct task cases, not repeated decoding of every same task.",
+    "Remote runner enforced a 2700-second internal execution budget although prereg max_total_wall_seconds is 3600; run completed well inside both.",
+    "START temperature race produced >57.0C START measurements for some blocks; these are retained as protocol deviations.",
+    "B2n action-track manipulation was inactive; B2n no-anchor manipulation is evaluated only in the self-state track, as recorded by the runner."
+  ],
+  "sealed_hash_ok": true,
+  "self_state": {
+    "B2": {
+      "abstain_rate": 0.0,
+      "n": 3,
+      "target_present_rate": 1.0,
+      "valid": 3,
+      "withheld_goal_match_rate": 1.0
+    },
+    "B2n": {
+      "abstain_rate": 1.0,
+      "n": 3,
+      "target_present_rate": 0.0,
+      "valid": 3,
+      "withheld_goal_match_rate": 0.0
+    },
+    "NO_SELF_MODEL": {
+      "abstain_rate": 1.0,
+      "n": 3,
+      "target_present_rate": 0.0,
+      "valid": 3,
+      "withheld_goal_match_rate": 0.0
+    }
+  },
+  "self_state_comparisons": {
+    "B2-B2n": {
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "deltas": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "draws": 10000,
+      "mean": 1.0,
+      "n": 3,
+      "seed": 61003
+    },
+    "B2-NO_SELF_MODEL": {
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "deltas": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "draws": 10000,
+      "mean": 1.0,
+      "n": 3,
+      "seed": 61003
+    }
+  },
+  "thermal": {
+    "flagged_blocks": [],
+    "max_peak_temp_c": 68.5,
+    "start_gate_violations": [
+      {
+        "attempt": 1,
+        "event": "START",
+        "label": "action-B0",
+        "remaining_s": 2426,
+        "temp_c": 57.5,
+        "ts": "2026-10-03T15:50:45Z"
+      },
+      {
+        "attempt": 1,
+        "event": "START",
+        "label": "action-B0F",
+        "remaining_s": 2102,
+        "temp_c": 57.5,
+        "ts": "2026-10-03T15:56:09Z"
+      },
+      {
+        "attempt": 1,
+        "event": "START",
+        "label": "selfstate-B2",
+        "remaining_s": 1972,
+        "temp_c": 57.5,
+        "ts": "2026-10-03T15:58:19Z"
+      },
+      {
+        "attempt": 1,
+        "event": "START",
+        "label": "forecast",
+        "remaining_s": 1484,
+        "temp_c": 57.5,
+        "ts": "2026-10-03T16:06:27Z"
+      }
+    ],
+    "temperature_flag_c": 70.0,
+    "thermal_abort_c": 72.0,
+    "thermal_aborts": []
+  }
+}

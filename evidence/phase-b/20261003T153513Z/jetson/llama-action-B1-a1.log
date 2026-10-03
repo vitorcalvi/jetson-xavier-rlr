@@ -1,0 +1,58 @@
+0.00.038.921 I srv  llama_server: initializing ...
+0.00.039.010 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.042.793 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.048.102 I srv    load_model: loading model '/models/models/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf'
+0.03.346.039 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.04.392.525 I cmn          init: llama threadpool init, n_threads = 4
+0.04.751.041 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 4096, kv_unified = 'true'
+0.04.780.846 I srv  llama_server: model loaded
+0.04.780.906 I srv  llama_server: listening on http://127.0.0.1:8080
+0.04.780.909 W srv  llama_server: notice: server default port will be changed to :9931 in a future release (ref: https://github.com/ggml-org/llama.cpp/pull/26508)
+0.06.229.802 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
+0.06.231.560 I slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
+0.10.806.513 I slot print_timing: id  3 | task 0 | prompt processing, n_tokens =    512, progress = 0.94, t =   4.57 s / 111.93 tokens per second
+0.15.096.181 I slot print_timing: id  3 | task 0 | prompt eval time =    5570.97 ms /   545 tokens (   10.22 ms per token,    97.83 tokens per second)
+0.15.096.456 I slot print_timing: id  3 | task 0 |        eval time =    3293.28 ms /    27 tokens (  126.66 ms per token,     7.89 tokens per second)
+0.15.096.481 I slot print_timing: id  3 | task 0 |       total time =    8864.26 ms /   572 tokens
+0.15.096.495 I slot print_timing: id  3 | task 0 |    graphs reused =         28
+0.15.096.898 I slot      release: id  3 | task 0 | stop processing: n_tokens = 571, truncated = 0
+0.15.316.190 I slot get_availabl: id  2 | task -1 | selected slot by LRU, t_last = -1
+0.15.338.452 I slot launch_slot_: id  2 | task 29 | processing task, is_child = 0
+0.19.788.766 I slot print_timing: id  2 | task 29 | prompt processing, n_tokens =   1024, progress = 0.72, t =   4.43 s / 231.20 tokens per second
+0.29.955.773 I slot print_timing: id  2 | task 29 | prompt eval time =    8159.69 ms /  1424 tokens (    5.73 ms per token,   174.52 tokens per second)
+0.29.955.832 I slot print_timing: id  2 | task 29 |        eval time =    6436.52 ms /    50 tokens (  131.36 ms per token,     7.61 tokens per second)
+0.29.955.838 I slot print_timing: id  2 | task 29 |       total time =   14596.21 ms /  1474 tokens
+0.29.955.841 I slot print_timing: id  2 | task 29 |    graphs reused =         81
+0.29.956.656 I slot      release: id  2 | task 29 | stop processing: n_tokens = 1473, truncated = 0
+0.30.047.136 I slot get_availabl: id  1 | task -1 | selected slot by LRU, t_last = -1
+0.30.057.438 I slot launch_slot_: id  1 | task 82 | processing task, is_child = 0
+0.35.413.856 I slot print_timing: id  1 | task 82 | prompt eval time =    1822.93 ms /   145 tokens (   12.57 ms per token,    79.54 tokens per second)
+0.35.414.068 I slot print_timing: id  1 | task 82 |        eval time =    3506.14 ms /    27 tokens (  134.85 ms per token,     7.42 tokens per second)
+0.35.414.094 I slot print_timing: id  1 | task 82 |       total time =    5329.07 ms /   172 tokens
+0.35.414.099 I slot print_timing: id  1 | task 82 |    graphs reused =        106
+0.35.414.315 I slot      release: id  1 | task 82 | stop processing: n_tokens = 561, truncated = 0
+0.35.643.814 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.35.667.497 I slot launch_slot_: id  0 | task 110 | processing task, is_child = 0
+0.40.227.762 I slot print_timing: id  0 | task 110 | prompt processing, n_tokens =   1024, progress = 0.72, t =   4.53 s / 226.04 tokens per second
+0.47.372.186 I slot print_timing: id  0 | task 110 | prompt eval time =    7220.25 ms /  1414 tokens (    5.11 ms per token,   195.84 tokens per second)
+0.47.372.240 I slot print_timing: id  0 | task 110 |        eval time =    4454.38 ms /    36 tokens (  127.27 ms per token,     7.86 tokens per second)
+0.47.372.491 I slot print_timing: id  0 | task 110 |       total time =   11674.62 ms /  1450 tokens
+0.47.372.526 I slot print_timing: id  0 | task 110 |    graphs reused =        145
+0.47.373.124 I slot      release: id  0 | task 110 | stop processing: n_tokens = 1449, truncated = 0
+0.47.461.000 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = 506371300597
+0.47.469.982 I slot launch_slot_: id  3 | task 149 | processing task, is_child = 0
+0.55.112.976 I slot print_timing: id  3 | task 149 | prompt eval time =    2143.26 ms /   148 tokens (   14.48 ms per token,    69.05 tokens per second)
+0.55.113.034 I slot print_timing: id  3 | task 149 |        eval time =    5468.38 ms /    42 tokens (  133.38 ms per token,     7.50 tokens per second)
+0.55.113.268 I slot print_timing: id  3 | task 149 |       total time =    7611.64 ms /   190 tokens
+0.55.113.307 I slot print_timing: id  3 | task 149 |    graphs reused =        185
+0.55.113.560 I slot      release: id  3 | task 149 | stop processing: n_tokens = 579, truncated = 0
+0.55.342.320 I slot get_availabl: id  2 | task -1 | selected slot by LRU, t_last = 506386160376
+0.55.366.317 I slot launch_slot_: id  2 | task 192 | processing task, is_child = 0
+0.59.894.138 I slot print_timing: id  2 | task 192 | prompt processing, n_tokens =   1024, progress = 0.72, t =   4.52 s / 226.73 tokens per second
+1.12.884.426 I slot print_timing: id  2 | task 192 | prompt eval time =    7485.77 ms /  1417 tokens (    5.28 ms per token,   189.29 tokens per second)
+1.12.884.466 I slot print_timing: id  2 | task 192 |        eval time =   10020.79 ms /    77 tokens (  131.85 ms per token,     7.58 tokens per second)
+1.12.884.513 I slot print_timing: id  2 | task 192 |       total time =   17506.56 ms /  1494 tokens
+1.12.884.541 I slot print_timing: id  2 | task 192 |    graphs reused =        265
+1.12.885.360 I slot      release: id  2 | task 192 | stop processing: n_tokens = 1493, truncated = 0
+1.13.114.670 I srv    operator(): operator(): cleaning up before exit...
+1.13.118.599 W ~llama_context:  CUDA_Host compute buffer size of   2.5982 MiB, does not match expectation of   2.5030 MiB

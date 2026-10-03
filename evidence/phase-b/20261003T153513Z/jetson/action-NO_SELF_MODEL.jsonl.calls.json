@@ -1,0 +1,44 @@
+[
+  {
+    "latency_ms": 7381.9,
+    "prompt_sha256": "5af86d0cfc98d4aba7162c1738416c67c4f1e630a6769d9a71a59b40c9be7b4f",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 53.5,
+    "temp_before_c": 52.0
+  },
+  {
+    "latency_ms": 13189.91,
+    "prompt_sha256": "9219e85f97d267dfa75041c8bd1ecb0c10ea4fcfb497bd917440bbe4692582d4",
+    "schema": "rlr_action",
+    "temp_after_c": 54.5,
+    "temp_before_c": 53.0
+  },
+  {
+    "latency_ms": 3768.74,
+    "prompt_sha256": "1a150685664bb350b1c906f5686fe5a14c210256316e010c53b807de7894a235",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 55.0,
+    "temp_before_c": 54.0
+  },
+  {
+    "latency_ms": 11469.73,
+    "prompt_sha256": "569492d7ea22a8167ff3afc65da0f3dd808c8c5ab75866cf69862aefb8b7a3aa",
+    "schema": "rlr_action",
+    "temp_after_c": 56.0,
+    "temp_before_c": 54.0
+  },
+  {
+    "latency_ms": 5968.6,
+    "prompt_sha256": "50b47f53d2e7f8f3e697f12b50eec1a5bb5937747408edd8cb4f9f3ae2b5eee7",
+    "schema": "phaseb_knowing",
+    "temp_after_c": 56.5,
+    "temp_before_c": 55.5
+  },
+  {
+    "latency_ms": 13732.49,
+    "prompt_sha256": "9f72f16b01d60b069a7b3505387560b8e8cc85fa05e4902b976cd8548f057046",
+    "schema": "rlr_action",
+    "temp_after_c": 58.0,
+    "temp_before_c": 55.55
+  }
+]

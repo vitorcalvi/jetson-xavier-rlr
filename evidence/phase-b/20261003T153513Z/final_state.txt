@@ -1,0 +1,9 @@
+completed_utc=2026-10-03T16:11:49Z
+phaseb_report_sha256=5f47399a0eaef1fa4db67ce8e7757b4b7228fb6c13bdbafa1c1fa2d22e3e37f6
+answers_mode=0
+governor_mode=paused_max_fix_rounds
+governor_candidate=hardening-1cdb094
+jetson_health={"active_stage": null, "allow_24h": false, "max_temp_c": 51.0, "mode_10w": true, "ok": true, "thermal_guard": "active"}
+orphan_inference_process_count=0
+remote_phaseb_start_utc=2026-10-03T15:46:11Z
+remote_phaseb_end_utc=2026-10-03T16:06:47Z

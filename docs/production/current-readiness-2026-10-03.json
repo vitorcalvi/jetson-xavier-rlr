@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-03",
+  "candidate_commit": "1cdb094e2fab8353574922a791678cd7e506c5e9",
+  "candidate_id": "hardening-1cdb094",
+  "target": "unattended 24/7 autonomous RLR governor on Jetson Xavier NX",
+  "status": "NOT_READY",
+  "current_safe_state": {
+    "governor": "paused_max_fix_rounds",
+    "power_mode": "MODE_10W_DESKTOP",
+    "thermal_guard": "active",
+    "allow_24h": false
+  },
+  "completed": [
+    "F2.2 duplicate case-ID fail-fast",
+    "F2.6 DEV-only majority baseline",
+    "F1.3 causal forecast core",
+    "235/235 regression tests previously passed",
+    "300-second end-to-end smoke passed current governor gates",
+    "accelerated Phase B condition matrix executed",
+    "thermal guard remained active",
+    "orphan inference cleanup validated after smoke",
+    "sealed-answer scoring performed off-device"
+  ],
+  "phase_b": {
+    "action_cases_n": 3,
+    "B2_acc_act": 0.3333333333333333,
+    "B0_acc_act": 0.3333333333333333,
+    "B0F_acc_act": 0.3333333333333333,
+    "B1_acc_act": 0.3333333333333333,
+    "NO_SELF_MODEL_acc_act": 0.3333333333333333,
+    "MAJORITY_acc_act": 0.3333333333333333,
+    "B2_primary_paired_delta": 0.0,
+    "B2_primary_ci95": [0.0, 0.0],
+    "L1_supported": false,
+    "L2_supported": false,
+    "self_state": {
+      "B2_withheld_goal_recall": "3/3",
+      "B2n_withheld_goal_recall": "0/3",
+      "NO_SELF_MODEL_withheld_goal_recall": "0/3"
+    },
+    "forecast_mae_c": {
+      "model": 1.3333333333333333,
+      "persistence": 1.3333333333333333,
+      "linear": 2.9154762753740804
+    },
+    "max_peak_temp_c": 68.5,
+    "thermal_aborts": 0,
+    "limitations": [
+      "N=3 action benchmark is underpowered",
+      "held-out cases were operator/judge generated rather than independent third-party authored",
+      "some block START measurements were 57.5 C versus a preregistered 57.0 C cool-start target",
+      "hybrid Knowing output was invalid in several conditions",
+      "B2n no-anchor action-track manipulation was inactive; it was evaluated in the self-state track"
+    ]
+  },
+  "production_blockers": [
+    "Demonstrate B2 behavioral lift on a larger genuinely held-out balanced benchmark",
+    "Eliminate invalid/null hybrid Knowing paths",
+    "Harden supervisor lifecycle so no inference orphan can survive crash/thermal abort",
+    "Verify hardware/software watchdog behavior on the actual Xavier NX",
+    "Close thermal/fan observability and cooling-failure behavior",
+    "Verify SQLite crash/reboot/backup recovery",
+    "Implement and test atomic last-known-good rollback",
+    "Pass fault-injection matrix",
+    "Pass 30m, 2h, 8h, 24h and 72h non-compressed soak ladder"
+  ],
+  "production_rule": "allow_24h remains false until every production acceptance gate passes",
+  "final_action": "KEEP_DISABLED"
+}

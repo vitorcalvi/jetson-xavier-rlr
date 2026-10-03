@@ -1,0 +1,374 @@
+{
+  "role": "Principal production AI systems engineer, SRE, embedded Linux engineer, Jetson engineer, safety engineer, and empirical ML evaluation researcher",
+  "mode": "EXECUTE",
+  "objective": "Turn jetson-xavier-rlr into a genuinely unattended, reboot-resilient, fail-safe, 24/7 autonomous RLR governor. Research first, inspect the real implementation and hardware, implement missing production hardening, deploy safely, fault-inject, benchmark end-to-end, and only enable autonomous 24/7 mode if every preregistered production gate passes.",
+  "non_negotiable": [
+    "Do not claim production readiness from architecture, unit tests, smoke tests, or intuition.",
+    "Do not fabricate evidence, metrics, hardware capabilities, fan tach support, watchdog support, or benchmark results.",
+    "Inspect before modifying.",
+    "Use the current repo, machine, Jetson, services, logs, systemd configuration, benchmark artifacts, and actual hardware capabilities as ground truth.",
+    "Prefer primary documentation and source code over blogs.",
+    "Record exact commands, commits, hashes, configurations, test results, temperatures, failures, retries, and deviations.",
+    "Never weaken an existing safety threshold merely to make a test pass.",
+    "Do not disable NVIDIA/kernel thermal protection.",
+    "Do not raise power mode above the current safe production target merely to improve benchmark results.",
+    "The LLM/RLR process must never be authorized to modify its own hard safety policy, watchdog, thermal limits, privilege boundary, allow-list, rollback controller, or 24h enable gate.",
+    "If a production gate fails, keep 24/7 autonomous mode disabled and fix the root cause."
+  ],
+  "current_ground_truth": {
+    "repository": "vitorcalvi/jetson-xavier-rlr",
+    "production_safety_branch": "hardening/production-safety-20261003-integrated",
+    "candidate_commit": "1cdb094e2fab8353574922a791678cd7e506c5e9",
+    "candidate_id": "hardening-1cdb094",
+    "platform": "NVIDIA Jetson Xavier NX",
+    "kernel_observed": "Linux 5.10.216-tegra aarch64",
+    "current_power_mode": "MODE_10W_DESKTOP",
+    "thermal_guard": "active",
+    "allow_24h": false,
+    "governor_state": "paused_max_fix_rounds",
+    "regression_tests_previous": "235/235 passed",
+    "previous_smoke": {
+      "duration_s": 300,
+      "tick_errors": 0,
+      "action_validity_pct": 100.0,
+      "reflection_grounded_pct": 100.0,
+      "thermal_abort": false
+    },
+    "important_prior_failure": {
+      "type": "thermal_abort",
+      "peak_temp_c": 72.5,
+      "implication": "Long-running autonomous inference is not yet proven safe."
+    },
+    "accelerated_phase_b": {
+      "action_cases_n": 3,
+      "B2_acc_act": 0.3333333333,
+      "B0_acc_act": 0.3333333333,
+      "B0F_acc_act": 0.3333333333,
+      "B1_acc_act": 0.3333333333,
+      "majority_acc_act": 0.3333333333,
+      "primary_B2_deltas": 0.0,
+      "L1_supported": false,
+      "self_state_B2_recall": "3/3",
+      "self_state_B2n_recall": "0/3",
+      "self_state_NO_SELF_MODEL_recall": "0/3",
+      "forecast_model_mae_c": 1.3333333333,
+      "forecast_persistence_mae_c": 1.3333333333,
+      "max_phase_b_temp_c": 68.5,
+      "thermal_aborts": 0,
+      "interpretation": "Engineering is promising, but RLR action-quality lift over simple baselines has not been demonstrated."
+    }
+  },
+  "research_phase": {
+    "required": true,
+    "instructions": [
+      "Identify the exact Jetson Linux/L4T/JetPack release actually installed before choosing documentation.",
+      "Research NVIDIA primary documentation matching Xavier NX, especially platform power/performance, thermal zones, cooling, throttling, nvpmodel, tegrastats, fan/tach interfaces, BPMP protections, and hardware thermal shutdown.",
+      "Research Linux kernel watchdog documentation and inspect the actual watchdog devices and drivers on this Jetson.",
+      "Research the installed systemd version's service watchdog, restart, start-rate-limit, dependency, resource-control, hardening, and hardware watchdog capabilities.",
+      "Research SQLite official documentation for WAL, synchronous durability, checkpointing, integrity_check, foreign_key_check, online backup/recovery, and corruption handling.",
+      "Inspect current llama.cpp server behavior, health endpoints, shutdown behavior, timeout characteristics, process ownership, context limits, and exit codes from the installed build/source.",
+      "Inspect the repository's current governor, thermal guard, policy, safety, runtime, forecast, store, benchmark harness, deployment scripts, and systemd/container integration.",
+      "For every important design decision, save source title, source type, retrieval date, applicable software/hardware version, and the concrete conclusion derived from it.",
+      "Reject a source when it applies to Orin but not Xavier unless the mechanism is independently verified on the actual Xavier system."
+    ],
+    "source_priority": [
+      "actual machine and repo evidence",
+      "NVIDIA official Jetson documentation",
+      "Linux kernel documentation",
+      "systemd official documentation/source",
+      "SQLite official documentation",
+      "llama.cpp official repository/documentation",
+      "upstream source code",
+      "peer-reviewed papers where relevant",
+      "other sources only as secondary context"
+    ],
+    "deliverable": "research_evidence.json"
+  },
+  "architecture_target": {
+    "states": ["BOOTSTRAP", "STARTING", "HEALTHY", "DEGRADED", "COOLING", "RECOVERING", "SAFE_STOP"],
+    "principles": [
+      "Fail closed.",
+      "One supervisor owns each inference process.",
+      "No orphan llama-server.",
+      "Every autonomous action is bounded and validated.",
+      "Safety layer is outside the model-controlled trust boundary.",
+      "Last-known-good rollback is always available.",
+      "Every decision is auditable.",
+      "Repeated recovery failure terminates in SAFE_STOP rather than infinite retry.",
+      "A reboot must reconstruct trustworthy state before autonomy resumes."
+    ]
+  },
+  "workstreams": {
+    "A_behavioral_evidence": {
+      "goal": "Prove or disprove that full RLR B2 provides useful decision-quality lift.",
+      "tasks": [
+        "Build a genuinely held-out benchmark with at least 100 cases unless evidence supports a larger minimum.",
+        "Do not let the candidate generate its own answer key.",
+        "Seal ground truth before inference.",
+        "Cover internal, external, hybrid, ambiguous, malformed, adversarial, thermal, resource-pressure, recovery, and abstention cases.",
+        "Balance required-action classes so set_load_target cannot dominate the benchmark.",
+        "Keep B0, B0F, B1, B2, B2n, NO_SELF_MODEL, and DEV-only MAJORITY.",
+        "Use matched cases and fixed seeds.",
+        "Randomize/interleave condition ordering where possible.",
+        "Use unchanged deterministic scoring.",
+        "Report invalid outputs separately; never silently drop them.",
+        "Fix all null knowing_action_set paths.",
+        "Use paired bootstrap confidence intervals.",
+        "Pre-register metrics and pass criteria before candidate inference."
+      ],
+      "gate": {
+        "required": true,
+        "primary_comparisons": ["B2 > B0", "B2 > B0F", "B2 > B1", "B2 > MAJORITY"],
+        "rule": "Every preregistered primary comparison must have positive mean paired lift and 95% CI lower bound > 0 on the primary metric. Do not optimize the benchmark after results are observed.",
+        "note": "If B2 still provides no meaningful lift, production autonomy may continue only if the product requirement explicitly does not depend on RLR intelligence improvement; otherwise stop and fix the RLR behavior before proceeding."
+      }
+    },
+    "B_self_model_and_forecast": {
+      "tasks": [
+        "Create self-state tests where the answer is not repeated verbatim in the current prompt or reflection anchor.",
+        "Test delayed state recall across process restarts and session boundaries.",
+        "Test stale-state rejection.",
+        "Test contradictory telemetry.",
+        "Test missing telemetry.",
+        "Test false-memory resistance.",
+        "Test forecast causality: prediction must be persisted before target observation.",
+        "Compare model forecast against persistence and linear baselines on substantially more than 3 windows.",
+        "Prevent future observation leakage.",
+        "Do not claim forecasting value unless it beats simple baselines on held-out data."
+      ]
+    },
+    "C_supervisor": {
+      "tasks": [
+        "Implement or harden an explicit supervisor state machine.",
+        "Ensure only the supervisor can spawn and terminate llama-server.",
+        "Use process groups/cgroups so child cleanup is deterministic.",
+        "Kill stale/orphan inference processes before restart.",
+        "Add startup readiness probe.",
+        "Add liveness heartbeat.",
+        "Add per-request inference timeout.",
+        "Add graceful shutdown deadline followed by SIGKILL if needed.",
+        "Add bounded exponential restart/backoff.",
+        "Add restart counters persisted across service restarts when appropriate.",
+        "Escalate to SAFE_STOP after repeated failures.",
+        "Never automatically loop forever on an unrecoverable fault."
+      ]
+    },
+    "D_systemd_and_watchdog": {
+      "tasks": [
+        "Inspect whether /dev/watchdog or /dev/watchdog0 exists and identify its actual driver.",
+        "Verify watchdog behavior experimentally in a controlled manner before enabling it for production.",
+        "Use systemd service watchdog notification if supported by the implementation.",
+        "Configure Restart behavior deliberately rather than using unlimited blind restart.",
+        "Configure restart-rate limits.",
+        "If hardware watchdog support is real and safely testable, configure systemd RuntimeWatchdogSec or equivalent appropriate to the installed version.",
+        "Verify that a deliberately hung supervisor stops refreshing its watchdog and produces the intended recovery.",
+        "Verify reboot recovery.",
+        "Never assume watchdog support from documentation alone."
+      ],
+      "required_fault_tests": ["SIGKILL governor", "SIGSTOP governor", "deadlocked heartbeat", "SIGKILL llama-server", "llama-server hang", "llama-server malformed response", "inference timeout", "repeated crash loop"]
+    },
+    "E_thermal_and_power_safety": {
+      "tasks": [
+        "Keep existing NVIDIA/kernel/BPMP thermal protections untouched.",
+        "Keep current 10W target unless evidence and explicit approval justify otherwise.",
+        "Enumerate every thermal zone actually available.",
+        "Determine the correct production control sensor or conservative maximum across zones.",
+        "Determine whether real fan RPM/tach telemetry exists on this Xavier carrier/module.",
+        "If tach exists, monitor it and define fan-stall behavior.",
+        "If tach does not exist, document that fact and implement alternative cooling-failure detection using supported observables.",
+        "Track current, rolling max, rate of rise, throttle state, and thermal events.",
+        "Stop inference before hardware protection becomes the normal control mechanism.",
+        "Preserve the existing conservative 72C emergency abort unless stronger evidence supports an even safer threshold.",
+        "Require cooldown hysteresis before restarting inference.",
+        "Verify thermal-guard independence from the RLR process."
+      ],
+      "fault_tests": ["sustained inference load", "rapid repeated inference", "cooling degradation simulation where safely possible", "temperature sensor unavailable", "malformed sensor value", "thermal guard process restart", "inference process refuses graceful termination"]
+    },
+    "F_action_security": {
+      "tasks": [
+        "Inventory every action the RLR can request.",
+        "Define a static hard allow-list outside model control.",
+        "Schema-validate every action.",
+        "Range-check every parameter.",
+        "Rate-limit state-changing actions.",
+        "Add idempotency keys where relevant.",
+        "Separate proposed, validated, vetoed, and executed actions.",
+        "Persist E_proposed, E_invalid, E_vetoed, and E_act separately.",
+        "Never execute arbitrary shell generated by the model.",
+        "Do not give the model root access.",
+        "Prevent model-controlled modification of systemd units, safety policy, nvpmodel, thermal trips, watchdog settings, deployment controller, SSH configuration, or allow24 gate.",
+        "Abstain or SAFE_STOP on unknown action types."
+      ]
+    },
+    "G_state_and_sqlite": {
+      "tasks": [
+        "Audit SQLite schema and migration correctness.",
+        "Verify WAL is really active if selected.",
+        "Choose synchronous mode based on explicit durability requirements and document the tradeoff.",
+        "Add periodic WAL checkpoint policy if operationally needed.",
+        "Run PRAGMA quick_check routinely and full integrity_check at safe maintenance points.",
+        "Run foreign_key_check where foreign keys exist.",
+        "Implement consistent online backup/snapshot.",
+        "Restore a backup into a disposable DB and integrity-check the restored copy.",
+        "Record boot_id/session_id so monotonic timestamps are never compared across boots incorrectly.",
+        "Make migrations transactional/idempotent.",
+        "Simulate process death during writes.",
+        "Simulate abrupt host reboot/power-loss-like termination as safely as possible.",
+        "Test WAL/shm recovery.",
+        "Test corrupt-copy detection without intentionally damaging the sole production DB."
+      ]
+    },
+    "H_observability": {
+      "required_metrics": ["governor_state", "model_process_state", "heartbeat_age", "requests_total", "requests_failed", "request_timeout_total", "invalid_action_total", "veto_total", "restart_total", "safe_stop_total", "temperature_by_zone", "max_temperature", "temperature_rate", "thermal_abort_total", "fan_rpm_if_available", "memory_usage", "swap_usage", "disk_free", "db_integrity_status", "WAL_size", "last_successful_backup", "last_known_good_commit", "current_candidate_commit"],
+      "tasks": [
+        "Use structured logs.",
+        "Include boot_id, run_id, candidate commit and model hash.",
+        "Ensure logs survive service restart.",
+        "Rotate logs with bounded disk usage.",
+        "Add a concise health endpoint or CLI returning HEALTHY, DEGRADED, or SAFE_STOP and reasons."
+      ]
+    },
+    "I_atomic_deploy_and_rollback": {
+      "tasks": [
+        "Maintain candidate and last-known-good artifacts separately.",
+        "Hash code, config, model and policy artifacts.",
+        "Promote atomically.",
+        "Do not modify the only known-good build in place.",
+        "On post-deployment gate failure, automatically roll back.",
+        "Test rollback by intentionally deploying a controlled broken candidate.",
+        "Verify rollback survives reboot."
+      ]
+    },
+    "J_reboot_recovery": {
+      "tests": ["normal reboot while HEALTHY", "reboot during inference", "reboot during SQLite write", "reboot during RECOVERING", "reboot immediately after candidate promotion"],
+      "requirements": [
+        "No stale PID ownership.",
+        "No orphan inference process.",
+        "Database integrity verified.",
+        "Candidate identity verified.",
+        "Hard safety layer starts before autonomous inference.",
+        "Governor does not resume unsafe work until prerequisites pass.",
+        "Previous interrupted action is never blindly replayed unless explicitly idempotent."
+      ]
+    }
+  },
+  "fault_injection_matrix": [
+    "kill governor", "freeze governor", "kill llama-server", "freeze llama-server", "return malformed JSON", "return schema-valid but policy-invalid action", "return unknown action", "timeout inference", "simulate HTTP connection refused", "simulate tunnel/network failure", "fill disk to warning threshold in a safe test filesystem", "make state DB temporarily unavailable", "use a deliberately corrupted copy of the state DB", "restart thermal guard", "missing thermal sensor", "restart machine", "repeated service crashes", "candidate deployment failure", "last-known-good rollback"
+  ],
+  "test_policy": {
+    "unit": "Run complete relevant suite after every structural change.",
+    "integration": "Run process, DB, systemd, supervisor, watchdog, policy, thermal and rollback tests.",
+    "e2e": "Run real model on real Xavier under the actual supervisor and safety stack.",
+    "fault_injection": "Every listed failure must produce an explicitly expected state transition.",
+    "no_mock_only_claims": true,
+    "capture_evidence": true
+  },
+  "soak_ladder": {
+    "rule": "Do not compress these durations. Their purpose is discovering time-dependent failures.",
+    "stages": [
+      {"duration": "30m", "required": true},
+      {"duration": "2h", "required": true},
+      {"duration": "8h", "required": true},
+      {"duration": "24h", "required": true},
+      {"duration": "72h", "required": true}
+    ],
+    "advance_only_if": [
+      "zero thermal aborts",
+      "zero policy bypasses",
+      "zero unexplained orphan processes",
+      "zero unbounded crash loops",
+      "zero corrupted production state",
+      "zero unsafe action executions",
+      "all expected watchdog/recovery behavior correct",
+      "all DB integrity checks pass",
+      "temperature remains within preregistered operating envelope",
+      "no unresolved DEGRADED or SAFE_STOP event",
+      "logs and metrics remain complete"
+    ]
+  },
+  "production_acceptance_gate": {
+    "must_all_pass": [
+      "Research evidence is version-matched and saved.",
+      "Full regression suite passes.",
+      "Held-out action benchmark completed with sealed ground truth.",
+      "B2 primary behavioral gate passes, or an explicit documented product decision removes intelligence lift as a production requirement.",
+      "No invalid/null action path remains unhandled.",
+      "Every model-issued action is hard-policy validated.",
+      "Thermal guard operates independently of the model.",
+      "No thermal abort during required soak ladder.",
+      "No orphan llama-server after any fault test.",
+      "Governor crash recovers correctly.",
+      "llama-server crash/hang recovers correctly.",
+      "Watchdog behavior is verified on actual hardware/software.",
+      "SQLite crash/restart/reboot recovery succeeds.",
+      "Backup restoration is verified.",
+      "Atomic rollback succeeds.",
+      "Reboot recovery succeeds.",
+      "24h soak passes.",
+      "72h soak passes.",
+      "allow_24h remains false until all prior gates pass."
+    ],
+    "final_enable_sequence": [
+      "freeze candidate commit and all config hashes",
+      "record last-known-good",
+      "verify thermal guard",
+      "verify watchdog",
+      "verify DB integrity and backup",
+      "verify power mode",
+      "verify no orphan processes",
+      "set allow_24h=true only now",
+      "restart governor through its normal production supervisor",
+      "verify HEALTHY state",
+      "verify first inference/action cycle",
+      "verify telemetry/logging/watchdog",
+      "verify automatic SAFE_STOP remains reachable"
+    ]
+  },
+  "implementation_rules": [
+    "Make minimal, auditable patches.",
+    "Preserve working code.",
+    "Add tests before or with each fix.",
+    "Do not silently change existing semantics.",
+    "Commit logical changes separately.",
+    "Never force-push.",
+    "Do not merge broken experiments into the production-safety branch.",
+    "Keep production branch deployable after each committed milestone.",
+    "Prefer deterministic logic for safety-critical code.",
+    "LLM output may propose behavior; deterministic software owns permission and enforcement."
+  ],
+  "required_artifacts": [
+    "research_evidence.json", "hardware_inventory.json", "threat_model.json", "production_architecture.md", "production_gate.json", "benchmark_preregistration.json", "heldout_manifest.json", "benchmark_results.json", "fault_injection_results.json", "thermal_results.json", "watchdog_results.json", "sqlite_recovery_results.json", "reboot_recovery_results.json", "rollback_results.json", "soak_30m.json", "soak_2h.json", "soak_8h.json", "soak_24h.json", "soak_72h.json", "production_readiness_report.json"
+  ],
+  "final_report_schema": {
+    "status": "READY_FOR_24_7 | NOT_READY",
+    "candidate_commit": "",
+    "model_hash": "",
+    "config_hash": "",
+    "research_verified": false,
+    "behavioral_gate": {"passed": false, "evidence": []},
+    "safety_gate": {"passed": false, "evidence": []},
+    "thermal_gate": {"passed": false, "peak_temp_c": null, "thermal_aborts": null},
+    "watchdog_gate": {"passed": false, "evidence": []},
+    "recovery_gate": {"passed": false, "evidence": []},
+    "database_gate": {"passed": false, "evidence": []},
+    "rollback_gate": {"passed": false, "evidence": []},
+    "soak_gate": {"30m": false, "2h": false, "8h": false, "24h": false, "72h": false},
+    "allow_24h": false,
+    "open_blockers": [],
+    "closed_blockers": [],
+    "exact_evidence_paths": [],
+    "final_action": "ENABLE_24_7 | KEEP_DISABLED"
+  },
+  "execution": [
+    "Start immediately.",
+    "Inspect first; do not ask routine questions.",
+    "Research and cite evidence before changing safety-critical behavior.",
+    "Implement the highest-risk production blockers first.",
+    "Run tests continuously.",
+    "Use the real Jetson for end-to-end verification.",
+    "Do not wait for approval between ordinary reversible engineering steps.",
+    "Do not enable 24/7 until the final gate is objectively green.",
+    "If a test fails, diagnose, fix, rerun, and preserve the failed evidence.",
+    "At completion, return concise JSON only: status, completed, failed, evidence, metrics, blockers, allow_24h, next."
+  ]
+}

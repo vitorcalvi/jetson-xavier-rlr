@@ -1,0 +1,28 @@
+{
+  "action_counts": {
+    "set_load_target": 15,
+    "set_reply_tokens": 1
+  },
+  "dev_case_ids": [
+    "s11-000",
+    "s11-001",
+    "s11-002",
+    "s11-003",
+    "s11-004",
+    "s11-005",
+    "s11-006",
+    "s11-007",
+    "s11-008",
+    "s11-009",
+    "s11-010",
+    "s11-011",
+    "s11-012",
+    "s11-013",
+    "s11-014",
+    "s11-015"
+  ],
+  "fit_split": "dev",
+  "kind": "constant_majority_E_act",
+  "selected_action": "set_load_target",
+  "sha256": "3f767258a048bd62cc528f4765688f19c23a33d9f0883ef16b5722b974fd580f"
+}

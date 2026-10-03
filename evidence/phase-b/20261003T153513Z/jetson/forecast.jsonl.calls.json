@@ -1,0 +1,23 @@
+[
+  {
+    "latency_ms": 5102.57,
+    "prompt_sha256": "871765b2984303c683c3cb8c2b89ed4fef1b397833fa3ba5820d543fba7c4b8b",
+    "schema": "rlr_temperature_forecast",
+    "temp_after_c": 60.0,
+    "temp_before_c": 59.0
+  },
+  {
+    "latency_ms": 2655.3,
+    "prompt_sha256": "90ec47eba70ab90326930220fd5026d49512681fcf82b6ae1e97c82150a3834c",
+    "schema": "rlr_temperature_forecast",
+    "temp_after_c": 60.0,
+    "temp_before_c": 59.5
+  },
+  {
+    "latency_ms": 2734.44,
+    "prompt_sha256": "f8cf437fc75f10fbf75304b248ab098ca48b6892229bd6b3ddcb7809214ffa03",
+    "schema": "rlr_temperature_forecast",
+    "temp_after_c": 60.5,
+    "temp_before_c": 60.0
+  }
+]

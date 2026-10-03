@@ -1,0 +1,107 @@
+[
+  {
+    "latency_ms": 7319.43,
+    "prompt_sha256": "92ccb9183ce552232b51b7cfec60187ba999efeb6cb63f304129c2d385e62d9d",
+    "schema": "rlr_self_report",
+    "temp_after_c": 60.0,
+    "temp_before_c": 57.5
+  },
+  {
+    "latency_ms": 4373.04,
+    "prompt_sha256": "5a4a1ff7bca5f220e982cd18711583c4e035b902338c77bfd81effdf8d568eb5",
+    "schema": "rlr_self_report",
+    "temp_after_c": 60.5,
+    "temp_before_c": 59.5
+  },
+  {
+    "latency_ms": 27385.68,
+    "prompt_sha256": "7eff052959388dffe162a1d3b8a7388d9260d2902c3995f88eae25a3361a5591",
+    "schema": "rlr_reflection",
+    "temp_after_c": 62.5,
+    "temp_before_c": 60.0
+  },
+  {
+    "latency_ms": 2407.07,
+    "prompt_sha256": "3cccde9bb7330f2c4c9bd317e771def14934cfbb86bf349a10372244d0935f3a",
+    "schema": "rlr_goal_ack",
+    "temp_after_c": 62.5,
+    "temp_before_c": 62.5
+  },
+  {
+    "latency_ms": 5321.76,
+    "prompt_sha256": "25457da30779ac59d4d0970940d6ac9f3aecf734d486f962a0a8a5dc13db2215",
+    "schema": "rlr_self_report",
+    "temp_after_c": 63.0,
+    "temp_before_c": 62.5
+  },
+  {
+    "latency_ms": 4287.88,
+    "prompt_sha256": "0824a24bef4e580bcee5499bf059a255f6745616b44bd1ba2c7d3bd5f8593b8b",
+    "schema": "rlr_self_report",
+    "temp_after_c": 63.5,
+    "temp_before_c": 62.5
+  },
+  {
+    "latency_ms": 5023.72,
+    "prompt_sha256": "663f1b1d5332190ac15bd7530d30da5b17626b889db7e8bda6cf392800c32760",
+    "schema": "rlr_self_report",
+    "temp_after_c": 64.0,
+    "temp_before_c": 63.0
+  },
+  {
+    "latency_ms": 19182.54,
+    "prompt_sha256": "7415901e89b648dede505344a0ecabaccc30710f3710a9773bebbe2de64426ce",
+    "schema": "rlr_reflection",
+    "temp_after_c": 65.0,
+    "temp_before_c": 63.5
+  },
+  {
+    "latency_ms": 2560.32,
+    "prompt_sha256": "8c40c90136e311c89d97f85f9c39ddda0183e827445407587009dcc50c2ccc0f",
+    "schema": "rlr_goal_ack",
+    "temp_after_c": 65.0,
+    "temp_before_c": 64.5
+  },
+  {
+    "latency_ms": 5515.27,
+    "prompt_sha256": "f39c0141ec63c4086752f63539893d422f732830d05af968c7cea211d5c9888a",
+    "schema": "rlr_self_report",
+    "temp_after_c": 65.5,
+    "temp_before_c": 65.0
+  },
+  {
+    "latency_ms": 4385.92,
+    "prompt_sha256": "ae6bb79021e0561ebd5c2567574ecd54099b1c1394a23510245c41fedb078b51",
+    "schema": "rlr_self_report",
+    "temp_after_c": 65.5,
+    "temp_before_c": 64.5
+  },
+  {
+    "latency_ms": 5021.88,
+    "prompt_sha256": "db273ff9be23c36f719cb7ed7fd5b5e2f2a174125628626b1d40addfb26addcc",
+    "schema": "rlr_self_report",
+    "temp_after_c": 66.0,
+    "temp_before_c": 65.5
+  },
+  {
+    "latency_ms": 28570.57,
+    "prompt_sha256": "439ec38b1b19877d63a06a672fcc4c77652a8e4b41544305be848e8f1b6bb05e",
+    "schema": "rlr_reflection",
+    "temp_after_c": 68.0,
+    "temp_before_c": 65.5
+  },
+  {
+    "latency_ms": 2752.99,
+    "prompt_sha256": "d71b4aa772b58401341618426d34da5b571fa9b0c08b79038bbe75efeb53b7dd",
+    "schema": "rlr_goal_ack",
+    "temp_after_c": 68.0,
+    "temp_before_c": 68.0
+  },
+  {
+    "latency_ms": 5154.41,
+    "prompt_sha256": "e20c8437e55193899923699c67fd4c9b5fff349ce742c929cfc5da79deeb5173",
+    "schema": "rlr_self_report",
+    "temp_after_c": 68.5,
+    "temp_before_c": 67.5
+  }
+]
