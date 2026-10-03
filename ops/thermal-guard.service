@@ -4,8 +4,17 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/thermal-guard.sh
+EnvironmentFile=-/etc/default/thermal-guard
+ExecStart=/bin/sh /usr/local/bin/thermal-guard.sh
 Restart=always
+RestartSec=5s
+OOMPolicy=stop
+Nice=-10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/sys /run /proc/sysrq-trigger
 
 [Install]
 WantedBy=multi-user.target
