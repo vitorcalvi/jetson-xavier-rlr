@@ -23,7 +23,8 @@ class LlamaServer:
         # Constrained actions and reports are short. An unbounded default let
         # small models generate hundreds of tokens for a one-action response.
         max_tokens = {"rlr_action": 96, "rlr_self_report": 96,
-                      "rlr_reflection": 384}.get(schema_name, 128)
+                      "rlr_reflection": 384,
+                      "rlr_temperature_forecast": 64}.get(schema_name, 128)
         body = {"model": self.model,
                 "messages": [{"role": "system", "content": prompt}],
                 "temperature": 0,

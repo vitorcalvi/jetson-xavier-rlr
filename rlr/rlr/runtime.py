@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .actions import InvalidAction, action_json_schema, validate_action
 from .executor import TrustedExecutor
+from .forecast import ForecastEngine
 from .governor import Governor
 from .policy import PolicyEngine
 from .safety import SafetyStateMachine
@@ -84,7 +85,8 @@ class Config:
                  media_limit_bytes=2 * 1024 * 1024 * 1024, db_path=None, goal_window=5,
                  capability_window=12, episode_char_limit=600, prompt_char_budget=6000,
                  reflection_word_budget=REFLECTION_WORD_BUDGET, action_window=8,
-                 opa_path=None, policy_timeout_s=0.25):
+                 opa_path=None, policy_timeout_s=0.25, forecast_enabled=False,
+                 forecast_window_s=60.0, forecast_horizon_s=60.0):
         self.data_dir = Path(data_dir)
         self.db_path = Path(db_path) if db_path else self.data_dir / "brain.db"
         root = self.data_dir.resolve()
@@ -106,6 +108,9 @@ class Config:
         default_opa = shutil.which("opa") or str(Path.home() / ".local" / "bin" / "opa")
         self.opa_path = opa_path or os.environ.get("RLR_OPA_PATH") or default_opa
         self.policy_timeout_s = float(policy_timeout_s)
+        self.forecast_enabled = bool(forecast_enabled)
+        self.forecast_window_s = float(forecast_window_s)
+        self.forecast_horizon_s = float(forecast_horizon_s)
 
 
 class ReflectiveLoop:
@@ -127,6 +132,13 @@ class ReflectiveLoop:
         self.executor = executor or TrustedExecutor(
             store=self.store, allowed_nvp_modes={5},
             allowed_services={"rlr-inference.service", "thermal-guard.service"})
+        # Forecasting is opt-in. Keeping it disabled by default avoids adding a
+        # second model call (and heat load) to the deployed governor until a
+        # controlled benchmark explicitly enables the mechanism.
+        self.forecaster = (ForecastEngine(
+            self.store, self.llm, window_s=self.config.forecast_window_s,
+            horizon_s=self.config.forecast_horizon_s)
+            if self.config.forecast_enabled else None)
         self.settings = {"vision_fps": 3.0, "reply_tokens": 64, "load_target": 100}
         self.heavy_engines_paused = False
         self.forced_cooldown = False
@@ -522,9 +534,16 @@ class ReflectiveLoop:
         sample.setdefault("fan_rpm", None)
         persisted = self.store.add_telemetry(sample)
         sample.update({k: v for k, v in persisted.items() if k != "id"})
+        temperature = self.governor.max_temp(sample)
+        if self.forecaster is not None:
+            # ForecastEngine reads only persisted telemetry at or before this
+            # sample. Mature rows may settle at any temperature, but a new model
+            # forecast is not issued once the deterministic conserve band begins.
+            self.forecaster.on_sample(
+                sample, allow_issue=(temperature is not None
+                                     and temperature < Governor.CONSERVE_C))
         failures = self.store.recent_execution_failures(limit=5)
         self.safety_state = self.safety.evaluate(sample, execution_failures=failures)
-        temperature = self.governor.max_temp(sample)
 
         if temperature is not None and temperature >= Governor.COOLDOWN_C:
             self.forced_cooldown = True

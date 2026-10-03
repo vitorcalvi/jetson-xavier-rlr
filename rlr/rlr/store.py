@@ -141,6 +141,31 @@ class Store:
                 self.db.execute("INSERT OR IGNORE INTO schema_migrations(version,applied_at) VALUES(3,?)",
                                 (utc_now(),))
 
+        applied4 = self.db.execute(
+            "SELECT 1 FROM schema_migrations WHERE version=4").fetchone()
+        if applied4 is None:
+            with self.db:
+                self.db.executescript("""
+                    CREATE TABLE IF NOT EXISTS forecasts (
+                        id INTEGER PRIMARY KEY,
+                        created_at TEXT NOT NULL,
+                        target_at REAL NOT NULL,
+                        horizon_s REAL NOT NULL,
+                        window_s REAL NOT NULL,
+                        predicted_temp_c REAL,
+                        observed_temp_c REAL,
+                        error_c REAL,
+                        valid INTEGER NOT NULL,
+                        method TEXT NOT NULL,
+                        model_version TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_forecasts_target_at
+                        ON forecasts(target_at);
+                """)
+                self.db.execute(
+                    "INSERT INTO schema_migrations(version,applied_at) VALUES(4,?)",
+                    (utc_now(),))
+
     def add_tick(self, duration_ms, outcome, error=None):
         with self.db:
             cur = self.db.execute(
@@ -179,6 +204,78 @@ class Store:
         if cur.lastrowid and cur.lastrowid % 500 == 0:
             self.prune_routine_data()
         return sample
+
+    def telemetry_window(self, end_monotonic, window_s):
+        rows = self.db.execute(
+            """SELECT id,captured_monotonic,zones_c_json FROM telemetry
+               WHERE captured_monotonic IS NOT NULL
+                 AND captured_monotonic >= ? AND captured_monotonic <= ?
+               ORDER BY captured_monotonic,id""",
+            (float(end_monotonic) - float(window_s), float(end_monotonic))).fetchall()
+        result = []
+        for row in rows:
+            try:
+                zones = json.loads(row["zones_c_json"] or "[]")
+                values = [float(value) for value in zones if isinstance(value, (int, float))]
+            except (TypeError, ValueError):
+                values = []
+            if values:
+                result.append({"telemetry_id": row["id"],
+                               "captured_monotonic": row["captured_monotonic"],
+                               "max_temp_c": max(values)})
+        return result
+
+    def add_forecast(self, target_at, horizon_s, window_s, predicted_temp_c,
+                     method, model_version, valid=True):
+        with self.db:
+            cur = self.db.execute(
+                """INSERT INTO forecasts
+                   (created_at,target_at,horizon_s,window_s,predicted_temp_c,
+                    observed_temp_c,error_c,valid,method,model_version)
+                   VALUES(?,?,?,?,?,NULL,NULL,?,?,?)""",
+                (utc_now(), float(target_at), float(horizon_s), float(window_s),
+                 float(predicted_temp_c) if predicted_temp_c is not None else None,
+                 int(bool(valid)), str(method), str(model_version)))
+        return cur.lastrowid
+
+    def pending_forecasts(self, now_monotonic, min_id=0):
+        rows = self.db.execute(
+            """SELECT * FROM forecasts
+               WHERE id >= ? AND valid=1 AND observed_temp_c IS NULL AND target_at <= ?
+               ORDER BY target_at,id""",
+            (int(min_id), float(now_monotonic))).fetchall()
+        return [dict(row) for row in rows]
+
+    def settle_forecast(self, forecast_id, observed_temp_c, valid=True):
+        with self.db:
+            row = self.db.execute(
+                "SELECT predicted_temp_c FROM forecasts WHERE id=?",
+                (int(forecast_id),)).fetchone()
+            if row is None:
+                raise KeyError("forecast_not_found:%s" % forecast_id)
+            predicted = row[0]
+            is_valid = bool(valid) and predicted is not None
+            error = (float(observed_temp_c) - float(predicted)) if is_valid else None
+            self.db.execute(
+                """UPDATE forecasts
+                   SET observed_temp_c=?,error_c=?,valid=? WHERE id=?""",
+                (float(observed_temp_c) if observed_temp_c is not None else None,
+                 error, int(is_valid), int(forecast_id)))
+        return is_valid
+
+    def latest_forecast_target(self, min_id=0):
+        row = self.db.execute(
+            "SELECT MAX(target_at) FROM forecasts WHERE id >= ?",
+            (int(min_id),)).fetchone()
+        return row[0] if row and row[0] is not None else None
+
+    def latest_forecast_id(self):
+        row = self.db.execute("SELECT COALESCE(MAX(id),0) FROM forecasts").fetchone()
+        return int(row[0])
+
+    def forecast_rows(self):
+        return [dict(row) for row in self.db.execute(
+            "SELECT * FROM forecasts ORDER BY id").fetchall()]
 
     def latest_telemetry(self):
         row = self.db.execute("SELECT * FROM telemetry ORDER BY id DESC LIMIT 1").fetchone()

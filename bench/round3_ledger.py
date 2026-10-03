@@ -35,8 +35,11 @@ def append_ledger(path, record):
         os.close(fd)
 
 
-def preflight_then_append_start(expected, paths, ledger_path, record):
-    """Refuse before any START row is written if a frozen hash differs."""
+def preflight_then_append_start(expected, paths, ledger_path, record, cases=None):
+    """Refuse before START if case IDs or frozen hashes fail integrity checks."""
+    if cases is not None:
+        from kapro_cases import validate_case_ids
+        validate_case_ids(cases)
     actual = verify_hashes(expected, paths)
     start = dict(record)
     start["event"] = "START"

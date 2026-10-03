@@ -339,6 +339,17 @@ def main():
                         help="skip cases already recorded in this output dir")
     args = parser.parse_args()
 
+    generated = []
+    for seed in args.seeds:
+        for case in kc.build_cases(seed, args.per_seed,
+                                   with_distractors=args.distractors):
+            case = ka.apply_condition(case, args.condition)
+            case["condition"] = args.condition
+            generated.append(case)
+    # Integrity gate: reject duplicate IDs across the complete run before the
+    # first Knowing/Acting inference or output/ledger row can be produced.
+    kc.validate_case_ids(generated)
+
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = LlamaServer(args.server, model=args.model)
@@ -350,37 +361,34 @@ def main():
     done = _completed_ids(out_dir) if args.resume else set()
     if done:
         print("resuming: %d cases already recorded" % len(done))
+
     cases, records, scored = [], [], []
     try:
-        for seed in args.seeds:
-            for case in kc.build_cases(seed, args.per_seed,
-                                       with_distractors=args.distractors):
-                case = ka.apply_condition(case, args.condition)
-                case["condition"] = args.condition
-                if case["case_id"] in done:
-                    # Already finished in an earlier, thermally aborted attempt.
-                    cases.append(case)
-                    continue
+        for case in generated:
+            if case["case_id"] in done:
+                # Already finished in an earlier, thermally aborted attempt.
                 cases.append(case)
-                _write(streams["cases"], case)
-                try:
-                    record = run_case(case, llm, out_dir / "rlrdata",
-                                      out_dir / "rlrdata" / "kapro.db")
-                except OSError as exc:
-                    # A transport failure is a blocked case, never a measured zero.
-                    record = blocked_case(case, "transport: %s" % exc)
-                records.append(record)
-                _write(streams["knowing"], {k: record.get(k) for k in (
-                    "case_id", "seed", "boundary", "topology", "condition",
-                    "knowing", "knowing_raw", "knowing_error")})
-                _write(streams["acting"], {k: record.get(k) for k in (
-                    "case_id", "seed", "boundary", "topology", "condition",
-                    "acting", "acting_raw", "pass", "latency_ms", "failure_codes")})
-                if record["knowing"].get("required_actions") is not None and \
-                        record["acting"].get("E_act") is not None:
-                    row = ks.score_case(record)
-                    scored.append(row)
-                    _write(streams["scored"], row)
+                continue
+            cases.append(case)
+            _write(streams["cases"], case)
+            try:
+                record = run_case(case, llm, out_dir / "rlrdata",
+                                  out_dir / "rlrdata" / "kapro.db")
+            except OSError as exc:
+                # A transport failure is a blocked case, never a measured zero.
+                record = blocked_case(case, "transport: %s" % exc)
+            records.append(record)
+            _write(streams["knowing"], {k: record.get(k) for k in (
+                "case_id", "seed", "boundary", "topology", "condition",
+                "knowing", "knowing_raw", "knowing_error")})
+            _write(streams["acting"], {k: record.get(k) for k in (
+                "case_id", "seed", "boundary", "topology", "condition",
+                "acting", "acting_raw", "pass", "latency_ms", "failure_codes")})
+            if record["knowing"].get("required_actions") is not None and \
+                    record["acting"].get("E_act") is not None:
+                row = ks.score_case(record)
+                scored.append(row)
+                _write(streams["scored"], row)
     finally:
         for handle in streams.values():
             handle.close()

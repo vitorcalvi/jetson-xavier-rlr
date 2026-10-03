@@ -202,6 +202,19 @@ def distractors_for(whitelist, count=10, seed=0):
     return out
 
 
+def validate_case_ids(cases):
+    """Fail before inference if any benchmark case id is duplicated."""
+    seen = set()
+    for case in cases:
+        case_id = case.get("case_id") if isinstance(case, dict) else None
+        if not isinstance(case_id, str) or not case_id:
+            raise ValueError("invalid_case_id")
+        if case_id in seen:
+            raise ValueError("duplicate_case_id:%s" % case_id)
+        seen.add(case_id)
+    return cases
+
+
 def build_cases(seed, count, with_distractors=False):
     """Deterministically build `count` cases for one seed.
 
@@ -239,4 +252,4 @@ def build_cases(seed, count, with_distractors=False):
         base["ground_truth"] = {"T": list(base["target_actions"]),
                                 "subtasks": base.get("subtasks", [])}
         cases.append(base)
-    return cases
+    return validate_case_ids(cases)
