@@ -1,0 +1,26 @@
+[Unit]
+Description=RLR managed llama.cpp inference service
+After=network.target
+ConditionPathExists=/etc/rlr/inference.env
+
+[Service]
+Type=simple
+User=vitor
+Group=vitor
+EnvironmentFile=/etc/rlr/inference.env
+ExecStart=/bin/sh /usr/local/bin/rlr-inference-launch.sh
+Restart=on-failure
+RestartSec=5s
+OOMPolicy=stop
+CPUQuota=400%
+MemoryHigh=3500M
+MemoryMax=4600M
+TasksMax=256
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/models/rlr
+
+[Install]
+WantedBy=multi-user.target
