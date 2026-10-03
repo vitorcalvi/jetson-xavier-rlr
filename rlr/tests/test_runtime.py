@@ -3956,6 +3956,49 @@ def test_tick_calls_llm_below_watchdog_aware_threshold(tmp_path):
     loop.close()
 
 
+def test_watchdog_abstention_is_latched_until_resume_temperature(tmp_path):
+    """Once the watchdog band is entered, a small temperature dip must not
+    immediately resume LLM work; all zones must cool below RESUME_C first.
+    """
+    from rlr.governor import Governor
+
+    current = [Governor.WATCHDOG_AWARE_C + 0.2]
+
+    def dynamic_provider():
+        t = current[0]
+        return {"zones_c": [t, t - 1.0], "ram_used_mib": 1200,
+                "ram_total_mib": 6833, "power_mode": "MODE_10W_DESKTOP",
+                "fan_rpm": None}
+
+    class CountingLLM(FakeLLM):
+        def __init__(self):
+            super().__init__()
+            self.action_calls = 0
+
+        def complete(self, prompt, schema, schema_name):
+            if schema_name == "rlr_action":
+                self.action_calls += 1
+            return super().complete(prompt, schema, schema_name)
+
+    llm = CountingLLM()
+    loop = ReflectiveLoop(llm, Config(str(tmp_path), self_report_every=0), dynamic_provider)
+    first = loop.tick()
+    assert first["outcome"] == "abstained:thermal_watchdog"
+    assert loop.watchdog_aware is True and llm.action_calls == 0
+
+    current[0] = Governor.WATCHDOG_AWARE_C - 0.5
+    second = loop.tick()
+    assert second["outcome"] == "abstained:thermal_watchdog_latched"
+    assert loop.watchdog_aware is True and llm.action_calls == 0
+
+    current[0] = Governor.RESUME_C - 0.5
+    third = loop.tick()
+    assert loop.watchdog_aware is False
+    assert llm.action_calls == 1
+    assert third.get("outcome") != "abstained:thermal_watchdog_latched"
+    loop.close()
+
+
 def test_tick_threshold_sits_one_degree_below_watchdog(tmp_path):
     """Pin the watchdog-aware threshold to the architectural headroom:
     ``WATCHDOG_AWARE_C`` must sit strictly below 72.0 C so the runtime's

@@ -130,6 +130,10 @@ class ReflectiveLoop:
         self.settings = {"vision_fps": 3.0, "reply_tokens": 64, "load_target": 100}
         self.heavy_engines_paused = False
         self.forced_cooldown = False
+        # Sticky thermal deadband: after entering the watchdog-aware band,
+        # keep abstaining until every zone is below RESUME_C. This prevents
+        # oscillating back into LLM work while residual heat is still high.
+        self.watchdog_aware = False
         self.tick_count = 0
         self.cooldown_until = 0.0
         self.last_reflection_monotonic = self.clock()
@@ -560,24 +564,31 @@ class ReflectiveLoop:
         # episode the OSError branch emits so operators can
         # distinguish a thermal-aware abstention from a transport
         # failure on the telemetry timeline.
+        zones = sample.get("zones_c") or []
         if temperature is not None and temperature >= Governor.WATCHDOG_AWARE_C:
+            self.watchdog_aware = True
+        elif zones and all(z < Governor.RESUME_C for z in zones):
+            self.watchdog_aware = False
+        if self.watchdog_aware:
+            latched = temperature is not None and temperature < Governor.WATCHDOG_AWARE_C
+            reason = "thermal_watchdog_latched" if latched else "thermal_watchdog"
+            episode_kind = reason
             self.store.add_episode(
-                "thermal_watchdog",
+                episode_kind,
                 content=json.dumps({"temperature_c": temperature,
                                    "threshold_c": Governor.WATCHDOG_AWARE_C,
-                                   "watchdog_threshold_c": Governor.WATCHDOG_AWARE_C + 1.0}),
+                                   "resume_c": Governor.RESUME_C,
+                                   "watchdog_threshold_c": Governor.WATCHDOG_AWARE_C + 1.0,
+                                   "latched": latched}),
             )
             proposed = {
                 "action": "abstain",
-                "reason": "thermal_watchdog",
-                "rationale": ("Temperature %.1f C is at or above the "
-                              "watchdog-aware abstention threshold "
-                              "(%.1f C); the LLM call would risk the "
-                              "external thermal watchdog (72 C) firing "
-                              "and recording run_status:thermal_abort "
-                              "against this run, so the runtime "
-                              "abstains until the device cools.") %
-                             (temperature, Governor.WATCHDOG_AWARE_C),
+                "reason": reason,
+                "rationale": ("Temperature %.1f C is in the watchdog-aware "
+                              "thermal band (entry %.1f C, resume below %.1f C); "
+                              "skip the LLM call until the device has cooled.") %
+                             (temperature if temperature is not None else float("nan"),
+                              Governor.WATCHDOG_AWARE_C, Governor.RESUME_C),
             }
             result = self._execute(proposed, sample)
             return dict(result, sample=sample)
