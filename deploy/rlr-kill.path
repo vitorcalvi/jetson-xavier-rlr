@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for the RLR kill file
+
+[Path]
+PathExists=%h/rlr/KILL
+Unit=rlr-kill.service
+
+[Install]
+WantedBy=paths.target

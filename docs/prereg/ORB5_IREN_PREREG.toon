@@ -1,0 +1,34 @@
+prereg: RLR_ORB5_IREN_FORWARD_PAPER
+version: 1.0
+frozen_utc: 2026-10-12T15:40Z
+authors: [Claude (implementation), ChatGPT (RLR_IREN_5M_EDGE_RESEARCH v1.0, recommendation 3)]
+authorization: "user instruction 2026-10-12 ('implement it') for Alpaca PAPER only"
+status: "FORWARD TEST ONLY. Not a deployment claim; ChatGPT's research found NO verified edge (ORB5 final CI [-0.41,+0.58], failed random p95, negative 2025 train)."
+hypothesis: "IREN 5m opening-range breakout above the 09:30-anchored VWAP has positive net expectancy after costs on NEW trading days."
+data_used_for_selection: "IEX 1m 2025-01-02..2026-10-09 (ChatGPT). Every date <= 2026-10-12 is excluded from evaluation."
+evaluation_window: "trading days from 2026-10-13 onward, until >= 30 closed trades (expected about 60 trading days at ~0.5 trades/day)"
+rules (code: src/reflective_loop_runtime/trading/orb5.py; selected by RLR_TRADER_STRATEGY=orb5):
+  bars: "5m buckets aligned to 09:30 ET built from regular-session 1m IEX bars; only completed buckets"
+  opening_range: "high of the 09:30-09:35 bucket"
+  entry: "completed bucket with open in [09:35,10:45] ET; close > OR high; previous completed close <= OR high; close > VWAP (09:30-anchored, typical price x volume)"
+  stop_distance: "max(1.0*ATR14(5m Wilder, prior sessions included), 0.004*price, 4*spread*price)"
+  target: "1.6R"
+  exits: "evaluated on completed 5m closes: stop, target, 60-min time stop; forced flatten from 15:50 ET each 1m tick (independent of data)"
+  timing: "decisions on the 1m tick one minute after a bucket completes (data latency); market orders, time_in_force=day"
+  risk: "500 USD notional; max 3 entries/day; 30-min cooldown after a loss; -3R daily halt; spread <= 0.20%; data <= 240 s old; long only; IREN only"
+deviations_from_backtest: ["orders ~1 min after the next bucket open (not the exact open)", "live spread gate from the IEX quote (the backtest assumed 6 bp)", "flatten from 15:50 (backtest 15:55)"]
+acceptance (all required, evaluated once at >= 30 trades):
+  - "mean net R per trade, day-block bootstrap 95% CI lower bound > 0"
+  - "mean net R beats the p95 of a matched random-entry control (same days, same exits, same count)"
+  - "live realized slippage + spread per trade reported; the gate fails if the cost-adjusted mean <= 0"
+stop_rules: ["halt the test if cumulative -15R before 30 trades (about 3x the backtest max DD)", "any safety incident -> KILL and review"]
+no_peeking: "no parameter changes during the test; interim reports are descriptive only"
+data_dir: "~/rlr/trader-iren-orb5 (fresh ledger)"
+amendment_v1_1:
+  frozen_utc: 2026-10-12T19:00Z
+  before_any_evaluation_data: "yes; no ORB5 forward trade has occurred (evaluation starts 2026-10-13)"
+  source: "ChatGPT cmd_rlr_orb5_parity_review_1 (MISMATCH M1, M2)"
+  M1_bucket_quality: "the signal 5m bucket must contain >= 4 one-minute bars INCLUDING its final minute (bucket start + 4 min); otherwise hold 'incomplete_bucket' (backtest good_close / n_mins >= 4)"
+  M2_atr_price_band: "entry only if 0.001 <= ATR14(5m)/signal close <= 0.08 and signal close >= 5 USD; otherwise hold 'atr_or_price_out_of_band'"
+  execution_path_change: "the live trader now runs the P0 OrderController path (ChatGPT GO e65c41c) with paper-only autorun after each clean broker reconcile; strategy rules unchanged beyond M1/M2"
+  remaining_documented_deviations: ["orders ~1 minute after the next bucket open (backtest: exact next open; ChatGPT measured |1-min move| median ~31 bp, material vs the 40 bp min stop, so results are a test of THIS implementation, not an exact historical replication)", "flatten from 15:50 ET (backtest 15:55)", "live IEX spread gate (<= 20 bp) vs the backtest's 6 bp model", "ATR seeding differs slightly (not material per review)"]

@@ -1,0 +1,7 @@
+[Unit]
+Description=Stop the RLR loop when the kill file appears
+After=rlr.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --user stop rlr.service

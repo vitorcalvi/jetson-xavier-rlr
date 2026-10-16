@@ -1,0 +1,117 @@
+toon
+  report: RLR_AUTONOMY_V2_IMPLEMENTATION_AND_GO_GATE
+  as_of: 2026-10-12
+  status: OFFLINE_IMPLEMENTED_PAPER_SELECTOR_NOT_DEPLOYED
+  disposition: NO_LIVE_GO_NO_AUTOMATIC_JETSON_DEPLOYMENT
+
+  audited_system:
+    jetson_host: jetson-nx
+    active_rlr_service: true
+    jetson_checkout_observed: 83001becae16f749897114eb3c54e123c896fbdb
+    git_main_when_branched: e65c41c
+    jetson_strategy: ORB5_and_earlier_VWAP_reclaim_paper
+    policy_expiry_reported: 2026-11-10
+    P0_controller: PRESENT_ON_MAIN_SEPARATE_FROM_JETSON_CHECKOUT
+    implementation_branch: chatgpt/rlr-autonomy-20261012
+    implementation_path: src/reflective_loop_runtime/trading/autonomy.py
+    optional_trader_veto_hook: TraderLoop.entry_evidence_gate
+    hook_default: NONE_BACKWARDS_COMPATIBLE
+    runtime_wiring_to_trusted_authority_and_broker: NOT_DONE
+    deployment_writes: NONE
+    broker_calls_or_keys: NONE
+    dokploy_changes: NONE
+
+  actual_research_evidence:
+    symbol: IREN
+    feed: Alpaca_IEX_only
+    filtered_EMA_GAP2_ABS_validation_mean_r: 0.26316
+    filtered_EMA_GAP2_ABS_final_exploratory_mean_r: -0.29697
+    filtered_EMA_RVOL2_validation_mean_r: 0.05613
+    filtered_EMA_RVOL2_final_exploratory_mean_r: -0.29599
+    filtered_ORB15_FIRST5_UP1_validation_mean_r: 0.22532
+    filtered_ORB15_FIRST5_UP1_final_exploratory_mean_r: -0.10109
+    filtered_VWAP_GAP2_ABS_validation_mean_r: 0.01571
+    filtered_VWAP_GAP2_ABS_final_exploratory_mean_r: -0.16509
+    random_ORB5_matched_trades: 51
+    random_ORB5_observed_mean_r: 0.0847196
+    random_ORB5_baseline_mean_r: 0.2334089
+    random_ORB5_empirical_p_upper: 0.7652348
+    conclusion: NO_PROVEN_ROBUST_POSITIVE_NET_EDGE
+    restriction: Negative exploratory results and paper-only results cannot authorize live trading
+
+  research_sources:
+    - ~/agent-work/rlr-5m-research-20261012/output/filtered_qualified.json
+    - ~/agent-work/rlr-5m-research-20261012/output/exit_policy_qualified.json
+    - ~/agent-work/rlr-5m-research-20261012/output/orb5_random_baseline.json
+    - ~/agent-work/rlr-5m-research-20261012/output/sampled_iex_spreads.json
+
+  autonomy_architecture[10]{stage,owner,default_when_failed}:
+    1_sense,SIP_quotes_bars_and_independent_broker_truth,NO_NEW_ENTRIES
+    2_data_quality,latency_gap_outliers_feed_timestamp,NO_TRADE
+    3_regime,version_pinned_deterministic_classifier,UNKNOWN_NO_TRADE
+    4_research,isolated_agent_team_auto_generates_candidates,NO_PRODUCTION_EFFECT
+    5_experiments,immutable_registry_train_validation_sealed_holdout_forward_paper,REJECT
+    6_strategy_gate,multiple_trials_adjusted_net_R_DD_freshness,NO_TRADE
+    7_signed_scope,Ed25519_operator_approved_strategy_fingerprint,NO_TRADE
+    8_risk_and_order,P0_controller_governor_permit_toolbroker,NO_EFFECT
+    9_broker_reconciliation,order_ID_orders_fills_positions_account,HALT_ENTRIES
+    10_evaluate_daily,drift_degradation_costs_alerts,REMOVE_FROM_ELIGIBILITY
+
+  built_capabilities[10]:
+    - Chronological non-overlapping data-split evidence gate using daily net-R
+    - Separate holdout and prospective paper sample requirements
+    - Cost and leakage audit flags required
+    - Multiple-trial-adjusted lower-confidence-bound test
+    - Explicit NO_TRADE fallback and market-data/SIP hard veto
+    - Distinct approved strategy fingerprints tied to code hash/feed/regime/provenance
+    - Durable SQLite experiment registry with frozen historical study data
+    - Append-only hash-chained decision journal with restart verification and conflict detection
+    - Optional entry-only veto hook in existing loop; invalid/failed evidence cannot open a new trade
+    - Risk-reducing exits bypass the strategy-evidence veto (P0 governor still applies)
+
+  defaults:
+    min_train_days: 30
+    min_validation_days: 20
+    min_holdout_days: 30
+    min_forward_paper_days: 20
+    min_holdout_trades: 30
+    min_forward_paper_trades: 30
+    max_holdout_or_forward_drawdown_r: 8.0
+    alpha_familywise: 0.05
+    max_quote_age_seconds: 20
+    max_spread_bps: 20
+    max_forward_age_days: 14
+    authority_required: true
+    broker_reconciled_required: true
+    paper_only: true
+    SIP_required_to_be_paper_eligible: true
+    note: "Defaults are engineering gate thresholds, NOT validated strategy parameters"
+
+  prerequisites_before_any_test_deployment[8]:
+    - Move or rebase the deployed ORB5 code onto reviewed main/P0 order-controller branch
+    - Enforce real signed authority verification externally (not a caller-controlled Boolean)
+    - Build trusted adapters from raw broker fills and immutable real forward-paper evidence
+    - Independently verify data-feeds and SIP entitlements; IEX permitted only for shadow research
+    - Ensure regime classifier and strategy variants are pre-registered and version-pinned
+    - Implement per-session data reconciliation and broker failover with order-id dedup
+    - Run restart/timeout/late-fill/partial-fill/kill-switch failure-injection tests on integrated runtime
+    - Independent review and explicit paper deployment GO
+
+  still_out_of_scope:
+    live_orders: true
+    automatic_key_creation: true
+    autonomous_signed_policy_renewal: true
+    risk_limit_mutation_by_LLM: true
+    automatic_code_promotion: true
+    automatic_restart_after_unknown_broker_state: true
+    evidence_that_strategy_is_profitable: true
+
+  planned_implementation_order:
+    P0: safely_merge_controller_and_jetson_strategy_then_end_to_end_broker_truth_in_shadow
+    P1: immutable_broker_fill_adapters_SIP_regime_classifier_autonomous_daily_selection
+    P2: ntfy_alerts_and_classified_incident_recovery_with_sticky_halts
+    P3: candidate_research_swarm_and_integrity_attested_canary_research
+    P4: forward_paper_shadow_soak_and_independent_edge_review
+    P5: operator_authorized_paper_deployment_only
+
+  safety_principle: "Autonomous intelligence may narrow permissions or abstain; it must not issue its own permits, widen policy, forge evidence, or promote itself to live execution."

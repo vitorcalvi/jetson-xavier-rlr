@@ -1,0 +1,18 @@
+[Unit]
+Description=RLR Qwen3.5-2B-Q4_K_M bounded JSON advisor (loopback 8081)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/llama.cpp/build/bin/llama-server -m %h/models/Qwen3.5-2B-Q4_K_M.gguf -ngl 99 -c 1024 -t 2 -n 64 --host 127.0.0.1 --port 8081 -fa on -np 1 --cache-prompt --cache-ram 256 --reasoning off --temp 0 --offline
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+Nice=0
+CPUWeight=200
+MemoryAccounting=yes
+MemoryHigh=2800M
+MemoryMax=3500M
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Append one RLR soak metrics line (TOON)
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+
+[Service]
+Type=oneshot
+ExecStart=%h/rlr/venv/bin/python %h/rlr/soak/metrics_sample.py

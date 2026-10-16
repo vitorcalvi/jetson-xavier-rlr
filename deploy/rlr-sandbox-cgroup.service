@@ -1,0 +1,35 @@
+[Unit]
+Description=Delegated pids cgroup that caps RLR sandboxed runs
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+# Before= is ordering only: it makes this oneshot start ahead of the runtime
+# user unit, it does not make the runtime depend on it. The gate is the
+# agent_runtime preflight, which refuses to start when RLR_SANDBOX_PIDS_CGROUP
+# names a base that is not a writable, delegated pids cgroup.
+Before=user@1000.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# RLIMIT_NPROC is uid-wide and advisory: a fork storm under one sandbox can push
+# the *user's* count past it, and nothing stops a process already past the limit
+# from forking. The pids controller is the kernel-enforced per-run cap the broker
+# needs, and it only works if the runtime user owns the cgroup it writes.
+#
+# cgroup v1 path (the Jetson's kernel 5.10 layout). On a v2 host the equivalent is
+# /sys/fs/cgroup/rlr-sandbox, writable only after "cgroup.subtree_control +pids"
+# is set on the parent; v1 needs no such delegation step.
+#
+# The chown covers the base directory and its own two control files, and claims
+# nothing more. Measured on this host as uid 1000: mkdir under the chowned base
+# succeeds and the child's pids.max is writable, because the kernel gives the
+# creator ownership of the control files it populates in a new child. A
+# recursive chown would therefore be unnecessary -- and wrong to promise, since
+# a run's children only exist while that run does.
+#
+# RLR_SANDBOX_USER is the user the base is handed to; change it there rather than
+# in the chown line, and systemd expands it into the command below.
+Environment=RLR_SANDBOX_USER=vitor
+ExecStart=/bin/sh -c '/bin/mkdir -p /sys/fs/cgroup/pids/rlr-sandbox && /bin/chown ${RLR_SANDBOX_USER} /sys/fs/cgroup/pids/rlr-sandbox /sys/fs/cgroup/pids/rlr-sandbox/pids.max /sys/fs/cgroup/pids/rlr-sandbox/cgroup.procs'
+
+[Install]
+WantedBy=multi-user.target

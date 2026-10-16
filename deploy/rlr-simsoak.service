@@ -1,0 +1,27 @@
+[Unit]
+Description=RLR overnight simsoak (6h simulated fault-injected soak, looped)
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+After=rlr.service
+
+[Service]
+Type=simple
+ExecStart=%h/rlr/soak/simsoak_loop.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+# Best-effort limits under systemd --user (cgroup HYBRID on the Xavier NX).
+MemoryMax=1G
+# CPU priority: this loop exists only to keep the host busy overnight, so it
+# must never compete with the workload under test. The Jetson has 4 cores and
+# the soak re-runs a simulated 6 h pass in minutes, so it burns a core
+# continuously; unweighted it starved the falcon06 advisor until its request
+# timed out. Nice=19 plus the lowest CPUWeight hands every contended cycle to
+# llama-server and rlr.service, CPUQuota=100% keeps it to a single core, and
+# IOSchedulingClass=idle leaves the soak no I/O priority at all.
+CPUQuota=100%
+CPUWeight=10
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

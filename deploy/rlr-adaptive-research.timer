@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly evidence-based RLR research recommendations
+
+[Timer]
+OnBootSec=4min
+OnUnitActiveSec=1h
+AccuracySec=2min
+Unit=rlr-adaptive-research.service
+
+[Install]
+WantedBy=timers.target

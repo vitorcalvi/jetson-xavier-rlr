@@ -1,0 +1,17 @@
+[
+  {
+    "asset_id": "b4855e07-c75e-4511-93a2-88d0f0f7e1c6",
+    "symbol": "BTC/USD",
+    "exchange": "CRYPTO",
+    "asset_class": "crypto",
+    "qty": "0.0025",
+    "avg_entry_price": "65000.00",
+    "side": "long",
+    "market_value": "168.75",
+    "cost_basis": "162.50",
+    "unrealized_pl": "6.25",
+    "unrealized_plpc": "0.03846",
+    "current_price": "67500.00",
+    "change_today": "0.012"
+  }
+]

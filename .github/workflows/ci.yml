@@ -2,64 +2,56 @@ name: CI
 
 on:
   push:
-    branches: [main, "chatgpt/**"]
+    branches: ["main"]
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  tests:
-    name: Python ${{ matrix.python-version }} tests
+  test:
+    name: test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install test dependency
-        run: python -m pip install --upgrade pip pytest
-
-      - name: Byte-compile Python
-        run: python -m compileall -q rlr/rlr bench prototype
-
-      - name: RLR tests
-        working-directory: rlr
-        run: python -m pytest -q
-
-      - name: Benchmark tests
-        working-directory: bench
-        env:
-          PYTHONPATH: ${{ github.workspace }}/rlr:${{ github.workspace }}/bench
-        run: python -m pytest -q
-
-      - name: Prototype tests
-        working-directory: prototype
-        run: python -m pytest -q
-
-      - name: Shell syntax
-        shell: bash
+      - name: Install package and test deps
         run: |
-          set -euo pipefail
-          for file in scripts/*.sh ops/*.sh bench/*.sh; do
-            bash -n "$file"
-          done
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Byte-compile (syntax check)
+        run: python -m compileall -q src bench tests
+      - name: Import package
+        run: python -c "import reflective_loop_runtime as r; print(r.__version__)"
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Run offline demo tick
+        run: python -m reflective_loop_runtime demo --ticks 4 --data-dir ./.ci_demo
 
-  docker:
-    name: Docker build
+  lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+      - name: Ruff lint
+        run: ruff check src bench tests
 
+  docker:
+    name: docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Build image
-        run: docker build --platform linux/amd64 -t jetson-build:ci .
+        run: docker build -t reflective-loop-runtime:ci .

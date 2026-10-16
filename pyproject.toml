@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reflective-loop-runtime"
+version = "0.1.0"
+description = "Persistent closed-loop autonomy runtime with a fast OpenDecider cortex, an optional LFM normalizer, a Qwen slow brain, and a deterministic Governor."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Reflective Loop Runtime contributors" }]
+keywords = ["autonomy", "agent", "decision-runtime", "open-decider", "governor", "safety"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# The runtime core is stdlib-only. No mandatory third-party dependencies.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+# Optional ed25519 backend for signing/verifying mission policy bundles. When it
+# is absent the kernel falls back to the clearly-marked dev-only HMAC-SHA256 path.
+crypto = ["cryptography>=41.0"]
+
+[project.scripts]
+reflective-loop-runtime = "reflective_loop_runtime.cli:main"
+rlr-redteam = "reflective_loop_runtime.redteam:main"
+rlr-simsoak = "reflective_loop_runtime.simsoak:main"
+
+[project.urls]
+Homepage = "https://github.com/vitorcalvi/reflective-loop-runtime"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+reflective_loop_runtime = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# The held-out set is frozen: it is committed exactly as the blind labels were
+# received, and its manifest sha256 is checked by the gate, so a lint finding
+# there is reported as an ignore rather than answered with an edit.
+"bench/heldout/*.py" = ["E501", "W292"]

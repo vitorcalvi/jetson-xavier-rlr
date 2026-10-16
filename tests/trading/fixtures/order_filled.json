@@ -1,0 +1,11 @@
+{
+  "id": "9058c3e3-1f5e-4d2a-9b8b-0e6f1b2c8f01",
+  "client_order_id": "rlr-deadbeefcafebabe12345678",
+  "symbol": "BTC/USD",
+  "side": "buy",
+  "type": "market",
+  "time_in_force": "gtc",
+  "status": "filled",
+  "filled_qty": "0.0015",
+  "filled_avg_price": "67500.25"
+}

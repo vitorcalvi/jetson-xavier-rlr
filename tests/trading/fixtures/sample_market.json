@@ -1,0 +1,22 @@
+{
+  "_description": "Minimal offline fixture for the RLR paper-trading lane tests. Lane market data (bars, quotes, snapshots) and HTTP injection are owned by the market lane; this file exists so the tests/trading/fixtures/ tree is real and so an injected fake HTTP helper has somewhere to anchor.",
+  "snapshot": {
+    "symbol": "BTCUSDT",
+    "fetched_at": 1700000000.0,
+    "last_bar_ts": 1700000000.0,
+    "quote": {"bid": 30000.0, "ask": 30000.5, "ts": 1700000000.0},
+    "bars": []
+  },
+  "features": {
+    "symbol": "BTCUSDT",
+    "price": 30000.0,
+    "ema20_5m": 30000.0,
+    "ema50_5m": 30000.0,
+    "vwap": 30000.0,
+    "atr14": 50.0,
+    "ret_60m": 0.0,
+    "spread_pct": 0.00001666,
+    "crossed_above_vwap": false,
+    "last_bar_age_s": 0.0
+  }
+}

@@ -1,0 +1,27 @@
+[Unit]
+Description=Reflective Loop Runtime (RLR) user service on Jetson
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+After=network.target
+ConditionPathExists=!%h/rlr/KILL
+
+[Service]
+Type=simple
+WorkingDirectory=%h/rlr/rlr-runtime
+EnvironmentFile=-%h/.config/rlr/rlr.env
+ExecStart=%h/rlr/venv/bin/python %h/rlr/rlr-runtime/deploy/agent_runtime.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+KillSignal=SIGTERM
+# Best-effort resource limits under systemd --user (cgroup HYBRID on the
+# Xavier NX); honoured as hard limits where the unified cgroup is available.
+MemoryMax=1G
+MemoryHigh=768M
+CPUQuota=50%
+# Same CPUWeight as rlr-advisor.service: the loop and the advisor it consults
+# are the workload, rlr-simsoak.service (CPUWeight=10, Nice=19) is only the
+# overnight background load. Under contention the tick must win.
+CPUWeight=200
+
+[Install]
+WantedBy=default.target

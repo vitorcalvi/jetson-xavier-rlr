@@ -1,0 +1,12 @@
+# Safety-kernel ownership.
+#
+# Changes to the paths below require review from @vitorcalvi before merge.
+# The same globs are enforced mechanically by scripts/check_protected.sh via
+# protected_paths.txt, which blocks a diff touching them unless KERNEL_CHANGE=1.
+
+src/reflective_loop_runtime/kernel/      @vitorcalvi
+src/reflective_loop_runtime/governor.py  @vitorcalvi
+src/reflective_loop_runtime/executor.py  @vitorcalvi
+tests/kernel/                            @vitorcalvi
+policy/                                  @vitorcalvi
+sandbox/                                 @vitorcalvi

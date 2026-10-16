@@ -1,0 +1,13 @@
+[Unit]
+Description=Sample RLR soak metrics every 15 minutes
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+
+[Timer]
+OnActiveSec=45s
+OnUnitActiveSec=15min
+AccuracySec=10s
+Persistent=true
+Unit=rlr-metrics.service
+
+[Install]
+WantedBy=timers.target

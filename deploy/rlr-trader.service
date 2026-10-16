@@ -1,0 +1,14 @@
+[Unit]
+Description=RLR paper crypto trader
+
+[Service]
+EnvironmentFile=%h/.config/rlr/rlr.env
+EnvironmentFile=%h/.config/rlr/trader.env
+ExecStart=%h/rlr/venv/bin/python %h/rlr/rlr-runtime/deploy/trader_runtime.py
+Restart=on-failure
+RestartSec=10
+Nice=10
+MemoryMax=300M
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+# Protected safety-kernel paths (same globs as .github/CODEOWNERS).
+#
+# scripts/check_protected.sh rejects a git diff that touches any glob listed
+# here unless the environment variable KERNEL_CHANGE=1 acknowledges the change.
+#
+# Blank lines and lines beginning with '#' are ignored. A glob with a trailing
+# slash protects every file beneath that directory.
+
+src/reflective_loop_runtime/kernel/
+src/reflective_loop_runtime/governor.py
+src/reflective_loop_runtime/executor.py
+tests/kernel/
+policy/
+sandbox/

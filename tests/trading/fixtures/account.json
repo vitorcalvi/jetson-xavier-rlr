@@ -1,0 +1,18 @@
+{
+  "id": "9058c3e3-1f5e-4d2a-9b8b-0e6f1b2c8f01",
+  "account_number": "PA3YZ1234567",
+  "status": "ACTIVE",
+  "currency": "USD",
+  "cash": "10000.00",
+  "portfolio_value": "10500.00",
+  "buying_power": "20000.00",
+  "equity": "10500.00",
+  "last_equity": "10400.00",
+  "multiplier": "1",
+  "pattern_day_trader": false,
+  "trading_blocked": false,
+  "transfers_blocked": false,
+  "shorting_enabled": true,
+  "long_market_value": "500.00",
+  "short_market_value": "0"
+}

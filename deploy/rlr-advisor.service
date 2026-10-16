@@ -1,0 +1,37 @@
+[Unit]
+Description=RLR falcon06 advisor (llama-server) user service on the Jetson
+Documentation=https://github.com/vitorcalvi/reflective-loop-runtime
+After=network.target
+
+[Service]
+Type=simple
+# One model loaded at a time: the falcon06 advisor, using the same settings the
+# Jetson benchmark selected (context 1024, flash attention on, 2 threads, full
+# GPU offload), served on the loopback only. The runtime reaches it through
+# RLR_ADVISOR_ENABLE + RLR_LLAMA_BASE_URL; it is advisory only and never the
+# final selector.
+#
+# Memory bound: --cache-ram 256 caps the in-RAM prompt/KV cache. This build's
+# default is 8192 MiB, and the overnight soak grew that host-side anonymous
+# cache until MemAvailable fell below 500 MiB (llama-server RssAnon ~4.9 GiB
+# while RssFile, the mmap'd model, stayed ~270 MiB). MemoryHigh/MemoryMax keep
+# any residual growth inside the advisor's own cgroup, so under pressure
+# systemd reclaims and, if needed, kills only the advisor (Restart=on-failure
+# brings it back) - never rlr.service or rlr-simsoak.service.
+ExecStart=%h/llama.cpp/build/bin/llama-server -m %h/models/Falcon-H1R-0.6B-Q4_K_M.gguf -ngl 99 -c 1024 -t 2 --host 127.0.0.1 --port 8080 -fa on -np 1 --cache-prompt --cache-ram 256 --offline
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+# CPU priority: the advisor answered the 2026-10-06 soak with request
+# timeouts because it ran at Nice=5 while rlr-simsoak looped unweighted on a
+# 4-core Jetson. Serving one 0.6B model is latency-critical for the loop's
+# advice tick, so it now runs un-niced at the high CPUWeight the live loop also
+# uses; the soak is pushed to Nice=19/CPUWeight=10 instead.
+Nice=0
+CPUWeight=200
+MemoryAccounting=yes
+MemoryHigh=2200M
+MemoryMax=2600M
+
+[Install]
+WantedBy=default.target

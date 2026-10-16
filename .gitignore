@@ -1,19 +1,11 @@
-# Large model and accelerator artifacts
-models/
-*.gguf
-*.engine
-*.onnx
-*.bin
-
-# Runtime data
-logs/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+.env*
 *.db
-*.sqlite
-*.sqlite3
-
-# NVIDIA L4T bundles and generated images
-Linux_for_Tegra/
-rootfs/
-rootfs*/
-*.tar.bz2
-*.img
+*.sqlite*
+.qwen/
+.evidence/
+.agent-tmp/

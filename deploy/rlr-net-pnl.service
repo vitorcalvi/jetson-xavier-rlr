@@ -1,0 +1,10 @@
+[Unit]
+Description=RLR paper broker activity net P&L reconciliation
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/rlr/rlr.env
+EnvironmentFile=%h/.config/rlr/trader.env
+ExecStart=%h/rlr/venv/bin/python %h/rlr/rlr-runtime/deploy/net_pnl_report.py
+Nice=12
+MemoryMax=220M

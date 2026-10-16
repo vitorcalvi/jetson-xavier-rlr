@@ -1,0 +1,12 @@
+[Unit]
+Description=RLR adaptive research hypothesis (no broker access)
+After=rlr-qwen35.service
+Wants=rlr-qwen35.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-%h/.config/rlr/trader.env
+ExecStart=%h/rlr/venv/bin/python %h/rlr/rlr-runtime/deploy/adaptive_research.py
+Nice=14
+CPUWeight=15
+MemoryMax=180M
