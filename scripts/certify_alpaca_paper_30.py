@@ -36,6 +36,7 @@ class Lifecycle:
             bool(self.states)
             and self.states[0] == "new"
             and self.states[-1] in ("filled", "canceled")
+            and 0 < self.quantity
             and 0 <= self.filled <= self.quantity
             and all(
                 b in NEXT.get(a, set()) for a, b in zip(self.states, self.states[1:], strict=False)
@@ -67,7 +68,11 @@ def simulate_30(output: Path | None = None) -> dict:
         "mean_slippage_delta_bps_simulated": slip_delta,
         "real_paper_fills": 0,
         "broker_certified": False,
-        "pass_simulation": passed == 30 and slip_delta <= 3,
+        "state_machine_pass": passed == 30,
+        "simulated_maker_gate_pass": maker_ratio >= 0.70,
+        "simulated_slippage_gate_pass": slip_delta <= 3,
+        "pass_simulation": passed == 30 and maker_ratio >= 0.70 and slip_delta <= 3,
+        "paper_promotion_ready": False,
         "provenance": "LOCALLY_GENERATED_TRANSITIONS_NOT_RECORDED_ALPACA_WS",
     }
     if output:
