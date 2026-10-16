@@ -37,13 +37,10 @@ payload in the `toon_memory_payload` field. It is **not** a pure TOON file.
 
 ## Regression contract and limitations
 
-R1 test replays 100 deterministic legacy *actions* with the observer attached;
+R1 tests now cover both 100 deterministic action observations and an actual 100-tick Stage2 main-loop replay using an inert fake broker;
 R2 injects 15 worker errors; R3 compares a high-correlation risk veto; R4
 measures the two existing **real** Stage2 state records that are currently
-available. There are **zero actual Stage2 trading fills** in that ledger. These
-tests cannot certify 100-tick bit-level Stage2 replay of a genuine market-data
-session; to claim it, replay historical broker/quote/bar tapes under a hardware-
-isolated stub broker and compare full outputs byte-for-byte.
+available. There are **zero actual Stage2 trading fills** in that ledger. The actual Stage2 loop replay matches all legacy state snapshots, runtime tick bytes and zero broker calls. It is halted-mode coverage only; a genuine open-session tape replay still requires saved broker/quote/bar observations.
 
 A lack of tokenizer (`tiktoken`/cl100k_base) yields `token_reduction=null`, not a
 fabricated percentage. Original underlying snapshots show negative TOON byte

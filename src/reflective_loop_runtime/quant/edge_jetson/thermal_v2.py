@@ -4,9 +4,9 @@ No hardware controls are performed by default. The hot-path router stays
 independent; a background trainer must call permitted() each work cycle.
 """
 from __future__ import annotations
-from dataclasses import dataclass,field
+from dataclasses import dataclass
 from pathlib import Path
-import os,shutil,subprocess
+import os,shutil
 from typing import Callable
 
 
