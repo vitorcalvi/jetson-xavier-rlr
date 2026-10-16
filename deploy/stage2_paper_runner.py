@@ -51,7 +51,7 @@ def loop():
         except Exception:
             _toon_bridge=None  # Absent/broken shadow code cannot block Stage2.
         gate=StrictSessionQuoteGate()
-        last_entry=0.0;last_completed=time.monotonic()
+        last_completed=time.monotonic()
         while True:
             now=time.time()
             # Independent liveness source, not confused with the persisted
@@ -145,7 +145,6 @@ def loop():
                             except Exception:
                                 pass
                         controller.execute_entry(cycle_id,gate_value)
-                        last_entry=now
             elif mode=='HALT_ENTRIES':
                 # Persisted operator/safety hold: keep read-only liveness alive,
                 # NEVER clear the halt or submit a new order automatically.

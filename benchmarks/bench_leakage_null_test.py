@@ -36,7 +36,7 @@ def run(paths:int=100,trials:int=200,seed:int=17,db_path:Path|None=None)->dict:
             # Test values cannot influence fold scaler or selection.
             scaler=FoldStandardizer.fit([(v,) for v in base],split.train,split.test)
             if any(i in split.test for i in scaler.fitted_indices):leak_violations+=1
-            train=set(split.train);test=set(split.test)
+            train=set(split.train)
             selected_train_sr=float('-inf');selected_oos=[]
             for trial in range(trials):
                 # Trial selection only sees training outcomes. All variants
