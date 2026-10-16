@@ -104,12 +104,10 @@ class SystemReport:
         abstained = [c for c in self.cases if c.executed in _OBSERVE_LIKE]
         correct = [c for c in fired if _equivalent(c.executed, c.expected)]
         tool_over = sum(
-            1 for c in self.cases
-            if c.expected in _OBSERVE_LIKE and c.executed not in _OBSERVE_LIKE
+            1 for c in self.cases if c.expected in _OBSERVE_LIKE and c.executed not in _OBSERVE_LIKE
         )
         tool_under = sum(
-            1 for c in self.cases
-            if c.expected not in _OBSERVE_LIKE and c.executed in _OBSERVE_LIKE
+            1 for c in self.cases if c.expected not in _OBSERVE_LIKE and c.executed in _OBSERVE_LIKE
         )
         latencies = [c.latency_ms for c in self.cases]
         return {
@@ -119,9 +117,7 @@ class SystemReport:
             "fired_rate": round(len(fired) / total, 4),
             "Acc_act": round(len(correct) / len(fired), 4) if fired else None,
             "Acc_act_all_cases": round(len(correct) / total, 4),
-            "kas_known": round(
-                sum(1 for c in self.cases if c.fired) / total, 4
-            ),
+            "kas_known": round(sum(1 for c in self.cases if c.fired) / total, 4),
             "kas_correct": round(len(correct) / total, 4),
             "ToolOver": tool_over,
             "ToolUnder": tool_under,
@@ -149,14 +145,19 @@ def run_qwen_only(cases: list[Case], tmp: Path) -> SystemReport:
     url = _qwen_url()
     if not url:
         return SystemReport(
-            name="qwen_only", available=False,
+            name="qwen_only",
+            available=False,
             unavailable_reason="no Qwen endpoint configured (set RLR_QWEN_URL to enable)",
         )
     from reflective_loop_runtime.qwen import OpenAICompatClient
 
-    brain = QwenSlowBrain(OpenAICompatClient(
-        url, _qwen_model(), allow_remote=_qwen_allow_remote(),
-    ))
+    brain = QwenSlowBrain(
+        OpenAICompatClient(
+            url,
+            _qwen_model(),
+            allow_remote=_qwen_allow_remote(),
+        )
+    )
     report = SystemReport(name="qwen_only", available=True)
     config = Config(data_dir=tmp / "qwen_only")
     for case in cases:
@@ -169,11 +170,17 @@ def run_qwen_only(cases: list[Case], tmp: Path) -> SystemReport:
         latency = (time.perf_counter() - started) * 1000.0
         executed = advice.suggested_candidate or "abstain"
         fired = advice.suggested_candidate is not None
-        report.cases.append(CaseResult(
-            case=case.name, expected=case.expected_action, executed=executed, fired=fired,
-            latency_ms=round(latency, 4), abstained=executed in _OBSERVE_LIKE,
-            note="degraded" if advice.degraded else "",
-        ))
+        report.cases.append(
+            CaseResult(
+                case=case.name,
+                expected=case.expected_action,
+                executed=executed,
+                fired=fired,
+                latency_ms=round(latency, 4),
+                abstained=executed in _OBSERVE_LIKE,
+                note="degraded" if advice.degraded else "",
+            )
+        )
     return report
 
 
@@ -189,11 +196,17 @@ def run_opendecider_only(cases: list[Case], tmp: Path) -> SystemReport:
         latency = (time.perf_counter() - started) * 1000.0
         fired = scored.confidence >= config.confidence_threshold
         executed = scored.choice if fired else "abstain"
-        report.cases.append(CaseResult(
-            case=case.name, expected=case.expected_action, executed=executed, fired=fired,
-            latency_ms=round(latency, 4), abstained=executed in _OBSERVE_LIKE,
-            note="" if fired else "below confidence gate",
-        ))
+        report.cases.append(
+            CaseResult(
+                case=case.name,
+                expected=case.expected_action,
+                executed=executed,
+                fired=fired,
+                latency_ms=round(latency, 4),
+                abstained=executed in _OBSERVE_LIKE,
+                note="" if fired else "below confidence gate",
+            )
+        )
     return report
 
 
@@ -217,10 +230,16 @@ def run_lfm_opendecider(cases: list[Case], tmp: Path) -> SystemReport:
         latency = (time.perf_counter() - started) * 1000.0
         fired = scored.confidence >= config.confidence_threshold
         executed = scored.choice if fired else "abstain"
-        report.cases.append(CaseResult(
-            case=case.name, expected=case.expected_action, executed=executed, fired=fired,
-            latency_ms=round(latency, 4), abstained=executed in _OBSERVE_LIKE,
-        ))
+        report.cases.append(
+            CaseResult(
+                case=case.name,
+                expected=case.expected_action,
+                executed=executed,
+                fired=fired,
+                latency_ms=round(latency, 4),
+                abstained=executed in _OBSERVE_LIKE,
+            )
+        )
     return report
 
 
@@ -248,20 +267,28 @@ def run_rlr2_hybrid(cases: list[Case], tmp: Path, *, qwen: bool) -> SystemReport
         try:
             started = time.perf_counter()
             result = runtime.tick(
-                _fresh_sample(case), capabilities=set(case.capabilities),
-                structured=case.structured, raw_text=case.raw_text,
-                context="benchmark case", goal_digest="maintain stable operation",
+                _fresh_sample(case),
+                capabilities=set(case.capabilities),
+                structured=case.structured,
+                raw_text=case.raw_text,
+                context="benchmark case",
+                goal_digest="maintain stable operation",
             )
             latency = (time.perf_counter() - started) * 1000.0
             executed = result.decision["choice"] if result.decision["choice"] else "abstain"
             if result.vetoed:
                 executed = "abstain"
-            report.cases.append(CaseResult(
-                case=case.name, expected=case.expected_action, executed=executed,
-                fired=not result.vetoed, latency_ms=round(latency, 4),
-                abstained=executed in _OBSERVE_LIKE,
-                note=result.veto_reason or ("qwen:" + str(result.used_qwen)),
-            ))
+            report.cases.append(
+                CaseResult(
+                    case=case.name,
+                    expected=case.expected_action,
+                    executed=executed,
+                    fired=not result.vetoed,
+                    latency_ms=round(latency, 4),
+                    abstained=executed in _OBSERVE_LIKE,
+                    note=result.veto_reason or ("qwen:" + str(result.used_qwen)),
+                )
+            )
         finally:
             runtime.store.close()
     return report
@@ -377,7 +404,9 @@ def _qwen_allow_remote() -> bool:
 # ---------------------------------------------------------------------------
 
 
-def run_battle(*, with_qwen: bool = False, out: Path | None = None, tmp_root: Path | None = None) -> dict[str, Any]:
+def run_battle(
+    *, with_qwen: bool = False, out: Path | None = None, tmp_root: Path | None = None
+) -> dict[str, Any]:
     import tempfile
 
     tmp = Path(tmp_root or tempfile.mkdtemp(prefix="rlr_bench_"))
@@ -410,8 +439,11 @@ def run_battle(*, with_qwen: bool = False, out: Path | None = None, tmp_root: Pa
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rlr-bench", description="RLR battle harness")
-    parser.add_argument("--with-qwen", action="store_true",
-                        help="enable the scripted offline advisor in the hybrid system")
+    parser.add_argument(
+        "--with-qwen",
+        action="store_true",
+        help="enable the scripted offline advisor in the hybrid system",
+    )
     parser.add_argument("--out", default="", help="write the JSON report to this path")
     parser.add_argument("--tmp-root", default="", help="directory for per-system databases")
     return parser

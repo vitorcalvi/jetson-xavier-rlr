@@ -89,9 +89,7 @@ def test_agent_runtime_accepts_exact_reverified_policy_digest(monkeypatch, tmp_p
 
     class FakeRuntime:
         def __init__(self, config, **kwargs):
-            reloaded = load_operator_policy(
-                config.policy_path, config.policy_public_key_path
-            )
+            reloaded = load_operator_policy(config.policy_path, config.policy_public_key_path)
             self.permits = SimpleNamespace(policy=reloaded)
 
     monkeypatch.setattr(module, "ReflectiveLoopRuntime", FakeRuntime)
@@ -121,9 +119,7 @@ def test_agent_runtime_refuses_policy_digest_mismatch(monkeypatch, tmp_path):
         module.main()
 
 
-def test_healthcheck_rejects_missing_then_accepts_valid_authority(
-    monkeypatch, tmp_path
-):
+def test_healthcheck_rejects_missing_then_accepts_valid_authority(monkeypatch, tmp_path):
     module = _load(ROOT / "deploy" / "healthcheck.py", "g1_health")
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("RLR_POLICY_PATH", raising=False)

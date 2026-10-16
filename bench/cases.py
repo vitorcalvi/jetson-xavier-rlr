@@ -27,7 +27,9 @@ class Case:
     note: str = ""
 
 
-def _sample(temperature_c: float, ram_used: float = 2048.0, ram_total: float = 8192.0) -> dict[str, Any]:
+def _sample(
+    temperature_c: float, ram_used: float = 2048.0, ram_total: float = 8192.0
+) -> dict[str, Any]:
     return {
         "temperature_c": temperature_c,
         "zones_c": [temperature_c],

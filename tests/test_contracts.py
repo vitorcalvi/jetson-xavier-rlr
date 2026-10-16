@@ -68,9 +68,18 @@ class TestActionContracts:
         from reflective_loop_runtime.contracts import ACTION_FIELDS
 
         forbidden = {
-            "shell", "exec", "run_command", "write_file", "open_socket",
-            "set_clock", "set_power", "set_fan", "write_thermal_guard",
-            "set_gpio", "reboot", "shutdown",
+            "shell",
+            "exec",
+            "run_command",
+            "write_file",
+            "open_socket",
+            "set_clock",
+            "set_power",
+            "set_fan",
+            "write_thermal_guard",
+            "set_gpio",
+            "reboot",
+            "shutdown",
         }
         assert forbidden.isdisjoint(ACTION_FIELDS)
 
@@ -84,8 +93,11 @@ class TestScoredDecisionContracts:
 
     def test_valid_decision_passes(self):
         scored = validate_scored_decision(
-            {"choice": "observe", "confidence": 0.6,
-             "probabilities": {"observe": 0.6, "abstain": 0.3, "cooldown": 0.1}},
+            {
+                "choice": "observe",
+                "confidence": 0.6,
+                "probabilities": {"observe": 0.6, "abstain": 0.3, "cooldown": 0.1},
+            },
             self.IDS,
         )
         assert scored.choice == "observe"
@@ -94,57 +106,78 @@ class TestScoredDecisionContracts:
     def test_key_mismatch_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": 1.0,
-                 "probabilities": {"observe": 1.0}},
+                {"choice": "observe", "confidence": 1.0, "probabilities": {"observe": 1.0}},
                 self.IDS,
             )
 
     def test_extra_key_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": 0.5,
-                 "probabilities": {"observe": 0.5, "abstain": 0.25,
-                                   "cooldown": 0.25, "ghost": 0.0}},
+                {
+                    "choice": "observe",
+                    "confidence": 0.5,
+                    "probabilities": {
+                        "observe": 0.5,
+                        "abstain": 0.25,
+                        "cooldown": 0.25,
+                        "ghost": 0.0,
+                    },
+                },
                 self.IDS,
             )
 
     def test_sum_error_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": 0.5,
-                 "probabilities": {"observe": 0.5, "abstain": 0.1, "cooldown": 0.1}},
+                {
+                    "choice": "observe",
+                    "confidence": 0.5,
+                    "probabilities": {"observe": 0.5, "abstain": 0.1, "cooldown": 0.1},
+                },
                 self.IDS,
             )
 
     def test_non_finite_probability_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": float("nan"),
-                 "probabilities": {"observe": float("nan"), "abstain": 0.5, "cooldown": 0.5}},
+                {
+                    "choice": "observe",
+                    "confidence": float("nan"),
+                    "probabilities": {"observe": float("nan"), "abstain": 0.5, "cooldown": 0.5},
+                },
                 self.IDS,
             )
 
     def test_confidence_mismatch_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": 0.9,
-                 "probabilities": {"observe": 0.5, "abstain": 0.25, "cooldown": 0.25}},
+                {
+                    "choice": "observe",
+                    "confidence": 0.9,
+                    "probabilities": {"observe": 0.5, "abstain": 0.25, "cooldown": 0.25},
+                },
                 self.IDS,
             )
 
     def test_choice_not_in_candidates_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "ghost", "confidence": 0.5,
-                 "probabilities": {"observe": 0.5, "abstain": 0.25, "cooldown": 0.25}},
+                {
+                    "choice": "ghost",
+                    "confidence": 0.5,
+                    "probabilities": {"observe": 0.5, "abstain": 0.25, "cooldown": 0.25},
+                },
                 self.IDS,
             )
 
     def test_out_of_range_probability_rejected(self):
         with pytest.raises(ContractError):
             validate_scored_decision(
-                {"choice": "observe", "confidence": 1.5,
-                 "probabilities": {"observe": 1.5, "abstain": -0.25, "cooldown": -0.25}},
+                {
+                    "choice": "observe",
+                    "confidence": 1.5,
+                    "probabilities": {"observe": 1.5, "abstain": -0.25, "cooldown": -0.25},
+                },
                 self.IDS,
             )
 

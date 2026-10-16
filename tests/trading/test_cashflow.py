@@ -26,9 +26,7 @@ from reflective_loop_runtime.trading.cashflow import (
 
 # --- helpers ---------------------------------------------------------------
 
-_FIXTURE_PATH = (
-    Path(__file__).resolve().parent / "fixtures" / "activities_sample.json"
-)
+_FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "activities_sample.json"
 
 
 def _row(
@@ -66,6 +64,7 @@ def _row(
 
 
 # -- test_parse_fill_and_cfee -------------------------------------------------
+
 
 def test_parse_fill_and_cfee() -> None:
     """``parse_activities`` normalises types, symbols and numeric fields.
@@ -134,6 +133,7 @@ def test_parse_fill_and_cfee() -> None:
 
 # -- test_fifo_round_trip_net -----------------------------------------------
 
+
 def test_fifo_round_trip_net() -> None:
     """A clean buy-then-sell round trip computes net from cost/proceeds/fees.
 
@@ -143,26 +143,41 @@ def test_fifo_round_trip_net() -> None:
     against a hand-built activity list.
     """
 
-    acts = parse_activities([
-        _row(
-            "FILL", id="b1", symbol="BTC/USD", side="buy",
-            qty="0.1", price="50000",
-            transaction_time="2026-10-11T18:00:00Z",
-            order_id="o-buy",
-        ),
-        _row(
-            "FILL", id="s1", symbol="BTC/USD", side="sell",
-            qty="0.1", price="51000",
-            transaction_time="2026-10-11T19:00:00Z",
-            order_id="o-sell",
-        ),
-        _row(
-            "CFEE", id="f1", symbol="BTC/USD", side="sell",
-            qty="0", price="0", net_amount="-0.50",
-            transaction_time="2026-10-11T19:00:01Z",
-            order_id="o-sell",
-        ),
-    ])
+    acts = parse_activities(
+        [
+            _row(
+                "FILL",
+                id="b1",
+                symbol="BTC/USD",
+                side="buy",
+                qty="0.1",
+                price="50000",
+                transaction_time="2026-10-11T18:00:00Z",
+                order_id="o-buy",
+            ),
+            _row(
+                "FILL",
+                id="s1",
+                symbol="BTC/USD",
+                side="sell",
+                qty="0.1",
+                price="51000",
+                transaction_time="2026-10-11T19:00:00Z",
+                order_id="o-sell",
+            ),
+            _row(
+                "CFEE",
+                id="f1",
+                symbol="BTC/USD",
+                side="sell",
+                qty="0",
+                price="0",
+                net_amount="-0.50",
+                transaction_time="2026-10-11T19:00:01Z",
+                order_id="o-sell",
+            ),
+        ]
+    )
     trips = round_trips(acts)
     assert len(trips) == 1
     trip = trips[0]
@@ -181,6 +196,7 @@ def test_fifo_round_trip_net() -> None:
 
 # -- test_fee_in_kind_valued_at_buy_price ----------------------------------
 
+
 def test_fee_in_kind_valued_at_buy_price() -> None:
     """An in-kind buy fee is valued at the buy price, not the sell price.
 
@@ -193,14 +209,13 @@ def test_fee_in_kind_valued_at_buy_price() -> None:
 
     # Profitable case: buy 1 ETH at 2000 (in-kind fee 0.05 ETH),
     # sell 0.95 ETH at 2100, no USD sell fee.
-    profit_acts = parse_activities([
-        _row("FILL", "p-b", "ETH/USD", "buy",
-             "1.0", "2000", "2026-10-11T10:00:00Z", "ob-p"),
-        _row("CFEE", "p-c", "ETH/USD", None,
-             "-0.05", "0", "2026-10-11T10:00:01Z", "ob-p"),
-        _row("FILL", "p-s", "ETH/USD", "sell",
-             "0.95", "2100", "2026-10-11T11:00:00Z", "os-p"),
-    ])
+    profit_acts = parse_activities(
+        [
+            _row("FILL", "p-b", "ETH/USD", "buy", "1.0", "2000", "2026-10-11T10:00:00Z", "ob-p"),
+            _row("CFEE", "p-c", "ETH/USD", None, "-0.05", "0", "2026-10-11T10:00:01Z", "ob-p"),
+            _row("FILL", "p-s", "ETH/USD", "sell", "0.95", "2100", "2026-10-11T11:00:00Z", "os-p"),
+        ]
+    )
     [p_trip] = round_trips(profit_acts)
     # Cost = 0.95 * 2000 = 1900. Proceeds = 0.95 * 2100 = 1995. Net =
     # 1995 - 1900 - 0.05*2000 = 95 - 100 = -5. The fee is the in-kind qty
@@ -215,14 +230,13 @@ def test_fee_in_kind_valued_at_buy_price() -> None:
     # be 0.95 * 1900 - 0.95 * 2000 - 0.05 * 2000 = 1805 - 1900 - 100 = -195.
     # Valued at the sell price the fee would be 0.05 * 1900 = 95 and the
     # net would be -190 instead of -195.
-    loss_acts = parse_activities([
-        _row("FILL", "l-b", "ETH/USD", "buy",
-             "1.0", "2000", "2026-10-11T10:00:00Z", "ob-l"),
-        _row("CFEE", "l-c", "ETH/USD", None,
-             "-0.05", "0", "2026-10-11T10:00:01Z", "ob-l"),
-        _row("FILL", "l-s", "ETH/USD", "sell",
-             "0.95", "1900", "2026-10-11T11:00:00Z", "os-l"),
-    ])
+    loss_acts = parse_activities(
+        [
+            _row("FILL", "l-b", "ETH/USD", "buy", "1.0", "2000", "2026-10-11T10:00:00Z", "ob-l"),
+            _row("CFEE", "l-c", "ETH/USD", None, "-0.05", "0", "2026-10-11T10:00:01Z", "ob-l"),
+            _row("FILL", "l-s", "ETH/USD", "sell", "0.95", "1900", "2026-10-11T11:00:00Z", "os-l"),
+        ]
+    )
     [l_trip] = round_trips(loss_acts)
     assert l_trip.cost_usd == Decimal("1900.0")
     assert l_trip.proceeds_usd == Decimal("1805.0")
@@ -231,6 +245,7 @@ def test_fee_in_kind_valued_at_buy_price() -> None:
 
 
 # -- test_real_btc_roundtrip_fixture ----------------------------------------
+
 
 def test_real_btc_roundtrip_fixture() -> None:
     """The 2026-10-11 paper round trip nets ~-0.0504 USD with ~0.0490 fees.
@@ -283,6 +298,7 @@ def test_real_btc_roundtrip_fixture() -> None:
 
 # -- test_partial_fills_fifo ------------------------------------------------
 
+
 def test_partial_fills_fifo() -> None:
     """FIFO matches the oldest buy lot first, even across multiple fills.
 
@@ -293,18 +309,15 @@ def test_partial_fills_fifo() -> None:
     then drains part of the remaining 120 lot.
     """
 
-    acts = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "0.1", "100", "2026-10-11T10:00:00Z", "ob1"),
-        _row("FILL", "b2", "BTC/USD", "buy",
-             "0.1", "110", "2026-10-11T10:01:00Z", "ob2"),
-        _row("FILL", "b3", "BTC/USD", "buy",
-             "0.1", "120", "2026-10-11T10:02:00Z", "ob3"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "0.2", "150", "2026-10-11T11:00:00Z", "os1"),
-        _row("FILL", "s2", "BTC/USD", "sell",
-             "0.05", "160", "2026-10-11T12:00:00Z", "os2"),
-    ])
+    acts = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "0.1", "100", "2026-10-11T10:00:00Z", "ob1"),
+            _row("FILL", "b2", "BTC/USD", "buy", "0.1", "110", "2026-10-11T10:01:00Z", "ob2"),
+            _row("FILL", "b3", "BTC/USD", "buy", "0.1", "120", "2026-10-11T10:02:00Z", "ob3"),
+            _row("FILL", "s1", "BTC/USD", "sell", "0.2", "150", "2026-10-11T11:00:00Z", "os1"),
+            _row("FILL", "s2", "BTC/USD", "sell", "0.05", "160", "2026-10-11T12:00:00Z", "os2"),
+        ]
+    )
     trips = round_trips(acts)
     assert len(trips) == 2
     # First trip: oldest two buys at cost 0.1*100 + 0.1*110 = 21, proceeds
@@ -338,6 +351,7 @@ def test_partial_fills_fifo() -> None:
 
 # -- test_open_lot_remainder -----------------------------------------------
 
+
 def test_open_lot_remainder() -> None:
     """Unmatched buys become ``open_lots`` and never produce a round trip.
 
@@ -347,10 +361,11 @@ def test_open_lot_remainder() -> None:
     sell closes part of it and the remainder stays open.
     """
 
-    acts = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "0.5", "30000", "2026-10-11T10:00:00Z", "ob"),
-    ])
+    acts = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "0.5", "30000", "2026-10-11T10:00:00Z", "ob"),
+        ]
+    )
     trips = round_trips(acts)
     assert trips == []
     info = summary(acts)
@@ -363,10 +378,11 @@ def test_open_lot_remainder() -> None:
     assert info["unmatched_sell_qty"] == {}
 
     # Add a partial sell of 0.2 BTC at 31000.
-    more_acts = acts + parse_activities([
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "0.2", "31000", "2026-10-11T11:00:00Z", "os"),
-    ])
+    more_acts = acts + parse_activities(
+        [
+            _row("FILL", "s1", "BTC/USD", "sell", "0.2", "31000", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     trips = round_trips(more_acts)
     assert len(trips) == 1
     assert trips[0].cost_usd == Decimal("6000.0")
@@ -383,6 +399,7 @@ def test_open_lot_remainder() -> None:
 
 # -- test_no_spread_double_count -------------------------------------------
 
+
 def test_no_spread_double_count() -> None:
     """The round trip never subtracts spread separately.
 
@@ -395,12 +412,12 @@ def test_no_spread_double_count() -> None:
     with no fees: net must be 5 (not 5 minus any spread).
     """
 
-    acts = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "1.0", "105", "2026-10-11T11:00:00Z", "os"),
-    ])
+    acts = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "1.0", "105", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     [trip] = round_trips(acts)
     # No fees configured -> fees_usd must be exactly zero and net_usd
     # must be exactly 5 (proceeds - cost - 0). Any spread subtraction
@@ -416,16 +433,23 @@ def test_no_spread_double_count() -> None:
 
     # And the identity holds even when there are fees, in both directions
     # of profitability.
-    acts2 = parse_activities([
-        _row("FILL", "b2", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob2"),
-        _row("FILL", "s2", "BTC/USD", "sell",
-             "1.0", "95", "2026-10-11T11:00:00Z", "os2"),
-        _row("CFEE", "c2", "BTC/USD", None,
-             "0", "0", net_amount="-1.00",
-             transaction_time="2026-10-11T11:00:01Z",
-             order_id="os2"),
-    ])
+    acts2 = parse_activities(
+        [
+            _row("FILL", "b2", "BTC/USD", "buy", "1.0", "100", "2026-10-11T10:00:00Z", "ob2"),
+            _row("FILL", "s2", "BTC/USD", "sell", "1.0", "95", "2026-10-11T11:00:00Z", "os2"),
+            _row(
+                "CFEE",
+                "c2",
+                "BTC/USD",
+                None,
+                "0",
+                "0",
+                net_amount="-1.00",
+                transaction_time="2026-10-11T11:00:01Z",
+                order_id="os2",
+            ),
+        ]
+    )
     [trip2] = round_trips(acts2)
     # Cost 100, proceeds 95, fee 1 -> net -6.
     assert trip2.net_usd == Decimal("-6.0")
@@ -433,6 +457,7 @@ def test_no_spread_double_count() -> None:
 
 
 # -- test_cfee_applied_once_across_partial_fills ----------------------------
+
 
 def test_cfee_applied_once_across_partial_fills() -> None:
     """A single CFEE is allocated across partial fills, never re-applied.
@@ -448,16 +473,14 @@ def test_cfee_applied_once_across_partial_fills() -> None:
     199, fees 1, net -1.
     """
 
-    acts = parse_activities([
-        _row("FILL", "f1", "BTC/USD", "buy",
-             "1", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("FILL", "f2", "BTC/USD", "buy",
-             "1", "100", "2026-10-11T10:00:01Z", "ob"),
-        _row("CFEE", "c1", "BTC/USD", None,
-             "-0.01", "0", "2026-10-11T10:00:02Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "1.99", "100", "2026-10-11T11:00:00Z", "os"),
-    ])
+    acts = parse_activities(
+        [
+            _row("FILL", "f1", "BTC/USD", "buy", "1", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("FILL", "f2", "BTC/USD", "buy", "1", "100", "2026-10-11T10:00:01Z", "ob"),
+            _row("CFEE", "c1", "BTC/USD", None, "-0.01", "0", "2026-10-11T10:00:02Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "1.99", "100", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     trips = round_trips(acts)
     assert len(trips) == 1
     trip = trips[0]
@@ -479,16 +502,14 @@ def test_cfee_applied_once_across_partial_fills() -> None:
     # And the CFEE arriving *after* the fills still applies exactly once
     # because the matcher looks the order_id up by qty-sum, not by event
     # order. Same numbers, different chronology.
-    chronologically_late = parse_activities([
-        _row("FILL", "f1", "BTC/USD", "buy",
-             "1", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("FILL", "f2", "BTC/USD", "buy",
-             "1", "100", "2026-10-11T10:00:01Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "1.99", "100", "2026-10-11T10:00:02Z", "os"),
-        _row("CFEE", "c1", "BTC/USD", None,
-             "-0.01", "0", "2026-10-11T10:00:03Z", "ob"),
-    ])
+    chronologically_late = parse_activities(
+        [
+            _row("FILL", "f1", "BTC/USD", "buy", "1", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("FILL", "f2", "BTC/USD", "buy", "1", "100", "2026-10-11T10:00:01Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "1.99", "100", "2026-10-11T10:00:02Z", "os"),
+            _row("CFEE", "c1", "BTC/USD", None, "-0.01", "0", "2026-10-11T10:00:03Z", "ob"),
+        ]
+    )
     trips_late = round_trips(chronologically_late)
     [late_trip] = trips_late
     assert late_trip.qty_sold == Decimal("1.99")
@@ -499,6 +520,7 @@ def test_cfee_applied_once_across_partial_fills() -> None:
 
 
 # -- test_duplicate_activity_ids_ignored -----------------------------------
+
 
 def test_duplicate_activity_ids_ignored() -> None:
     """Activities sharing the same ``id`` are de-duplicated before matching.
@@ -511,14 +533,13 @@ def test_duplicate_activity_ids_ignored() -> None:
     the un-duplicated version -- no second copy, no second fee.
     """
 
-    single = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("CFEE", "c1", "BTC/USD", None,
-             "-0.01", "0", "2026-10-11T10:00:01Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "0.99", "100", "2026-10-11T11:00:00Z", "os"),
-    ])
+    single = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("CFEE", "c1", "BTC/USD", None, "-0.01", "0", "2026-10-11T10:00:01Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "0.99", "100", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     [single_trip] = round_trips(single)
     assert single_trip.qty_sold == Decimal("0.99")
     assert single_trip.cost_usd == Decimal("99")
@@ -527,20 +548,43 @@ def test_duplicate_activity_ids_ignored() -> None:
     assert single_trip.net_usd == Decimal("-1")
 
     # Replay every activity; net must still be -1, not -2 / -3.
-    replayed = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("CFEE", "c1", "BTC/USD", None,
-             "-0.01", "0", "2026-10-11T10:00:01Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "0.99", "100", "2026-10-11T11:00:00Z", "os"),
-        _row("FILL", "b1", "BTC/USD", "buy",  # duplicate id b1
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("CFEE", "c1", "BTC/USD", None,  # duplicate id c1
-             "-0.01", "0", "2026-10-11T10:00:01Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",  # duplicate id s1
-             "0.99", "100", "2026-10-11T11:00:00Z", "os"),
-    ])
+    replayed = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("CFEE", "c1", "BTC/USD", None, "-0.01", "0", "2026-10-11T10:00:01Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "0.99", "100", "2026-10-11T11:00:00Z", "os"),
+            _row(
+                "FILL",
+                "b1",
+                "BTC/USD",
+                "buy",  # duplicate id b1
+                "1.0",
+                "100",
+                "2026-10-11T10:00:00Z",
+                "ob",
+            ),
+            _row(
+                "CFEE",
+                "c1",
+                "BTC/USD",
+                None,  # duplicate id c1
+                "-0.01",
+                "0",
+                "2026-10-11T10:00:01Z",
+                "ob",
+            ),
+            _row(
+                "FILL",
+                "s1",
+                "BTC/USD",
+                "sell",  # duplicate id s1
+                "0.99",
+                "100",
+                "2026-10-11T11:00:00Z",
+                "os",
+            ),
+        ]
+    )
     trips_dup = round_trips(replayed)
     # Exactly one round trip, with the exact same numbers.
     assert len(trips_dup) == 1
@@ -559,6 +603,7 @@ def test_duplicate_activity_ids_ignored() -> None:
 
 # -- test_orphan_sell_marks_incomplete -------------------------------------
 
+
 def test_orphan_sell_marks_incomplete() -> None:
     """An unmatched SELL sets ``incomplete=True`` and surfaces its qty.
 
@@ -570,10 +615,11 @@ def test_orphan_sell_marks_incomplete() -> None:
     than trust the realised PnL.
     """
 
-    acts = parse_activities([
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "0.5", "100", "2026-10-11T11:00:00Z", "os"),
-    ])
+    acts = parse_activities(
+        [
+            _row("FILL", "s1", "BTC/USD", "sell", "0.5", "100", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     info = summary(acts)
     # The orphan qty is the full 0.5; the ledger side is empty so there
     # are no realised proceeds and the round-trip count is 0 -- but the
@@ -586,10 +632,11 @@ def test_orphan_sell_marks_incomplete() -> None:
 
     # A second sell on a different symbol adds to the orphan map and
     # keeps incomplete True.
-    more_acts = acts + parse_activities([
-        _row("FILL", "s2", "ETH/USD", "sell",
-             "1.0", "2000", "2026-10-11T12:00:00Z", "os-eth"),
-    ])
+    more_acts = acts + parse_activities(
+        [
+            _row("FILL", "s2", "ETH/USD", "sell", "1.0", "2000", "2026-10-11T12:00:00Z", "os-eth"),
+        ]
+    )
     info_more = summary(more_acts)
     assert info_more["incomplete"] is True
     assert info_more["unmatched_sell_qty"] == {
@@ -601,12 +648,12 @@ def test_orphan_sell_marks_incomplete() -> None:
     # time-ordered and the sells already happened. ``incomplete`` stays
     # True. This is the whole point of the flag: a later buy cannot
     # quietly mask an earlier orphan.
-    recovered = more_acts + parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-12T10:00:00Z", "ob-btc"),
-        _row("FILL", "b2", "ETH/USD", "buy",
-             "2.0", "2000", "2026-10-12T10:00:01Z", "ob-eth"),
-    ])
+    recovered = more_acts + parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "1.0", "100", "2026-10-12T10:00:00Z", "ob-btc"),
+            _row("FILL", "b2", "ETH/USD", "buy", "2.0", "2000", "2026-10-12T10:00:01Z", "ob-eth"),
+        ]
+    )
     info_recovered = summary(recovered)
     assert info_recovered["incomplete"] is True
     assert info_recovered["unmatched_sell_qty"] == {
@@ -616,12 +663,12 @@ def test_orphan_sell_marks_incomplete() -> None:
 
     # And a clean buy-then-sell sequence (no orphans) leaves incomplete
     # False with an empty unmatched map.
-    clean = parse_activities([
-        _row("FILL", "b1", "BTC/USD", "buy",
-             "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
-        _row("FILL", "s1", "BTC/USD", "sell",
-             "1.0", "110", "2026-10-11T11:00:00Z", "os"),
-    ])
+    clean = parse_activities(
+        [
+            _row("FILL", "b1", "BTC/USD", "buy", "1.0", "100", "2026-10-11T10:00:00Z", "ob"),
+            _row("FILL", "s1", "BTC/USD", "sell", "1.0", "110", "2026-10-11T11:00:00Z", "os"),
+        ]
+    )
     info_clean = summary(clean)
     assert info_clean["incomplete"] is False
     assert info_clean["unmatched_sell_qty"] == {}

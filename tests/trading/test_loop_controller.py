@@ -127,9 +127,7 @@ def _build_broker(
 ) -> tuple[PermitService, ToolBroker]:
     """Build a real ``PermitService`` + ``ToolBroker`` for the trader manifest."""
     service = _service(tmp_path, trading_manifest())
-    adapters: dict[
-        tuple[str, str], Callable[[Mapping[str, object]], dict[str, object]]
-    ] = {}
+    adapters: dict[tuple[str, str], Callable[[Mapping[str, object]], dict[str, object]]] = {}
     if fake_order is not None:
         adapters[("alpaca_paper", "order")] = fake_order
     broker = ToolBroker(
@@ -327,9 +325,7 @@ def _make_filled_order_adapter(
 
     def fake_order(args: Mapping[str, object]) -> dict[str, object]:
         calls.append(dict(args))
-        fill_price = (
-            float(price_box["price"]) if price_box is not None else float(price)
-        )
+        fill_price = float(price_box["price"]) if price_box is not None else float(price)
         return {
             "order_id": "fake-order-1",
             "status": fill_status,
@@ -424,9 +420,7 @@ def test_controller_none_keeps_old_behaviour(
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     fake_broker = FakeBroker()
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         if position is None:
             return Decision(
                 symbol="BTC/USD",
@@ -479,9 +473,7 @@ def test_entry_blocked_when_controller_halted(
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     controller = OrderController(tmp_path / "orders.db")
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -513,8 +505,7 @@ def test_entry_blocked_when_controller_halted(
 
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "controller_veto"' in line
-            and "controller_mode:HALT_ENTRIES" in line
+            '"kind": "controller_veto"' in line and "controller_mode:HALT_ENTRIES" in line
             for line in journal_text.splitlines()
         ), "expected a controller_mode veto in the journal"
     finally:
@@ -537,9 +528,7 @@ def test_entry_allowed_after_operator_run(
     controller.set_mode(RUN, operator_approved=True)
     assert controller.snapshot()["mode"] == RUN
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -593,9 +582,7 @@ def test_reconcile_failure_blocks_entry(
     controller = OrderController(tmp_path / "orders.db")
     fake_broker = FakeBroker(orders_since_raises=True)
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -626,9 +613,9 @@ def test_reconcile_failure_blocks_entry(
         assert controller.snapshot()["mode"] == HALT_ENTRIES
 
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
-        assert any(
-            '"kind": "reconcile_failed"' in line for line in journal_text.splitlines()
-        ), "expected a reconcile_failed journal entry"
+        assert any('"kind": "reconcile_failed"' in line for line in journal_text.splitlines()), (
+            "expected a reconcile_failed journal entry"
+        )
     finally:
         controller.close()
         ledger.close()
@@ -666,9 +653,7 @@ def test_unknown_submit_is_looked_up_not_retried(
     permits, tool_broker = _build_broker(tmp_path, adapter)
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -749,9 +734,7 @@ def test_exit_blocked_in_emergency(
 
     fake_broker = FakeBroker(positions=[{"symbol": "BTCUSD", "qty": 1.0}])
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision("BTC/USD", "exit", "target")
 
     cfg = LoopConfig(
@@ -771,15 +754,12 @@ def test_exit_blocked_in_emergency(
     try:
         loop.tick(1000.0)
 
-        assert calls == [], (
-            f"expected no submit in EMERGENCY_STOP, got {calls!r}"
-        )
+        assert calls == [], f"expected no submit in EMERGENCY_STOP, got {calls!r}"
         assert controller.snapshot()["mode"] == EMERGENCY_STOP
 
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "emergency_no_auto_send"' in line
-            for line in journal_text.splitlines()
+            '"kind": "emergency_no_auto_send"' in line for line in journal_text.splitlines()
         ), "expected an emergency_no_auto_send journal entry"
     finally:
         controller.close()
@@ -809,9 +789,7 @@ def test_kill_file_escalates_controller(
 
     fake_broker = FakeBroker()
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision("BTC/USD", "hold", "no-trade")
 
     cfg = LoopConfig(
@@ -834,8 +812,7 @@ def test_kill_file_escalates_controller(
         # The controller has been escalated from RUN to HALT_ENTRIES by the
         # killmodes.apply call inside the prelude.
         assert controller.snapshot()["mode"] == HALT_ENTRIES, (
-            f"expected HALT_ENTRIES after kill-file escalation, "
-            f"got {controller.snapshot()!r}"
+            f"expected HALT_ENTRIES after kill-file escalation, got {controller.snapshot()!r}"
         )
     finally:
         controller.close()
@@ -860,9 +837,7 @@ def test_positions_error_fails_closed(
 
     fake_broker = FakeBroker(positions_raises=True)
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -889,9 +864,7 @@ def test_positions_error_fails_closed(
     try:
         loop.tick(1000.0)
 
-        assert calls == [], (
-            f"expected no submit when positions() raises, got {calls!r}"
-        )
+        assert calls == [], f"expected no submit when positions() raises, got {calls!r}"
         # The controller was tripped by the fail-closed reconcile.
         snap = controller.snapshot()
         assert snap["mode"] == HALT_ENTRIES, (
@@ -900,10 +873,9 @@ def test_positions_error_fails_closed(
         assert not snap["reconciled"], "controller must not be reconciled"
 
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
-        assert any(
-            '"kind": "reconcile_failed"' in line
-            for line in journal_text.splitlines()
-        ), "expected a reconcile_failed journal entry when positions() raises"
+        assert any('"kind": "reconcile_failed"' in line for line in journal_text.splitlines()), (
+            "expected a reconcile_failed journal entry when positions() raises"
+        )
     finally:
         controller.close()
         ledger.close()
@@ -927,9 +899,7 @@ def test_missing_history_start_is_incomplete(
 
     fake_broker = FakeBroker()
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -956,9 +926,7 @@ def test_missing_history_start_is_incomplete(
     try:
         loop.tick(1000.0)
 
-        assert calls == [], (
-            f"expected no submit with no history, got {calls!r}"
-        )
+        assert calls == [], f"expected no submit with no history, got {calls!r}"
         # No history means incomplete truth; the controller must not be in
         # a clean state and the entry must be refused.
         snap = controller.snapshot()
@@ -1004,7 +972,9 @@ def test_sell_fill_fee_in_usd(
     # Seed the controller with a buy that filled so the controller believes
     # we own 1 BTC. The seed fill is fee-free so the controller's internal
     # position exactly matches the broker's reported position.
-    seed_cid = controller.prepare_order("BTC/USD", "buy", 1, 1.0)  # integer tick: the prelude proves history coverage from it
+    seed_cid = controller.prepare_order(
+        "BTC/USD", "buy", 1, 1.0
+    )  # integer tick: the prelude proves history coverage from it
     controller.mark_submitting(seed_cid)
     controller.acknowledge_order(seed_cid, broker_status="accepted")
     controller.record_fill(seed_cid, "seed-exec-id", 1.0, fee_in_asset="0")
@@ -1035,9 +1005,7 @@ def test_sell_fill_fee_in_usd(
 
     monkeypatch.setattr(controller, "record_fill", spy_record_fill)
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision("BTC/USD", "exit", "target")
 
     cfg = LoopConfig(
@@ -1101,9 +1069,7 @@ def test_prepare_order_refusal_does_not_crash(
 
     monkeypatch.setattr(controller, "prepare_order", boom_prepare)
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol="BTC/USD",
             action="enter_long",
@@ -1131,9 +1097,7 @@ def test_prepare_order_refusal_does_not_crash(
         # Must not raise; the refusal must be journaled.
         loop.tick(1000.0)
 
-        assert calls == [], (
-            f"expected no submit when prepare_order refuses, got {calls!r}"
-        )
+        assert calls == [], f"expected no submit when prepare_order refuses, got {calls!r}"
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
             '"kind": "controller_refused"' in line

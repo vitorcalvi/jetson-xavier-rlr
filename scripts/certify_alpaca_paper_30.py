@@ -4,6 +4,7 @@
 Live-paper is deliberately blocked pending isolated-account credentials and
 verified cancel/fill reconciliation; the main Stage2 HALT_ENTRIES is immutable.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,9 @@ class Lifecycle:
             and self.states[0] == "new"
             and self.states[-1] in ("filled", "canceled")
             and 0 <= self.filled <= self.quantity
-            and all(b in NEXT.get(a, set()) for a, b in zip(
-                self.states, self.states[1:], strict=False
-            ))
+            and all(
+                b in NEXT.get(a, set()) for a, b in zip(self.states, self.states[1:], strict=False)
+            )
             and (self.states[-1] != "filled" or self.filled == self.quantity)
         )
 
@@ -50,8 +51,7 @@ def simulate_30(output: Path | None = None) -> dict:
         ("new", "accepted", "canceled"),
     )
     rows = [
-        Lifecycle(templates[i % 3], 1, int(i % 3 != 2), i % 2 == 0,
-                  0.2 if i % 3 == 0 else 0.0)
+        Lifecycle(templates[i % 3], 1, int(i % 3 != 2), i % 2 == 0, 0.2 if i % 3 == 0 else 0.0)
         for i in range(30)
     ]
     passed = sum(row.valid() for row in rows)
@@ -82,12 +82,16 @@ def live_paper(
 ) -> None:
     if url != PAPER_ENDPOINT or not halt.is_file():
         raise RuntimeError("wrong PAPER URL or live HALT_ENTRIES absent")
-    raise RuntimeError("NO_BROKER_POST: isolated certifier account and order reconciler not certified")
+    raise RuntimeError(
+        "NO_BROKER_POST: isolated certifier account and order reconciler not certified"
+    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("deterministic-exchange-sim", "live-paper"), required=True)
+    parser.add_argument(
+        "--mode", choices=("deterministic-exchange-sim", "live-paper"), required=True
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.mode == "live-paper":

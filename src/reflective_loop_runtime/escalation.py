@@ -148,9 +148,7 @@ class TieredSlowBrain:
             threshold = 0.55
         hard = confidence is not None and confidence <= threshold
         should_escalate = bool(
-            self.lan_enabled
-            and self.lan is not None
-            and (hard or local_advice.degraded)
+            self.lan_enabled and self.lan is not None and (hard or local_advice.degraded)
         )
         if not should_escalate:
             return local_advice

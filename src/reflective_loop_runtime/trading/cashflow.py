@@ -337,15 +337,11 @@ def round_trips(acts: list[Activity]) -> list[RoundTrip]:
         if act.side == "buy":
             cfee_rows = fees_by_order.get(act.order_id or "", ())
             total_in_kind, total_usd = _total_fee_for_order(cfee_rows)
-            total_qty = total_buy_qty_by_order.get(
-                act.order_id or "", Decimal(0)
-            )
+            total_qty = total_buy_qty_by_order.get(act.order_id or "", Decimal(0))
             # Allocate this fill's proportional share of the order's
             # total CFEE. A ratio of zero (no buy qty seen) is harmless:
             # it produces a 0 fee and a lot with gross qty intact.
-            ratio = (
-                act.qty / total_qty if total_qty > 0 else Decimal(0)
-            )
+            ratio = act.qty / total_qty if total_qty > 0 else Decimal(0)
             in_kind = total_in_kind * ratio
             usd = total_usd * ratio
             gross_qty = act.qty
@@ -371,12 +367,8 @@ def round_trips(acts: list[Activity]) -> list[RoundTrip]:
         elif act.side == "sell":
             cfee_rows = fees_by_order.get(act.order_id or "", ())
             total_in_kind, total_usd = _total_fee_for_order(cfee_rows)
-            total_qty = total_sell_qty_by_order.get(
-                act.order_id or "", Decimal(0)
-            )
-            ratio = (
-                act.qty / total_qty if total_qty > 0 else Decimal(0)
-            )
+            total_qty = total_sell_qty_by_order.get(act.order_id or "", Decimal(0))
+            ratio = act.qty / total_qty if total_qty > 0 else Decimal(0)
             in_kind_sell = total_in_kind * ratio
             usd_sell = total_usd * ratio
             if in_kind_sell == 0 and usd_sell == 0 and act.net_amount is not None:
@@ -427,11 +419,7 @@ def round_trips(acts: list[Activity]) -> list[RoundTrip]:
             if proceeds_total > 0 or cost_total > 0:
                 total_fees = buy_fee_total + sell_fee_usd
                 net_usd = proceeds_total - cost_total - total_fees
-                net_pct = (
-                    net_usd / cost_total
-                    if cost_total > 0
-                    else Decimal(0)
-                )
+                net_pct = net_usd / cost_total if cost_total > 0 else Decimal(0)
                 trips.append(
                     RoundTrip(
                         symbol=act.symbol,
@@ -490,8 +478,7 @@ def summary(acts: list[Activity]) -> dict[str, Any]:
     for act in unique_acts:
         if act.type == "FILL" and act.side == "buy" and act.order_id:
             total_buy_qty_by_order[act.order_id] = (
-                total_buy_qty_by_order.get(act.order_id, Decimal(0))
-                + act.qty
+                total_buy_qty_by_order.get(act.order_id, Decimal(0)) + act.qty
             )
 
     qty_bought: dict[str, Decimal] = {}
@@ -500,9 +487,7 @@ def summary(acts: list[Activity]) -> dict[str, Any]:
             continue
         cfee_rows = fees_by_order.get(act.order_id or "", ())
         total_in_kind, _total_usd = _total_fee_for_order(cfee_rows)
-        total_qty = total_buy_qty_by_order.get(
-            act.order_id or "", Decimal(0)
-        )
+        total_qty = total_buy_qty_by_order.get(act.order_id or "", Decimal(0))
         ratio = act.qty / total_qty if total_qty > 0 else Decimal(0)
         in_kind = total_in_kind * ratio
         net = act.qty - in_kind
@@ -533,9 +518,7 @@ def summary(acts: list[Activity]) -> dict[str, Any]:
         if act.side == "buy":
             cfee_rows = fees_by_order.get(act.order_id or "", ())
             total_in_kind, _total_usd = _total_fee_for_order(cfee_rows)
-            total_qty = total_buy_qty_by_order.get(
-                act.order_id or "", Decimal(0)
-            )
+            total_qty = total_buy_qty_by_order.get(act.order_id or "", Decimal(0))
             ratio = act.qty / total_qty if total_qty > 0 else Decimal(0)
             in_kind = total_in_kind * ratio
             gross_qty = act.qty
@@ -567,9 +550,9 @@ def summary(acts: list[Activity]) -> dict[str, Any]:
                 else:
                     lot["qty_net"] = remaining_net
             if sell_qty_remaining > 0:
-                unmatched_sell_qty[act.symbol] = unmatched_sell_qty.get(
-                    act.symbol, Decimal(0)
-                ) + sell_qty_remaining
+                unmatched_sell_qty[act.symbol] = (
+                    unmatched_sell_qty.get(act.symbol, Decimal(0)) + sell_qty_remaining
+                )
 
     incomplete = any(q > 0 for q in unmatched_sell_qty.values())
 

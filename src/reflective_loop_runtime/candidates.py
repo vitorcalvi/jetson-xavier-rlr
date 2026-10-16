@@ -83,9 +83,13 @@ def build_candidates(state: dict[str, Any], *, config: Any) -> list[Candidate]:
     # thermal headroom is available. Values are chosen deterministically from
     # the current band; the Governor may cap them further.
     if "vision" in capabilities and thermal != "cooldown":
-        fps = float(config.max_vision_fps_conserve if thermal == "conserve"
-                    else config.max_vision_fps_degraded if thermal == "degraded"
-                    else 2.0)
+        fps = float(
+            config.max_vision_fps_conserve
+            if thermal == "conserve"
+            else config.max_vision_fps_degraded
+            if thermal == "degraded"
+            else 2.0
+        )
         candidates.append(
             Candidate(
                 id="set_vision_fps",
@@ -96,9 +100,13 @@ def build_candidates(state: dict[str, Any], *, config: Any) -> list[Candidate]:
             )
         )
     if "generation" in capabilities and thermal != "cooldown":
-        tokens = int(config.max_reply_tokens_conserve if thermal == "conserve"
-                     else config.max_reply_tokens_degraded if thermal == "degraded"
-                     else 96)
+        tokens = int(
+            config.max_reply_tokens_conserve
+            if thermal == "conserve"
+            else config.max_reply_tokens_degraded
+            if thermal == "degraded"
+            else 96
+        )
         candidates.append(
             Candidate(
                 id="set_reply_tokens",
@@ -125,8 +133,10 @@ def build_candidates(state: dict[str, Any], *, config: Any) -> list[Candidate]:
             Candidate(
                 id="remember",
                 action="remember",
-                args={"text": str(state.get("episode_digest") or "recent observations")[:2000],
-                      "importance": 3},
+                args={
+                    "text": str(state.get("episode_digest") or "recent observations")[:2000],
+                    "importance": 3,
+                },
                 label="Store a memory",
                 description="Persist a concise lesson from recent observations.",
             )

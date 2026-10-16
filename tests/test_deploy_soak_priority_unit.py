@@ -71,8 +71,7 @@ def test_no_directive_is_shadowed_by_a_duplicate():
     """systemd honours the last assignment; a duplicate silently drops the fix."""
     for unit in ("rlr.service", "rlr-advisor.service", "rlr-simsoak.service"):
         lines = (  # noqa: E501 - per-line scan is the point
-            line.strip()
-            for line in (_DEPLOY / unit).read_text(encoding="utf-8").splitlines()
+            line.strip() for line in (_DEPLOY / unit).read_text(encoding="utf-8").splitlines()
         )
         keys = [ln.split("=", 1)[0] for ln in lines if ln and not ln.startswith("#") and "=" in ln]
         for key in ("Nice", "CPUWeight", "CPUQuota", "IOSchedulingClass"):

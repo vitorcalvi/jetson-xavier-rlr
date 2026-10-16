@@ -54,9 +54,7 @@ pytestmark = pytest.mark.skipif(
 
 def _sign_trading_policy(tmp_path: Path) -> tuple[Path, Path]:
     """Write a signed trading policy + matching public PEM into ``tmp_path``."""
-    bundle = paper_trading_policy_bundle(
-        issued_at=int(time.time()) - 60, lifetime_seconds=3600
-    )
+    bundle = paper_trading_policy_bundle(issued_at=int(time.time()) - 60, lifetime_seconds=3600)
     private = Ed25519PrivateKey.generate()
     public_pem = private.public_key().public_bytes(
         encoding=serialization.Encoding.PEM,
@@ -287,10 +285,12 @@ def test_healthcheck_fresh_heartbeat_succeeds(tmp_path: Path, monkeypatch) -> No
 
 def test_run_loop_default_sleep_once():
     calls = []
+
     class _Loop:
         def tick(self, now):
             calls.append(now)
-    t = [120.0]   # exactly on a 60 s boundary, so the default sleep returns immediately
+
+    t = [120.0]  # exactly on a 60 s boundary, so the default sleep returns immediately
     trader_runtime._run_loop(_Loop(), interval=60.0, once=True, clock=lambda: t[0])
     assert calls and calls[0] >= 120.0
 
@@ -302,6 +302,7 @@ def test_run_loop_default_sleep_once():
 
 def test_runtime_reraises_controller_failstop() -> None:
     """A ``ControllerFailStop`` from ``tick`` bubbles out of ``_run_loop``; a generic exception is still swallowed."""
+
     class _FailStopLoop:
         def __init__(self) -> None:
             self.calls = 0
@@ -312,12 +313,8 @@ def test_runtime_reraises_controller_failstop() -> None:
 
     fail_loop = _FailStopLoop()
     with pytest.raises(ControllerFailStop):
-        trader_runtime._run_loop(
-            fail_loop, interval=60.0, once=True, clock=lambda: 120.0
-        )
-    assert fail_loop.calls == 1, (
-        "ControllerFailStop must propagate without a second tick attempt"
-    )
+        trader_runtime._run_loop(fail_loop, interval=60.0, once=True, clock=lambda: 120.0)
+    assert fail_loop.calls == 1, "ControllerFailStop must propagate without a second tick attempt"
 
     generic_calls: list = []
 

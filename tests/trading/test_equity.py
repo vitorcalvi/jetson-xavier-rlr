@@ -65,7 +65,8 @@ def test_configured_symbols_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _broker(tif: str = "gtc", get=None, post=None) -> PaperBroker:
     return PaperBroker(
-        "PKTESTKEY", "secret",
+        "PKTESTKEY",
+        "secret",
         http_get=get or (lambda u, h: {}),
         http_post=post or (lambda u, h, b: {"id": "o1"}),
         time_in_force=tif,
@@ -134,8 +135,14 @@ def _loop(tmp_path: Path, fake_features, decide_fn, *, market_open=True, calls=N
 
 def _enter(features, position, limits, *, now):
     if position is None:
-        return Decision(symbol="BTC/USD", action="enter_long", reason="t",
-                        stop=90.0, target=110.0, notional=100.0)
+        return Decision(
+            symbol="BTC/USD",
+            action="enter_long",
+            reason="t",
+            stop=90.0,
+            target=110.0,
+            notional=100.0,
+        )
     return Decision("BTC/USD", "hold", "keep")
 
 
@@ -175,9 +182,16 @@ def test_crypto_mode_has_no_session_gate(tmp_path: Path, fake_features) -> None:
     service, broker = _build_broker(tmp_path, order)
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     loop = TraderLoop(
-        market_fn=_noop_market, broker=broker, permits=service, tool_broker=broker,
-        ledger=ledger, limits=Limits(), heartbeat_path=tmp_path / "hb.json",
-        kill_path=tmp_path / "KILL", decide_fn=_enter, review_fn=_approve,
+        market_fn=_noop_market,
+        broker=broker,
+        permits=service,
+        tool_broker=broker,
+        ledger=ledger,
+        limits=Limits(),
+        heartbeat_path=tmp_path / "hb.json",
+        kill_path=tmp_path / "KILL",
+        decide_fn=_enter,
+        review_fn=_approve,
         symbols=("BTC/USD",),
     )
     loop.tick(SAT_1100)
@@ -193,8 +207,12 @@ def test_fetch_snapshots_forwards_auth_headers(monkeypatch: pytest.MonkeyPatch) 
         seen.append(dict(headers))
         return {"quotes": {}} if "quotes" in url else {"bars": {}}
 
-    market.fetch_snapshots(("IREN",), http=http, now=MON_0935,
-                           headers={"APCA-API-KEY-ID": "PKX", "APCA-API-SECRET-KEY": "s"})
+    market.fetch_snapshots(
+        ("IREN",),
+        http=http,
+        now=MON_0935,
+        headers={"APCA-API-KEY-ID": "PKX", "APCA-API-SECRET-KEY": "s"},
+    )
     assert seen and all(h.get("APCA-API-KEY-ID") == "PKX" for h in seen)
 
 

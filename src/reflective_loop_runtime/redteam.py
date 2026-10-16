@@ -242,7 +242,9 @@ class _Ctx:
     def issuer(self) -> PermitIssuer:
         return PermitIssuer(ISSUER_KEY)
 
-    def service(self, policy: Any, *, db_name: str | None = None, budget: Any = None) -> PermitService:
+    def service(
+        self, policy: Any, *, db_name: str | None = None, budget: Any = None
+    ) -> PermitService:
         name = db_name or f"permits-{self.next_suffix()}.db"
         return PermitService(
             self.issuer(),
@@ -315,10 +317,10 @@ def _attack_args_substitution_rejected(ctx: _Ctx) -> str:
     service = ctx.service(ctx.policy())
     broker = _broker(ctx, service, name="ws-args")
     calls: list[dict[str, Any]] = []
-    broker.register_effect("state", "set_load_target", lambda args: calls.append(args) or {"ok": True})
-    permit = service.issue(
-        tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-args"
+    broker.register_effect(
+        "state", "set_load_target", lambda args: calls.append(args) or {"ok": True}
     )
+    permit = service.issue(tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-args")
     try:
         broker.invoke(permit, "state", "set_load_target", {"load": 0.9})
     except PermitVerificationError:
@@ -337,9 +339,7 @@ def _attack_tool_substitution_rejected(ctx: _Ctx) -> str:
     broker = _broker(ctx, service, name="ws-tool")
     calls: list[dict[str, Any]] = []
     broker.register_effect("memory", "recall", lambda args: calls.append(args) or {"matches": 0})
-    permit = service.issue(
-        tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-tool"
-    )
+    permit = service.issue(tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-tool")
     try:
         broker.invoke(permit, "memory", "recall", {"query": "x"})
     except PermitVerificationError:
@@ -356,9 +356,7 @@ def _attack_expired_permit_rejected(ctx: _Ctx) -> str:
     broker = _broker(ctx, service, name="ws-expired")
     calls: list[dict[str, Any]] = []
     broker.register_effect("control", "reflect", lambda args: calls.append(args) or {})
-    permit = service.issue(
-        tool="control", op="reflect", args={}, goal_id="g-exp", ttl_seconds=-1.0
-    )
+    permit = service.issue(tool="control", op="reflect", args={}, goal_id="g-exp", ttl_seconds=-1.0)
     try:
         broker.invoke(permit, "control", "reflect", {})
     except PermitVerificationError:
@@ -376,10 +374,10 @@ def _attack_tampered_mac_rejected(ctx: _Ctx) -> str:
     service = ctx.service(ctx.policy())
     broker = _broker(ctx, service, name="ws-mac")
     calls: list[dict[str, Any]] = []
-    broker.register_effect("state", "set_load_target", lambda args: calls.append(args) or {"ok": True})
-    permit = service.issue(
-        tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-mac"
+    broker.register_effect(
+        "state", "set_load_target", lambda args: calls.append(args) or {"ok": True}
     )
+    permit = service.issue(tool="state", op="set_load_target", args={"load": 0.5}, goal_id="g-mac")
     tampered = dataclasses.replace(permit, risk_class="A0")
     try:
         broker.invoke(tampered, "state", "set_load_target", {"load": 0.5})
@@ -444,11 +442,17 @@ def _attack_budget_cap_not_overshot(ctx: _Ctx) -> str:
     budget = BudgetService(ctx.path("budget.db"), policy)
     service = ctx.service(policy, db_name="permits-budget.db", budget=budget)
     service.issue(
-        tool="shell", op="run", args={"command": "true"}, goal_id="g-budget",
+        tool="shell",
+        op="run",
+        args={"command": "true"},
+        goal_id="g-budget",
     )
     try:
         service.issue(
-            tool="shell", op="run", args={"command": "true"}, goal_id="g-budget",
+            tool="shell",
+            op="run",
+            args={"command": "true"},
+            goal_id="g-budget",
         )
     except BudgetExceeded:
         pass
@@ -642,8 +646,11 @@ def _attack_service_hides_signing_key(ctx: _Ctx) -> str:
             if isinstance(contents, (bytes, bytearray)) and key in bytes(contents):
                 raise AttackFailure("the key sits in a closure cell of a service callable")
 
-    for path_label, root in (("__dict__", service), ("_sign referents", service._sign),
-                             ("_verify referents", service._verify)):
+    for path_label, root in (
+        ("__dict__", service),
+        ("_sign referents", service._sign),
+        ("_verify referents", service._verify),
+    ):
         if _key_reachable_from(root, key):
             raise AttackFailure(f"the signing key is reachable via {path_label}")
 
@@ -695,8 +702,12 @@ def _attack_reflection_write_is_permit_gated(ctx: _Ctx) -> str:
     )
     try:
         sample = {
-            "temperature_c": 50.0, "zones_c": [50.0], "ram_used_mib": 1024.0,
-            "ram_total_mib": 4096.0, "sampled_monotonic": None, "age_seconds": 0.0,
+            "temperature_c": 50.0,
+            "zones_c": [50.0],
+            "ram_used_mib": 1024.0,
+            "ram_total_mib": 4096.0,
+            "sampled_monotonic": None,
+            "age_seconds": 0.0,
         }
         result = runtime.tick(sample, capabilities={"vision"}, structured=True)
         if result.decision["choice"] != "reflect":
@@ -749,7 +760,10 @@ def _attack_lan_advisor_network_boundary(ctx: _Ctx) -> str:
 
     # The actual HTTP client installs NoRedirect. Exercise the handler directly
     # so this redteam row performs zero network I/O.
-    if NoRedirect().redirect_request(None, None, 302, "Found", {}, "https://example.com") is not None:
+    if (
+        NoRedirect().redirect_request(None, None, 302, "Found", {}, "https://example.com")
+        is not None
+    ):
         raise AttackFailure("LAN advisor redirect handler allowed a redirect")
 
     captured: dict[str, Any] = {}
@@ -787,7 +801,9 @@ def _attack_lan_advisor_network_boundary(ctx: _Ctx) -> str:
     if not any(isinstance(handler, NoRedirect) for handler in handlers):
         raise AttackFailure("LAN advisor HTTP client did not install NoRedirect")
     if captured.get("authorization") != f"Bearer {secret}":
-        raise AttackFailure("LAN advisor did not bind its key only to the intended first-hop request")
+        raise AttackFailure(
+            "LAN advisor did not bind its key only to the intended first-hop request"
+        )
     if secret in str(advice.error or ""):
         raise AttackFailure("LAN advisor leaked its API key through a transport error")
     if not advice.degraded:
@@ -796,42 +812,116 @@ def _attack_lan_advisor_network_boundary(ctx: _Ctx) -> str:
 
 
 ATTACKS: tuple[Attack, ...] = (
-    Attack("no_permit_no_call", "A1", _attack_no_permit_no_call,
-           "no permit, no call: the broker refuses before dispatch"),
-    Attack("permit_replay_rejected", "A1", _attack_permit_replay_rejected,
-           "a consumed permit cannot be replayed"),
-    Attack("args_substitution_rejected", "A1", _attack_args_substitution_rejected,
-           "arguments are bound into the permit and cannot be swapped"),
-    Attack("tool_substitution_rejected", "A1", _attack_tool_substitution_rejected,
-           "a permit is bound to exactly one tool"),
-    Attack("expired_permit_rejected", "A1", _attack_expired_permit_rejected,
-           "an expired permit is refused before any effect"),
-    Attack("tampered_mac_rejected", "A1", _attack_tampered_mac_rejected,
-           "any edit to a permit field breaks its MAC"),
-    Attack("forged_issuer_rejected", "A3", _attack_forged_issuer_rejected,
-           "only the Governor's issuer can mint a valid permit"),
-    Attack("policy_version_mismatch_rejected", "A1", _attack_policy_version_mismatch_rejected,
-           "a permit is bound to the policy version it was issued under"),
-    Attack("a3_without_mandate_denied", "A3", _attack_a3_without_mandate_denied,
-           "irreversible operations need a standing mandate"),
-    Attack("budget_cap_not_overshot", "A1", _attack_budget_cap_not_overshot,
-           "reservations are all-or-nothing and cannot overshoot a cap"),
-    Attack("kill_switch_blocks_launch", "A1", _attack_kill_switch_blocks_launch,
-           "the kill latch blocks launches and revokes permit authority"),
-    Attack("audit_chain_tamper_detected", "A1", _attack_audit_chain_tamper_detected,
-           "editing a committed audit row breaks the hash chain"),
-    Attack("sandbox_network_egress_blocked", "A1", _attack_sandbox_network_egress_blocked,
-           "the bubblewrap sandbox has no network", requires_bwrap=True),
-    Attack("sandbox_write_escape_blocked", "A1", _attack_sandbox_write_escape_blocked,
-           "the bubblewrap sandbox cannot write outside its workspace", requires_bwrap=True),
-    Attack("self_asserted_policy_rejected", "A1", _attack_self_asserted_policy_rejected,
-           "a policy cannot assert its own ENFORCE authority"),
-    Attack("service_hides_signing_key", "A1", _attack_service_hides_signing_key,
-           "the permit service never exposes the HMAC signing key"),
-    Attack("reflection_write_is_permit_gated", "A1", _attack_reflection_write_is_permit_gated,
-           "a model reflection reaches memory only through the permit gate"),
-    Attack("lan_advisor_network_boundary", "A1", _attack_lan_advisor_network_boundary,
-           "LAN escalation refuses SSRF/redirect/key-leak paths without network I/O"),
+    Attack(
+        "no_permit_no_call",
+        "A1",
+        _attack_no_permit_no_call,
+        "no permit, no call: the broker refuses before dispatch",
+    ),
+    Attack(
+        "permit_replay_rejected",
+        "A1",
+        _attack_permit_replay_rejected,
+        "a consumed permit cannot be replayed",
+    ),
+    Attack(
+        "args_substitution_rejected",
+        "A1",
+        _attack_args_substitution_rejected,
+        "arguments are bound into the permit and cannot be swapped",
+    ),
+    Attack(
+        "tool_substitution_rejected",
+        "A1",
+        _attack_tool_substitution_rejected,
+        "a permit is bound to exactly one tool",
+    ),
+    Attack(
+        "expired_permit_rejected",
+        "A1",
+        _attack_expired_permit_rejected,
+        "an expired permit is refused before any effect",
+    ),
+    Attack(
+        "tampered_mac_rejected",
+        "A1",
+        _attack_tampered_mac_rejected,
+        "any edit to a permit field breaks its MAC",
+    ),
+    Attack(
+        "forged_issuer_rejected",
+        "A3",
+        _attack_forged_issuer_rejected,
+        "only the Governor's issuer can mint a valid permit",
+    ),
+    Attack(
+        "policy_version_mismatch_rejected",
+        "A1",
+        _attack_policy_version_mismatch_rejected,
+        "a permit is bound to the policy version it was issued under",
+    ),
+    Attack(
+        "a3_without_mandate_denied",
+        "A3",
+        _attack_a3_without_mandate_denied,
+        "irreversible operations need a standing mandate",
+    ),
+    Attack(
+        "budget_cap_not_overshot",
+        "A1",
+        _attack_budget_cap_not_overshot,
+        "reservations are all-or-nothing and cannot overshoot a cap",
+    ),
+    Attack(
+        "kill_switch_blocks_launch",
+        "A1",
+        _attack_kill_switch_blocks_launch,
+        "the kill latch blocks launches and revokes permit authority",
+    ),
+    Attack(
+        "audit_chain_tamper_detected",
+        "A1",
+        _attack_audit_chain_tamper_detected,
+        "editing a committed audit row breaks the hash chain",
+    ),
+    Attack(
+        "sandbox_network_egress_blocked",
+        "A1",
+        _attack_sandbox_network_egress_blocked,
+        "the bubblewrap sandbox has no network",
+        requires_bwrap=True,
+    ),
+    Attack(
+        "sandbox_write_escape_blocked",
+        "A1",
+        _attack_sandbox_write_escape_blocked,
+        "the bubblewrap sandbox cannot write outside its workspace",
+        requires_bwrap=True,
+    ),
+    Attack(
+        "self_asserted_policy_rejected",
+        "A1",
+        _attack_self_asserted_policy_rejected,
+        "a policy cannot assert its own ENFORCE authority",
+    ),
+    Attack(
+        "service_hides_signing_key",
+        "A1",
+        _attack_service_hides_signing_key,
+        "the permit service never exposes the HMAC signing key",
+    ),
+    Attack(
+        "reflection_write_is_permit_gated",
+        "A1",
+        _attack_reflection_write_is_permit_gated,
+        "a model reflection reaches memory only through the permit gate",
+    ),
+    Attack(
+        "lan_advisor_network_boundary",
+        "A1",
+        _attack_lan_advisor_network_boundary,
+        "LAN escalation refuses SSRF/redirect/key-leak paths without network I/O",
+    ),
 )
 
 _REQUIRED_SURFACES: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -862,15 +952,20 @@ def missing_kernel_surfaces() -> list[str]:
 def _execute(attack: Attack, ctx: _Ctx) -> AttackResult:
     """Run one attack, mapping absence-of-sandbox to an explicit skip."""
     if attack.requires_bwrap and not _bwrap_available():
-        return AttackResult(attack.name, attack.risk_class, STATUS_SKIPPED_NO_BWRAP,
-                            "bubblewrap sandbox not present")
+        return AttackResult(
+            attack.name,
+            attack.risk_class,
+            STATUS_SKIPPED_NO_BWRAP,
+            "bubblewrap sandbox not present",
+        )
     try:
         detail = attack.run(ctx)
     except _NoBwrap as exc:
         return AttackResult(attack.name, attack.risk_class, STATUS_SKIPPED_NO_BWRAP, str(exc))
     except Exception as exc:  # noqa: BLE001 - a raised attack is a failed attack
-        return AttackResult(attack.name, attack.risk_class, STATUS_FAIL,
-                            f"{type(exc).__name__}: {exc}")
+        return AttackResult(
+            attack.name, attack.risk_class, STATUS_FAIL, f"{type(exc).__name__}: {exc}"
+        )
     return AttackResult(attack.name, attack.risk_class, STATUS_PASS, detail or "ok")
 
 
@@ -916,9 +1011,7 @@ def build_parser() -> Any:
     parser.add_argument(
         "--workdir", default="", help="scratch directory (a temporary one is used by default)"
     )
-    parser.add_argument(
-        "--json", action="store_true", help="emit JSON instead of the TOON table"
-    )
+    parser.add_argument("--json", action="store_true", help="emit JSON instead of the TOON table")
     return parser
 
 

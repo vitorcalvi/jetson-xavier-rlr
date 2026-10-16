@@ -603,7 +603,8 @@ class TraderLoop:
             decision = Decision(symbol, "exit", "session_close")
         allowed, veto_code = self._review(decision, features, risk_state, self._limits, now=now)
         if (
-            allowed and decision.action == "enter_long"
+            allowed
+            and decision.action == "enter_long"
             and Path("/home/vitor/rlr/flags/HALT_ENTRIES").exists()
         ):
             allowed, veto_code = False, "global_halt_entries"
@@ -652,8 +653,13 @@ class TraderLoop:
             snap = self._controller.snapshot()
             if snap.get("mode") != "RUN":
                 self._controller.set_mode("RUN", operator_approved=True)
-                self._ledger.journal({"kind": "shadow_autorun" if self._shadow else "paper_autorun",
-                                      "ts": now, "tick": self._tick})
+                self._ledger.journal(
+                    {
+                        "kind": "shadow_autorun" if self._shadow else "paper_autorun",
+                        "ts": now,
+                        "tick": self._tick,
+                    }
+                )
         except Exception:  # noqa: BLE001 - not clean yet: stay halted
             pass
 
@@ -664,19 +670,37 @@ class TraderLoop:
             return
         if not session.must_flatten(now):
             if not session.in_regular_session(now) and session.is_weekday(now):
-                self._ledger.journal({"kind": "position_held_outside_session", "ts": now,
-                                      "tick": self._tick,
-                                      "symbols": sorted(state.open_positions)})
+                self._ledger.journal(
+                    {
+                        "kind": "position_held_outside_session",
+                        "ts": now,
+                        "tick": self._tick,
+                        "symbols": sorted(state.open_positions),
+                    }
+                )
             return
         for symbol, position in list(state.open_positions.items()):
             try:
-                ok = self._execute(symbol, Decision(symbol, "exit", "session_close"),
-                                   _FLATTEN_FEATURES, now, position)
+                ok = self._execute(
+                    symbol,
+                    Decision(symbol, "exit", "session_close"),
+                    _FLATTEN_FEATURES,
+                    now,
+                    position,
+                )
                 error = None
             except Exception as exc:  # noqa: BLE001 - retried on the next tick
                 ok, error = False, repr(exc)
-            self._ledger.journal({"kind": "session_flatten", "ts": now, "tick": self._tick,
-                                  "symbol": symbol, "executed": bool(ok), "error": error})
+            self._ledger.journal(
+                {
+                    "kind": "session_flatten",
+                    "ts": now,
+                    "tick": self._tick,
+                    "symbol": symbol,
+                    "executed": bool(ok),
+                    "error": error,
+                }
+            )
 
     def _entry_session_open(self, now: float) -> bool:
         """Entry window open AND the broker clock confirms the market is open."""
@@ -746,7 +770,8 @@ class TraderLoop:
                         "notional": decision.notional,
                         "controller_mode": mode,
                         "controller_would_allow": (
-                            mode == "RUN" if decision.action == "enter_long"
+                            mode == "RUN"
+                            if decision.action == "enter_long"
                             else mode != "EMERGENCY_STOP"
                         ),
                     }
@@ -1313,23 +1338,27 @@ class TraderLoop:
                 reconciled = control.get("reconciled") is True
                 uncertain = control.get("uncertain") is not False
                 incident = str(control.get("incident") or "")
-                payload.update({
-                    "controller_mode": mode,
-                    "controller_reconciled": reconciled,
-                    "controller_uncertain": uncertain,
-                    "controller_incident": incident,
-                    "entries_blocked": bool(
-                        halted or mode != "RUN" or incident or uncertain or not reconciled
-                    ),
-                })
+                payload.update(
+                    {
+                        "controller_mode": mode,
+                        "controller_reconciled": reconciled,
+                        "controller_uncertain": uncertain,
+                        "controller_incident": incident,
+                        "entries_blocked": bool(
+                            halted or mode != "RUN" or incident or uncertain or not reconciled
+                        ),
+                    }
+                )
             except Exception:  # fail closed, never invent an all-clear
-                payload.update({
-                    "controller_mode": "UNKNOWN",
-                    "controller_reconciled": False,
-                    "controller_uncertain": True,
-                    "controller_incident": "controller_snapshot_unavailable",
-                    "entries_blocked": True,
-                })
+                payload.update(
+                    {
+                        "controller_mode": "UNKNOWN",
+                        "controller_reconciled": False,
+                        "controller_uncertain": True,
+                        "controller_incident": "controller_snapshot_unavailable",
+                        "entries_blocked": True,
+                    }
+                )
         else:
             payload.update({"controller_mode": "UNWIRED", "entries_blocked": bool(halted)})
         text = json.dumps(payload, default=str, sort_keys=True)

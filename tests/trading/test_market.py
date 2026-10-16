@@ -27,9 +27,7 @@ def _load(name: str) -> dict:
     return json.loads((FIXTURES / name).read_text())
 
 
-def _split_router(
-    bars: dict, quotes: dict
-) -> tuple[Callable[[str, dict], object], list[str]]:
+def _split_router(bars: dict, quotes: dict) -> tuple[Callable[[str, dict], object], list[str]]:
     """Return a fake ``http`` plus a list that records every URL it sees.
 
     The router looks at the URL path to decide which payload to return,
@@ -183,9 +181,7 @@ def test_fetch_snapshots_follows_pagination() -> None:
     # Two bars calls (page 1 + page 2) and one quotes call.
     bars_urls = [u for u in urls if "/bars" in u]
     quote_urls = [u for u in urls if "/quotes" in u]
-    assert len(bars_urls) == 2, (
-        f"expected page 1 + page 2, saw {len(bars_urls)} bars urls"
-    )
+    assert len(bars_urls) == 2, f"expected page 1 + page 2, saw {len(bars_urls)} bars urls"
     assert len(quote_urls) == 1, "exactly one quotes call regardless of pagination"
     # Pagination round-tripped the cursor through the URL, not the headers.
     assert "page_token=tok1" in bars_urls[1], (

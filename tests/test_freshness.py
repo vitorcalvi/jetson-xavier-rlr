@@ -171,9 +171,7 @@ class TestSlowCachedProvider:
             telemetry=provider,
         )
         try:
-            result = runtime.tick(
-                provider.sample(), capabilities={"vision"}, structured=True
-            )
+            result = runtime.tick(provider.sample(), capabilities={"vision"}, structured=True)
         finally:
             runtime.store.close()
         assert result.vetoed is True

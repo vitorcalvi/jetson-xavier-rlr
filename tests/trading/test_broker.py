@@ -77,9 +77,7 @@ class FakeHttp:
             raise value
         return value
 
-    def post(
-        self, url: str, headers: dict[str, str], body: dict[str, Any]
-    ) -> Any:
+    def post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> Any:
         self.post_calls.append((url, headers, body))
         return self._post_response
 
@@ -96,9 +94,7 @@ class _CallableHttp:
         self.get_calls.append((url, headers))
         return self._get_fn(url, headers)
 
-    def post(
-        self, url: str, headers: dict[str, str], body: dict[str, Any]
-    ) -> Any:
+    def post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> Any:
         self.post_calls.append((url, headers, body))
         return {}
 
@@ -106,6 +102,7 @@ class _CallableHttp:
 # ---------------------------------------------------------------------------
 # Fixtures used by the strict-validation tests
 # ---------------------------------------------------------------------------
+
 
 def _order(
     *,
@@ -390,9 +387,7 @@ class TestReadEndpoints:
         http = FakeHttp(get_responses=[page1, page2, page3])
         broker = _make_broker(http_get=http.get, http_post=http.post)
 
-        result = broker.orders_since(
-            "2023-12-31T00:00:00Z", page_limit=2, max_pages=10
-        )
+        result = broker.orders_since("2023-12-31T00:00:00Z", page_limit=2, max_pages=10)
 
         assert [o["id"] for o in result] == ["o1", "o2", "o3"]
         assert len(http.get_calls) == 3
@@ -419,9 +414,7 @@ class TestReadEndpoints:
         broker = _make_broker(http_get=http.get, http_post=http.post)
 
         with pytest.raises(RuntimeError, match="order history incomplete"):
-            broker.orders_since(
-                "2023-12-31T00:00:00Z", page_limit=2, max_pages=1
-            )
+            broker.orders_since("2023-12-31T00:00:00Z", page_limit=2, max_pages=1)
         # The single allowed page was fetched before the error was raised.
         assert len(http.get_calls) == 1
 
@@ -441,9 +434,7 @@ class TestReadEndpoints:
 
         assert result == order
         url = http.get_calls[0][0]
-        assert url.startswith(
-            f"{PAPER_BASE_URL}/v2/orders:by_client_order_id"
-        )
+        assert url.startswith(f"{PAPER_BASE_URL}/v2/orders:by_client_order_id")
         assert "client_order_id=rlr-xyz" in url
 
     def test_get_order_by_client_id_404_returns_none(self) -> None:
@@ -480,10 +471,7 @@ class TestOrdersSinceTieSafe:
             after = qs.get("after", ["2023-12-31T00:00:00Z"])[0]
             limit = int(qs.get("limit", ["500"])[0])
             after_dt = _after_dt(after)
-            filtered = [
-                o for o in all_orders
-                if _after_dt(o["submitted_at"]) > after_dt
-            ]
+            filtered = [o for o in all_orders if _after_dt(o["submitted_at"]) > after_dt]
             # Broker returns orders in ascending submitted_at order, then we
             # honour the page limit.  This matches the real Alpaca behaviour
             # the adapter is being made safe against.
@@ -494,9 +482,7 @@ class TestOrdersSinceTieSafe:
         broker = _make_broker(http_get=http.get, http_post=http.post)
 
         # A tie group smaller than a page is exhausted through the overlap.
-        result = broker.orders_since(
-            "2023-12-31T00:00:00Z", page_limit=4, max_pages=20
-        )
+        result = broker.orders_since("2023-12-31T00:00:00Z", page_limit=4, max_pages=20)
 
         ids = [o["id"] for o in result]
         assert ids == ["o1", "o2", "o3", "o4", "o5"]
@@ -529,12 +515,8 @@ class TestOrdersSinceTieSafe:
         http = FakeHttp(get_responses=[full_page, full_page])
         broker = _make_broker(http_get=http.get, http_post=http.post)
 
-        with pytest.raises(
-            RuntimeError, match="order history incomplete: tie group"
-        ):
-            broker.orders_since(
-                "2023-12-31T00:00:00Z", page_limit=2, max_pages=10
-            )
+        with pytest.raises(RuntimeError, match="order history incomplete: tie group"):
+            broker.orders_since("2023-12-31T00:00:00Z", page_limit=2, max_pages=10)
         # We made it to the second page before raising.
         assert len(http.get_calls) == 2
 
@@ -570,9 +552,7 @@ class TestCanonicalSymbols:
         # positions() rewrites BTCUSD -> BTC/USD.
         positions = [_position(symbol="BTCUSD", qty="0.25")]
         http_pos = FakeHttp(get_responses=[positions])
-        broker_pos = _make_broker(
-            http_get=http_pos.get, http_post=http_pos.post
-        )
+        broker_pos = _make_broker(http_get=http_pos.get, http_post=http_pos.post)
         result = broker_pos.positions()
         assert result[0]["symbol"] == "BTC/USD"
 
@@ -582,9 +562,7 @@ class TestCanonicalSymbols:
             _order(oid="o2", symbol="BTC/USD", status="open"),
         ]
         http_open = FakeHttp(get_responses=[open_orders_payload])
-        broker_open = _make_broker(
-            http_get=http_open.get, http_post=http_open.post
-        )
+        broker_open = _make_broker(http_get=http_open.get, http_post=http_open.post)
         result = broker_open.open_orders()
         assert [o["symbol"] for o in result] == ["ETH/USD", "BTC/USD"]
 
@@ -597,12 +575,8 @@ class TestCanonicalSymbols:
             ),
         ]
         http_since = FakeHttp(get_responses=[page])
-        broker_since = _make_broker(
-            http_get=http_since.get, http_post=http_since.post
-        )
-        result = broker_since.orders_since(
-            "2023-12-31T00:00:00Z", page_limit=10, max_pages=10
-        )
+        broker_since = _make_broker(http_get=http_since.get, http_post=http_since.post)
+        result = broker_since.orders_since("2023-12-31T00:00:00Z", page_limit=10, max_pages=10)
         assert result[0]["symbol"] == "SOL/USD"
 
         # get_order_by_client_id() rewrites BTCUSD -> BTC/USD.
@@ -613,9 +587,7 @@ class TestCanonicalSymbols:
             symbol="BTCUSD",
         )
         http_by = FakeHttp(get_responses=[order])
-        broker_by = _make_broker(
-            http_get=http_by.get, http_post=http_by.post
-        )
+        broker_by = _make_broker(http_get=http_by.get, http_post=http_by.post)
         result = broker_by.get_order_by_client_id("rlr-xyz")
         assert result is not None
         assert result["symbol"] == "BTC/USD"
@@ -658,9 +630,7 @@ class TestBrokerDataError:
         broker = _make_broker(http_get=http.get, http_post=http.post)
 
         with pytest.raises(BrokerDataError, match="orders_since"):
-            broker.orders_since(
-                "2023-12-31T00:00:00Z", page_limit=10, max_pages=5
-            )
+            broker.orders_since("2023-12-31T00:00:00Z", page_limit=10, max_pages=5)
         assert len(http.get_calls) == 1
 
     def test_order_missing_fields_raises(self) -> None:
@@ -699,15 +669,11 @@ class TestBrokerDataError:
         # An empty list is the "complete, nothing to report" signal and
         # must NOT raise.  Both positions() and open_orders() exercise this.
         http_pos = FakeHttp(get_responses=[[]])
-        broker_pos = _make_broker(
-            http_get=http_pos.get, http_post=http_pos.post
-        )
+        broker_pos = _make_broker(http_get=http_pos.get, http_post=http_pos.post)
         assert broker_pos.positions() == []
 
         http_open = FakeHttp(get_responses=[[]])
-        broker_open = _make_broker(
-            http_get=http_open.get, http_post=http_open.post
-        )
+        broker_open = _make_broker(http_get=http_open.get, http_post=http_open.post)
         assert broker_open.open_orders() == []
 
     def test_order_missing_fields_in_get_by_client_id_raises(self) -> None:

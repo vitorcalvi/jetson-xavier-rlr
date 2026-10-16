@@ -68,8 +68,9 @@ class Alerter:
     def enabled(self) -> bool:
         return bool(self._outbox)
 
-    def send(self, kind: str, message: str, *, priority: str = "default",
-             dedupe_key: str | None = None) -> bool:
+    def send(
+        self, kind: str, message: str, *, priority: str = "default", dedupe_key: str | None = None
+    ) -> bool:
         if not self._outbox:
             return False
         try:
@@ -78,13 +79,15 @@ class Alerter:
             if now - self._last.get(key, -1e18) < self._min_interval_s:
                 return False
             self._last[key] = now
-            self._sink({
-                "ts": now,
-                "title": f"RLR {kind}",
-                "priority": priority if priority in _PRIORITIES else "default",
-                "tags": kind,
-                "message": _redact(message),
-            })
+            self._sink(
+                {
+                    "ts": now,
+                    "title": f"RLR {kind}",
+                    "priority": priority if priority in _PRIORITIES else "default",
+                    "tags": kind,
+                    "message": _redact(message),
+                }
+            )
             return True
         except Exception:  # noqa: BLE001 - alerting must never affect trading
             return False
@@ -94,7 +97,9 @@ def from_env(env: Mapping[str, str], *, data_dir: Any = None) -> Alerter:
     """Enabled when RLR_ALERTS=1: outbox at RLR_ALERT_OUTBOX or <data_dir>/alerts_outbox.jsonl."""
     if (env.get("RLR_ALERTS") or "") != "1":
         return Alerter(None)
-    path = env.get("RLR_ALERT_OUTBOX") or (os.path.join(str(data_dir), "alerts_outbox.jsonl") if data_dir else "")
+    path = env.get("RLR_ALERT_OUTBOX") or (
+        os.path.join(str(data_dir), "alerts_outbox.jsonl") if data_dir else ""
+    )
     return Alerter(path or None)
 
 
@@ -131,8 +136,12 @@ class AlertingLedger:
             )
             return
         if kind == "decision" and e.get("veto") == "daily_loss_halt":
-            self._alerter.send("daily_halt", f"[{self._label}] daily loss limit reached: entries blocked today",
-                               priority="high", dedupe_key="daily_halt")
+            self._alerter.send(
+                "daily_halt",
+                f"[{self._label}] daily loss limit reached: entries blocked today",
+                priority="high",
+                dedupe_key="daily_halt",
+            )
             return
         if kind in _ALERT_KINDS:
             priority, label = _ALERT_KINDS[kind]

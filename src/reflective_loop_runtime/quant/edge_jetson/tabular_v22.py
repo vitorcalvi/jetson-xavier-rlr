@@ -1,4 +1,5 @@
 """Lossless tabular TOON for uniform arrays; never conflate regex with BPE."""
+
 from __future__ import annotations
 
 import json
@@ -35,8 +36,11 @@ def encode(data: dict[str, Any]) -> str:
                 if not isinstance(key, str) or not KEY.fullmatch(key):
                     raise ValueError("unsafe field")
                 visit(f"{prefix}.{key}" if prefix else key, value[key])
-        elif (isinstance(value, list) and len(value) >= 2
-              and all(isinstance(row, dict) for row in value)):
+        elif (
+            isinstance(value, list)
+            and len(value) >= 2
+            and all(isinstance(row, dict) for row in value)
+        ):
             columns = tuple(value[0])
             if not columns or any(set(row) != set(columns) for row in value):
                 raise ValueError("nonuniform table")
@@ -85,11 +89,10 @@ def decode(wire: str) -> dict[str, Any]:
             path, count, columns = match.groups()
             n = int(count)
             cols = columns.split(",")
-            if (n < 2 or n > 100_000 or n > len(lines) - i - 1
-                    or len(cols) != len(set(cols))):
+            if n < 2 or n > 100_000 or n > len(lines) - i - 1 or len(cols) != len(set(cols)):
                 raise ValueError("invalid table")
             rows = []
-            for row in lines[i + 1:i + n + 1]:
+            for row in lines[i + 1 : i + n + 1]:
                 if not row.startswith("\t"):
                     raise ValueError("invalid table row")
                 cells = row[1:].split("\t")
@@ -137,6 +140,11 @@ def metrics(records: list[dict]) -> dict:
         "token_metric": kind,
         "token_reduction_pct": round(ratio_t, 4) if exact else None,
         "regex_proxy_reduction_pct": round(ratio_t, 4) if not exact else None,
-        "r4_gate_pass": bool(exact and len(records) >= 100 and decode(wire) == root
-                             and ratio_b >= 25 and ratio_t >= 35),
+        "r4_gate_pass": bool(
+            exact
+            and len(records) >= 100
+            and decode(wire) == root
+            and ratio_b >= 25
+            and ratio_t >= 35
+        ),
     }

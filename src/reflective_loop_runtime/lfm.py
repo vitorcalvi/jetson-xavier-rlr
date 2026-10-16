@@ -27,8 +27,18 @@ MAX_ITEM_CHARS = 300
 MAX_SIGNALS = 24
 
 _AMBIGUITY_MARKERS = (
-    "maybe", "unclear", "however", "but ", "although", "conflicting",
-    "not sure", "unknown", "except", "unsure", "possibly", "confusing",
+    "maybe",
+    "unclear",
+    "however",
+    "but ",
+    "although",
+    "conflicting",
+    "not sure",
+    "unknown",
+    "except",
+    "unsure",
+    "possibly",
+    "confusing",
 )
 
 
@@ -125,7 +135,9 @@ class DeterministicLFM:
                 structured = True
             for sentence in _split_sentences(remainder):
                 lowered = sentence.lower()
-                if any(word in lowered for word in ("risk", "danger", "unsafe", "overheat", "fail")):
+                if any(
+                    word in lowered for word in ("risk", "danger", "unsafe", "overheat", "fail")
+                ):
                     risks.append(sentence)
                 elif any(word in lowered for word in ("must", "constraint", "cannot", "limit")):
                     constraints.append(sentence)

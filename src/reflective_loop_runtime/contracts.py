@@ -126,8 +126,7 @@ def validate_action(value: Any) -> dict[str, Any]:
         missing = expected - set(value)
         extra = set(value) - expected
         raise ContractError(
-            f"action fields do not match schema (missing={sorted(missing)}, "
-            f"extra={sorted(extra)})"
+            f"action fields do not match schema (missing={sorted(missing)}, extra={sorted(extra)})"
         )
 
     _check_text(value.get("rationale"), MAX_RATIONALE_CHARS, "rationale")

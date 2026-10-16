@@ -82,8 +82,7 @@ class TestFastPath:
     def test_structured_tick_skips_lfm_and_qwen(self, runtime_factory):
         decider = RecordingDecider()
         runtime = runtime_factory(decider=decider, slow_brain=StaticSlowBrain())
-        result = runtime.tick(warm_sample(), capabilities={"vision", "generation"},
-                              structured=True)
+        result = runtime.tick(warm_sample(), capabilities={"vision", "generation"}, structured=True)
         assert result.structured is True
         assert result.used_lfm is False
         assert result.used_qwen is False
@@ -160,8 +159,10 @@ class TestFailClosed:
     def test_lfm_failure_is_survivable(self, runtime_factory):
         runtime = runtime_factory(normalizer=RaisingNormalizer())
         result = runtime.tick(
-            warm_sample(), capabilities={"vision"},
-            structured=False, raw_text="totally unstructured-ish notes",
+            warm_sample(),
+            capabilities={"vision"},
+            structured=False,
+            raw_text="totally unstructured-ish notes",
         )
         assert result.used_lfm is True
         assert result.lfm_error is not None
@@ -197,15 +198,17 @@ class TestMeasuredQuality:
         runtime = runtime_factory()
         result = runtime.tick(
             warm_sample(temperature_c=80.0, zones_c=[80.0]),
-            capabilities={"vision", "generation"}, structured=True,
+            capabilities={"vision", "generation"},
+            structured=True,
         )
         assert result.decision["choice"] == "cooldown"
         assert result.execution["ok"] is True
 
     def test_cool_tick_does_not_over_act(self, runtime_factory):
         runtime = runtime_factory()
-        result = runtime.tick(warm_sample(temperature_c=50.0),
-                              capabilities={"vision"}, structured=True)
+        result = runtime.tick(
+            warm_sample(temperature_c=50.0), capabilities={"vision"}, structured=True
+        )
         assert result.decision["choice"] in ("observe", "abstain")
 
 
@@ -218,13 +221,16 @@ class TestLoopSurvival:
                 raise RuntimeError("boom")
 
         runtime = runtime_factory(
-            decider=AlwaysFail(), slow_brain=RaisingSlowBrain(),
+            decider=AlwaysFail(),
+            slow_brain=RaisingSlowBrain(),
             normalizer=RaisingNormalizer(),
         )
         for i in range(25):
             result = runtime.tick(
                 warm_sample(temperature_c=55.0 + i),
-                capabilities={"vision"}, structured=False, raw_text=f"noise {i}",
+                capabilities={"vision"},
+                structured=False,
+                raw_text=f"noise {i}",
             )
             assert result.execution["action"] is not None
         assert runtime.store.counts()["actions"] >= 25
@@ -232,8 +238,11 @@ class TestLoopSurvival:
     def test_successful_multi_tick_run_persists_everything(self, runtime_factory):
         runtime = runtime_factory()
         for i in range(6):
-            runtime.tick(warm_sample(temperature_c=52.0 + i * 4),
-                         capabilities={"vision", "generation"}, structured=True)
+            runtime.tick(
+                warm_sample(temperature_c=52.0 + i * 4),
+                capabilities={"vision", "generation"},
+                structured=True,
+            )
         counts = runtime.store.counts()
         assert counts["telemetry"] == 6
         assert counts["decisions"] >= 6
@@ -246,43 +255,58 @@ class TestReflection:
         decider = FixedDecider([("reflect", 0.99)])
         brain = StaticSlowBrain()
         runtime = runtime_factory(decider=decider, slow_brain=brain)
-        result = runtime.tick(warm_sample(temperature_c=50.0),
-                              capabilities={"vision"}, structured=True)
+        result = runtime.tick(
+            warm_sample(temperature_c=50.0), capabilities={"vision"}, structured=True
+        )
         assert result.decision["choice"] == "reflect"
         assert brain.reflect_calls == 1
         assert runtime.store.counts()["memories"] >= 1
 
+
 class TestBackgroundGoalSpamPrevention:
     def test_background_monitoring_never_proposes_default_set_goal(self, runtime_factory):
         class InspectCandidates:
-            name = 'goal-inspector'
+            name = "goal-inspector"
+
             def __init__(self):
                 self.ids = []
-            def score(self, candidates, state, *, context=''):
+
+            def score(self, candidates, state, *, context=""):
                 self.ids.append([c.id for c in candidates])
-                return make_scored(candidates, 'abstain', 0.98)
+                return make_scored(candidates, "abstain", 0.98)
+
         backend = InspectCandidates()
         runtime = runtime_factory(decider=backend)
         for _ in range(6):
-            runtime.tick(warm_sample(), capabilities=['vision', 'generation'],
-                         structured=True, goal_digest='maintain stable operation',
-                         allow_default_goal_creation=False)
+            runtime.tick(
+                warm_sample(),
+                capabilities=["vision", "generation"],
+                structured=True,
+                goal_digest="maintain stable operation",
+                allow_default_goal_creation=False,
+            )
         assert len(backend.ids) == 6
-        assert all('set_goal' not in ids for ids in backend.ids)
-        assert all('abstain' in ids and 'observe' in ids for ids in backend.ids)
-        assert not any(r['name'] == 'set_goal' for r in runtime.store.recent_actions(limit=30))
+        assert all("set_goal" not in ids for ids in backend.ids)
+        assert all("abstain" in ids and "observe" in ids for ids in backend.ids)
+        assert not any(r["name"] == "set_goal" for r in runtime.store.recent_actions(limit=30))
 
     def test_explicit_goal_creation_candidate_remains_available(self, runtime_factory):
         class InspectCandidates:
-            name = 'goal-inspector'
+            name = "goal-inspector"
+
             def __init__(self):
                 self.ids = []
-            def score(self, candidates, state, *, context=''):
+
+            def score(self, candidates, state, *, context=""):
                 self.ids.append([c.id for c in candidates])
-                return make_scored(candidates, 'abstain', 0.98)
+                return make_scored(candidates, "abstain", 0.98)
+
         backend = InspectCandidates()
         runtime = runtime_factory(decider=backend)
-        runtime.tick(warm_sample(), structured=True,
-                     goal_digest='investigate a concrete operator request',
-                     allow_default_goal_creation=True)
-        assert 'set_goal' in backend.ids[0]
+        runtime.tick(
+            warm_sample(),
+            structured=True,
+            goal_digest="investigate a concrete operator request",
+            allow_default_goal_creation=True,
+        )
+        assert "set_goal" in backend.ids[0]

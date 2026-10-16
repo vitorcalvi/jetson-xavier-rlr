@@ -113,9 +113,12 @@ def decide(
         # During 30-second loops, a recent executable bid protects the
         # stop between bar closes. Never use a stale quote for exits.
         observed = f.price
-        if (limits.hardened_entries and f.quote_bid is not None
-                and f.quote_age_s is not None
-                and -10 <= f.quote_age_s <= limits.max_quote_age_s):
+        if (
+            limits.hardened_entries
+            and f.quote_bid is not None
+            and f.quote_age_s is not None
+            and -10 <= f.quote_age_s <= limits.max_quote_age_s
+        ):
             observed = min(f.price, f.quote_bid)
         if limits.hardened_entries and observed <= position.stop:
             return Decision(symbol=symbol, action=ACTION_EXIT, reason="stop")
@@ -127,10 +130,15 @@ def decide(
             return Decision(symbol=symbol, action=ACTION_EXIT, reason="target")
         if now - position.entry_ts >= limits.time_stop_s:
             return Decision(symbol=symbol, action=ACTION_EXIT, reason="time")
-        if (limits.vwap_failure_exit and f.vwap is not None
-                and f.below_vwap_bars >= 2
-                and f.ema20_5m is not None and f.price < f.ema20_5m
-                and f.price < position.entry_px and now - position.entry_ts >= 120):
+        if (
+            limits.vwap_failure_exit
+            and f.vwap is not None
+            and f.below_vwap_bars >= 2
+            and f.ema20_5m is not None
+            and f.price < f.ema20_5m
+            and f.price < position.entry_px
+            and now - position.entry_ts >= 120
+        ):
             return Decision(symbol=symbol, action=ACTION_EXIT, reason="vwap_failure")
         return Decision(symbol=symbol, action=ACTION_HOLD, reason="in_position")
 
@@ -170,12 +178,13 @@ def decide(
             return Decision(symbol=symbol, action=ACTION_HOLD, reason="weak_5m_momentum")
         if f.ret_60m is None or f.ret_60m <= 0:
             return Decision(symbol=symbol, action=ACTION_HOLD, reason="weak_60m_momentum")
-        if (f.spread_pct is None or f.vwap is None
-                or (f.price - f.vwap) / f.price <=
-                limits.min_reclaim_spread_mult * f.spread_pct / 100.0):
+        if (
+            f.spread_pct is None
+            or f.vwap is None
+            or (f.price - f.vwap) / f.price <= limits.min_reclaim_spread_mult * f.spread_pct / 100.0
+        ):
             return Decision(symbol=symbol, action=ACTION_HOLD, reason="reclaim_below_spread")
-        if (f.quote_age_s is None or f.quote_age_s < -10
-                or f.quote_age_s > limits.max_quote_age_s):
+        if f.quote_age_s is None or f.quote_age_s < -10 or f.quote_age_s > limits.max_quote_age_s:
             return Decision(symbol=symbol, action=ACTION_HOLD, reason="quote_stale")
 
     # Cost-aware stop distance: take the widest of three floors so a

@@ -439,15 +439,11 @@ class FaultController:
 
     @property
     def observation_only(self) -> bool:
-        return any(
-            entry.spec.safe_state == OBSERVATION_ONLY for entry in self._active.values()
-        )
+        return any(entry.spec.safe_state == OBSERVATION_ONLY for entry in self._active.values())
 
     @property
     def quarantined(self) -> bool:
-        return any(
-            entry.spec.safe_state == SAFE_QUARANTINE for entry in self._active.values()
-        )
+        return any(entry.spec.safe_state == SAFE_QUARANTINE for entry in self._active.values())
 
     @property
     def local_bounded(self) -> bool:
@@ -476,9 +472,7 @@ class FaultController:
     @property
     def reconcile_required(self) -> bool:
         """True while any active fault forbids a blind retry."""
-        return any(
-            entry.spec.recovery == RECOVER_RECONCILE for entry in self._active.values()
-        )
+        return any(entry.spec.recovery == RECOVER_RECONCILE for entry in self._active.values())
 
     def response_for(self, fault: str) -> FaultResponse | None:
         entry = self._active.get(str(fault))
@@ -486,9 +480,7 @@ class FaultController:
 
     def snapshot(self) -> dict[str, Any]:
         return {
-            "active": {
-                name: entry.response.to_dict() for name, entry in self._active.items()
-            },
+            "active": {name: entry.response.to_dict() for name, entry in self._active.items()},
             "allowed_risk_classes": sorted(self.allowed_risk_classes),
             "observation_only": self.observation_only,
             "local_bounded": self.local_bounded,

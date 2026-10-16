@@ -335,9 +335,7 @@ def run_checks() -> list[str]:
     for dimension, floor in STRATUM_FLOORS.items():
         found = len(table.get(dimension, {}))
         if found < floor:
-            failures.append(
-                f"stratum {dimension!r} covers {found} values, need at least {floor}"
-            )
+            failures.append(f"stratum {dimension!r} covers {found} values, need at least {floor}")
     return failures
 
 

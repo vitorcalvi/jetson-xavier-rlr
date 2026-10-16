@@ -166,7 +166,9 @@ class EventBus:
             raise EventError(f"unknown event kind {kind!r}")
         with self._lock:
             self._sequence += 1
-            event = Event(kind=kind, payload=dict(payload), at=self._clock(), sequence=self._sequence)
+            event = Event(
+                kind=kind, payload=dict(payload), at=self._clock(), sequence=self._sequence
+            )
             self._history.append(event)
             handlers = list(self._subscribers.get(kind, ()))
             handlers += list(self._subscribers.get(WILDCARD, ()))
@@ -232,17 +234,13 @@ class Heartbeat:
             return None
         self._last = now
         self._tick += 1
-        return self.bus.emit(
-            HEARTBEAT, tick=self._tick, interval_seconds=self.interval_seconds
-        )
+        return self.bus.emit(HEARTBEAT, tick=self._tick, interval_seconds=self.interval_seconds)
 
     def pulse(self) -> Event:
         """Emit a heartbeat unconditionally (used at loop start / tests)."""
         self._last = self._clock()
         self._tick += 1
-        return self.bus.emit(
-            HEARTBEAT, tick=self._tick, interval_seconds=self.interval_seconds
-        )
+        return self.bus.emit(HEARTBEAT, tick=self._tick, interval_seconds=self.interval_seconds)
 
     @property
     def beats(self) -> int:
@@ -426,9 +424,8 @@ class AsyncReasoner:
                 self._calls.pop(call.call_id, None)
 
             expired = moment > call.deadline or finished_at > call.deadline
-            stale = (
-                current_state_version is not None
-                and call.state_version != str(current_state_version)
+            stale = current_state_version is not None and call.state_version != str(
+                current_state_version
             )
             if expired:
                 reason = "expired"

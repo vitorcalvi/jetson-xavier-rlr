@@ -170,9 +170,7 @@ def _lint_gbnf(grammar: str) -> dict[str, str]:
     assert rules, "grammar defines no rules"
     for name, rhs in rules.items():
         for ref in _gbnf_references(rhs):
-            assert ref in rules, (
-                f"undefined rule identifier {ref!r} referenced by {name!r}"
-            )
+            assert ref in rules, f"undefined rule identifier {ref!r} referenced by {name!r}"
     return rules
 
 
@@ -258,21 +256,14 @@ class TestAdviceGrammarLint:
 
     def test_lint_flags_the_original_undefined_identifier(self):
         # llama-server's own failure mode, reproduced by the linter.
-        buggy = (
-            "root ::= object\n"
-            "candidate ::= null | \"\\\"observe\\\"\"\n"
-            "object ::= candidate\n"
-        )
+        buggy = 'root ::= object\ncandidate ::= null | "\\"observe\\""\nobject ::= candidate\n'
         with pytest.raises(AssertionError, match="undefined rule identifier 'null'"):
             _lint_gbnf(buggy)
 
     def test_object_keys_are_ordered_and_the_object_closes(self):
         rules = _lint_gbnf(advice_grammar(self.IDS))
         obj = rules["object"]
-        positions = [
-            obj.index(rf'\"{key}\"')
-            for key in ("rationale", "suggested_candidate")
-        ]
+        positions = [obj.index(rf"\"{key}\"") for key in ("rationale", "suggested_candidate")]
         assert positions == sorted(positions)
         assert obj.rstrip().endswith('"}"')
         assert "{" in obj
@@ -288,7 +279,7 @@ class TestAdviceGrammarLint:
         text = rules["text"]
         assert "{0," + str(ADVICE_TEXT_MAX_CHARS) + "}" in text
         start = text.index("[^") + 2
-        char_class = text[start:text.index("]", start)]
+        char_class = text[start : text.index("]", start)]
         assert '"' in char_class  # quotes excluded, so text cannot escape
         assert "\\\\" in char_class  # backslashes excluded, so no escapes
         assert "\\x00-\\x1F" in char_class  # control chars/newlines excluded
@@ -349,9 +340,7 @@ class TestAdviceTokenBudget:
 
     def test_request_stops_at_the_closing_brace(self):
         with _Advisor() as server:
-            QwenSlowBrain(server.client()).advise(
-                state={}, candidates=_candidates(), previous=None
-            )
+            QwenSlowBrain(server.client()).advise(state={}, candidates=_candidates(), previous=None)
         request_body = server.requests[0]
         assert request_body["stop"] == list(ADVICE_STOP) == ["}"]
         assert request_body["max_tokens"] == ADVICE_MAX_TOKENS
@@ -359,7 +348,9 @@ class TestAdviceTokenBudget:
     def test_reply_stopped_at_the_brace_still_parses(self):
         # An OpenAI-compatible server omits the stop sequence from the content,
         # so a bounded reply arrives one "}" short and must still be usable.
-        with _Advisor(content='{"rationale":"thin margin","suggested_candidate":"cooldown"') as server:
+        with _Advisor(
+            content='{"rationale":"thin margin","suggested_candidate":"cooldown"'
+        ) as server:
             advice = QwenSlowBrain(server.client()).advise(
                 state={}, candidates=_candidates(), previous=None
             )

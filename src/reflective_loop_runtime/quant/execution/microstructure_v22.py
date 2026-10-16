@@ -1,10 +1,12 @@
 """L1 sized-BBO order-flow imbalance and L2 weighted book indicators."""
+
 from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
 from math import exp, isfinite, sqrt
 from statistics import mean
+
 from reflective_loop_runtime.quant.execution.smart_router import Book
 
 
@@ -20,10 +22,16 @@ class BBO:
     source: str
 
     def __post_init__(self) -> None:
-        valid = (self.symbol and self.source and self.timestamp_ms > 0
-                 and self.sequence >= 0 and self.bid < self.ask)
-        if not valid or not all(isfinite(x) and x > 0 for x in
-                                (self.bid, self.ask, self.bid_size, self.ask_size)):
+        valid = (
+            self.symbol
+            and self.source
+            and self.timestamp_ms > 0
+            and self.sequence >= 0
+            and self.bid < self.ask
+        )
+        if not valid or not all(
+            isfinite(x) and x > 0 for x in (self.bid, self.ask, self.bid_size, self.ask_size)
+        ):
             raise ValueError("incomplete L1 data")
 
     @property
@@ -38,9 +46,12 @@ class BBO:
 
 
 def ofi_step(before: BBO, after: BBO) -> float:
-    if (before.symbol != after.symbol or before.source != after.source
-            or before.sequence >= after.sequence
-            or before.timestamp_ms >= after.timestamp_ms):
+    if (
+        before.symbol != after.symbol
+        or before.source != after.source
+        or before.sequence >= after.sequence
+        or before.timestamp_ms >= after.timestamp_ms
+    ):
         raise ValueError("mixed-feed or nonmonotonic quote")
     return (
         (after.bid_size if after.bid >= before.bid else 0.0)
@@ -98,6 +109,4 @@ def directional_ic(signals: list[float], mids: list[float], horizon: int = 5) ->
     var_y = sum((v - my) ** 2 for v in y)
     if min(var_x, var_y) <= 0:
         raise ValueError("zero signal variance")
-    return sum((a - mx) * (b - my) for a, b in zip(x, y, strict=True)) / sqrt(
-        var_x * var_y
-    )
+    return sum((a - mx) * (b - my) for a, b in zip(x, y, strict=True)) / sqrt(var_x * var_y)

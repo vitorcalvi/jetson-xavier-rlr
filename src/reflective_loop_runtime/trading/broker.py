@@ -67,9 +67,7 @@ _POSITION_REQUIRED = ("symbol", "qty")
 def _validate_base_url(base_url: str) -> None:
     parsed = urlparse(base_url)
     if parsed.scheme.lower() != "https":
-        raise PaperOnlyError(
-            f"PaperBroker requires https, got scheme={parsed.scheme!r}"
-        )
+        raise PaperOnlyError(f"PaperBroker requires https, got scheme={parsed.scheme!r}")
     if (parsed.hostname or "").lower() != _PAPER_HOST:
         raise PaperOnlyError(
             "PaperBroker only accepts the paper-api.alpaca.markets host; "
@@ -79,9 +77,7 @@ def _validate_base_url(base_url: str) -> None:
 
 def _validate_key(key: str) -> None:
     if not isinstance(key, str) or not key.startswith("PK"):
-        raise PaperOnlyError(
-            "PaperBroker requires an Alpaca paper key starting with 'PK'"
-        )
+        raise PaperOnlyError("PaperBroker requires an Alpaca paper key starting with 'PK'")
 
 
 def client_order_id(symbol: str, side: str, tick: int) -> str:
@@ -159,34 +155,25 @@ def _require_list(
     clean one.
     """
     if not isinstance(payload, list):
-        raise BrokerDataError(
-            f"{what}: expected list, got {type(payload).__name__}"
-        )
+        raise BrokerDataError(f"{what}: expected list, got {type(payload).__name__}")
     seen_ids: set[str] = set()
     for index, item in enumerate(payload):
         if not isinstance(item, dict):
-            raise BrokerDataError(
-                f"{what}[{index}]: expected dict, got {type(item).__name__}"
-            )
+            raise BrokerDataError(f"{what}[{index}]: expected dict, got {type(item).__name__}")
         missing = [name for name in required_fields if name not in item]
         if missing:
-            raise BrokerDataError(
-                f"{what}[{index}]: missing required field(s) {missing!r}"
-            )
+            raise BrokerDataError(f"{what}[{index}]: missing required field(s) {missing!r}")
         for id_field in _ID_FIELDS:
             if id_field in required_fields:
                 value = item.get(id_field)
                 if not isinstance(value, str) or not value:
                     raise BrokerDataError(
-                        f"{what}[{index}]: {id_field!r} must be a non-empty "
-                        f"string, got {value!r}"
+                        f"{what}[{index}]: {id_field!r} must be a non-empty string, got {value!r}"
                     )
         if "id" in required_fields:
             ident = item["id"]
             if ident in seen_ids:
-                raise BrokerDataError(
-                    f"{what}: duplicate id {ident!r} within one response"
-                )
+                raise BrokerDataError(f"{what}: duplicate id {ident!r} within one response")
             seen_ids.add(ident)
     return payload
 
@@ -194,21 +181,14 @@ def _require_list(
 def _require_order_dict(payload: Any, what: str) -> dict[str, Any]:
     """Validate ``payload`` is an order dict with the required fields."""
     if not isinstance(payload, dict):
-        raise BrokerDataError(
-            f"{what}: expected dict, got {type(payload).__name__}"
-        )
+        raise BrokerDataError(f"{what}: expected dict, got {type(payload).__name__}")
     missing = [name for name in _ORDER_REQUIRED if name not in payload]
     if missing:
-        raise BrokerDataError(
-            f"{what}: missing required field(s) {missing!r}"
-        )
+        raise BrokerDataError(f"{what}: missing required field(s) {missing!r}")
     for id_field in ("id", "client_order_id"):
         value = payload.get(id_field)
         if not isinstance(value, str) or not value:
-            raise BrokerDataError(
-                f"{what}: {id_field!r} must be a non-empty string, "
-                f"got {value!r}"
-            )
+            raise BrokerDataError(f"{what}: {id_field!r} must be a non-empty string, got {value!r}")
     return payload
 
 
@@ -220,20 +200,14 @@ def _require_account_dict(payload: Any) -> dict[str, Any]:
     a list, or any other type raises :class:`BrokerDataError`.
     """
     if not isinstance(payload, dict):
-        raise BrokerDataError(
-            f"account: expected dict, got {type(payload).__name__}"
-        )
+        raise BrokerDataError(f"account: expected dict, got {type(payload).__name__}")
     if "status" not in payload or not isinstance(payload["status"], str):
         raise BrokerDataError(
-            f"account: missing or non-string 'status' (got "
-            f"{payload.get('status')!r})"
+            f"account: missing or non-string 'status' (got {payload.get('status')!r})"
         )
-    if "crypto_status" not in payload or not isinstance(
-        payload["crypto_status"], str
-    ):
+    if "crypto_status" not in payload or not isinstance(payload["crypto_status"], str):
         raise BrokerDataError(
-            f"account: missing or non-string 'crypto_status' (got "
-            f"{payload.get('crypto_status')!r})"
+            f"account: missing or non-string 'crypto_status' (got {payload.get('crypto_status')!r})"
         )
     return payload
 
@@ -353,9 +327,7 @@ class PaperBroker:
         raise BrokerDataError("activities: pagination incomplete")
 
     def get_order(self, order_id: str) -> Any:
-        return self._http_get(
-            f"{self._base_url}/v2/orders/{order_id}", self._headers()
-        )
+        return self._http_get(f"{self._base_url}/v2/orders/{order_id}", self._headers())
 
     def open_orders(self) -> list[dict[str, Any]]:
         """Return all currently-open orders from the paper account.
@@ -494,9 +466,7 @@ class PaperBroker:
             body["notional"] = float(notional)
         if qty is not None:
             body["qty"] = float(qty)
-        return self._http_post(
-            f"{self._base_url}/v2/orders", self._headers(), body
-        )
+        return self._http_post(f"{self._base_url}/v2/orders", self._headers(), body)
 
     def wait_filled(
         self,
@@ -514,8 +484,7 @@ class PaperBroker:
                 return order
             if time.monotonic() >= deadline:
                 raise TimeoutError(
-                    f"order {order_id} did not fill within {timeout_s}s "
-                    f"(last status={status!r})"
+                    f"order {order_id} did not fill within {timeout_s}s (last status={status!r})"
                 )
             sleep(float(poll_s))
 

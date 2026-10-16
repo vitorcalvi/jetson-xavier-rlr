@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline 100k logical-tick soak; no broker transport or service mutation."""
+
 from __future__ import annotations
 
 import argparse
@@ -37,8 +38,14 @@ def stage_a(ticks: int = 100_000, output: Path | None = None) -> dict:
             "symbol": "SPY",
             "mode": "SHADOW",
             "bars": [
-                {"t": i, "o": 100 + i / 100, "h": 101 + i / 100,
-                 "l": 99 + i / 100, "c": 100.2 + i / 100, "v": 12345 + i}
+                {
+                    "t": i,
+                    "o": 100 + i / 100,
+                    "h": 101 + i / 100,
+                    "l": 99 + i / 100,
+                    "c": 100.2 + i / 100,
+                    "v": 12345 + i,
+                }
                 for i in range(8)
             ],
         }
@@ -134,13 +141,19 @@ def main() -> None:
     parser.add_argument("--hours", type=float, default=48)
     parser.add_argument("--interval-seconds", type=int, default=3600)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--halt-file", type=Path, default=Path("/home/vitor/rlr/flags/HALT_ENTRIES"))
+    parser.add_argument(
+        "--halt-file", type=Path, default=Path("/home/vitor/rlr/flags/HALT_ENTRIES")
+    )
     arguments = parser.parse_args()
     if arguments.stage == "a":
         print(json.dumps(stage_a(arguments.ticks, arguments.output), indent=2))
     else:
-        stage_b(arguments.hours, arguments.interval_seconds,
-                arguments.output or Path("artifacts/stage_b_health.toon"), arguments.halt_file)
+        stage_b(
+            arguments.hours,
+            arguments.interval_seconds,
+            arguments.output or Path("artifacts/stage_b_health.toon"),
+            arguments.halt_file,
+        )
 
 
 if __name__ == "__main__":

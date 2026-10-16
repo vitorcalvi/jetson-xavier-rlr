@@ -34,9 +34,7 @@ class TestFrozenManifest:
         # case expects ``observe``, so writing that back would change nothing):
         # a different set is a different benchmark, not a different score.
         cases = list(score_heldout.HELDOUT_CASES)
-        index = next(
-            i for i, case in enumerate(cases) if case.expected_action != "cooldown"
-        )
+        index = next(i for i, case in enumerate(cases) if case.expected_action != "cooldown")
         cases[index] = dataclasses.replace(cases[index], expected_action="cooldown")
         monkeypatch.setattr(score_heldout, "HELDOUT_CASES", cases)
         with pytest.raises(score_heldout.ManifestMismatch):
@@ -73,7 +71,8 @@ class TestScoring:
     @pytest.fixture
     def report(self, tmp_path):
         return score_heldout.score(
-            cases=list(score_heldout.HELDOUT_CASES)[:8], tmp_root=tmp_path,
+            cases=list(score_heldout.HELDOUT_CASES)[:8],
+            tmp_root=tmp_path,
         )
 
     def test_every_system_is_scored_on_every_case(self, report):
@@ -106,8 +105,9 @@ class TestScoring:
 
     def test_paired_cells_are_disjoint_and_exhaustive(self, report):
         for row in report["paired"].values():
-            assert (row["both_right"] + row["both_wrong"]
-                    + row["a_only"] + row["b_only"]) == report["cases"]
+            assert (
+                row["both_right"] + row["both_wrong"] + row["a_only"] + row["b_only"]
+            ) == report["cases"]
 
     def test_paired_delta_equals_the_difference_in_totals(self, report):
         for row in report["paired"].values():

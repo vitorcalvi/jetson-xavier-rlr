@@ -85,9 +85,7 @@ class FaultBroker:
     def __post_init__(self) -> None:
         self._positions = [_canonicalise(dict(p)) for p in self.initial_positions]
         self._open_orders = [_canonicalise(dict(o)) for o in self.initial_orders]
-        self._lookup = {
-            k: _canonicalise(dict(v)) for k, v in self.initial_lookup.items()
-        }
+        self._lookup = {k: _canonicalise(dict(v)) for k, v in self.initial_lookup.items()}
         self._submit_calls = []
         self._late_fills_published = set()
         self._post_cancel_history = {}
@@ -143,16 +141,12 @@ class FaultBroker:
     # -- broker protocol the controller prelude uses -----------------------
     def positions(self) -> list[dict[str, Any]]:
         if self.raise_on_history:
-            raise RuntimeError(
-                "order history incomplete: positions endpoint unavailable"
-            )
+            raise RuntimeError("order history incomplete: positions endpoint unavailable")
         return [_canonicalise(dict(p)) for p in self._positions]
 
     def open_orders(self) -> list[dict[str, Any]]:
         if self.raise_on_history:
-            raise RuntimeError(
-                "order history incomplete: open orders endpoint unavailable"
-            )
+            raise RuntimeError("order history incomplete: open orders endpoint unavailable")
         return [_canonicalise(dict(o)) for o in self._open_orders]
 
     def account_status(self) -> dict[str, Any]:
@@ -178,9 +172,7 @@ class FaultBroker:
         max_pages: int = 50,
     ) -> list[dict[str, Any]]:
         if self.raise_on_history:
-            raise RuntimeError(
-                "order history incomplete: orders_since unavailable"
-            )
+            raise RuntimeError("order history incomplete: orders_since unavailable")
         # Surface both the live lookup and any late fills that have been
         # published since the last tick, so a reconcile detects them.
         out: list[dict[str, Any]] = []
@@ -243,9 +235,7 @@ class FaultBroker:
         # Keep open_orders in sync so open_orders() based reconciles see it.
         self._open_orders.append(dict(rec))
         if self.submit_raises_after_accept:
-            raise RuntimeError(
-                "submit failed after the broker accepted the order"
-            )
+            raise RuntimeError("submit failed after the broker accepted the order")
         return rec
 
     def adapter(self) -> Callable[[Mapping[str, object]], dict[str, object]]:

@@ -50,9 +50,7 @@ def requested_mode(data_dir) -> str | None:
     p = Path(data_dir)
     # Walk in descending order of restrictiveness so a stray re-ordering of
     # ``FILES`` cannot silently weaken precedence guarantees.
-    for name, mode in sorted(
-        FILES.items(), key=lambda kv: -_RESTRICTIVENESS[kv[1]]
-    ):
+    for name, mode in sorted(FILES.items(), key=lambda kv: -_RESTRICTIVENESS[kv[1]]):
         if (p / name).exists():
             return mode
     return None

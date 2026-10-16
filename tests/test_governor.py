@@ -79,9 +79,7 @@ class TestStaleness:
 
 class TestVetoes:
     def test_abstain_always_allowed_even_stale(self, governor):
-        decision = governor.veto(
-            {"action": "abstain", "rationale": "safe", "reason": "wait"}, {}
-        )
+        decision = governor.veto({"action": "abstain", "rationale": "safe", "reason": "wait"}, {})
         assert decision.allowed
 
     def test_observe_allowed_without_telemetry(self, governor):
@@ -89,21 +87,15 @@ class TestVetoes:
         assert decision.allowed
 
     def test_side_effecting_action_vetoed_on_stale_telemetry(self, governor):
-        decision = governor.veto(
-            {"action": "cooldown", "rationale": "cool", "seconds": 30}, {}
-        )
+        decision = governor.veto({"action": "cooldown", "rationale": "cool", "seconds": 30}, {})
         assert not decision.allowed
         assert "telemetry" in (decision.reason or "")
 
     def test_fps_cap_enforced(self, governor):
         sample = warm_sample(temperature_c=76.0)  # degraded
-        decision = governor.veto(
-            {"action": "set_vision_fps", "rationale": "x", "fps": 5.0}, sample
-        )
+        decision = governor.veto({"action": "set_vision_fps", "rationale": "x", "fps": 5.0}, sample)
         assert not decision.allowed
-        ok = governor.veto(
-            {"action": "set_vision_fps", "rationale": "x", "fps": 1.0}, sample
-        )
+        ok = governor.veto({"action": "set_vision_fps", "rationale": "x", "fps": 1.0}, sample)
         assert ok.allowed
 
     def test_tokens_cap_enforced(self, governor):
@@ -132,9 +124,9 @@ class TestVetoes:
 
     def test_repeat_veto_allows_different_action(self, governor):
         governor.store.record_action("cooldown", {"seconds": 30}, "executed")
-        assert governor.repeat_veto(
-            {"action": "set_vision_fps", "rationale": "x", "fps": 1.0}
-        ) is None
+        assert (
+            governor.repeat_veto({"action": "set_vision_fps", "rationale": "x", "fps": 1.0}) is None
+        )
 
     def test_repeat_veto_ignores_non_side_effecting(self, governor):
         governor.store.record_action("observe", {}, "executed")

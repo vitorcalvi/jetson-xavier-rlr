@@ -292,7 +292,9 @@ def run_soak(
     )
     recording = _RecordingPermits(service)
     goals = GoalManager(policy, audit=audit)
-    broker = ToolBroker(service, audit=audit, workspace=root / "workspace", manifest=broker_manifest())
+    broker = ToolBroker(
+        service, audit=audit, workspace=root / "workspace", manifest=broker_manifest()
+    )
     executive = Executive(
         plan, recording, broker, goals=goals, budget=budget, audit=audit, bus=bus, faults=faults
     )
@@ -308,13 +310,16 @@ def run_soak(
     broker.register_effect("memory", "forget", _tripwire("memory", "forget", violations))
     broker.register_effect("telemetry", "sample", lambda args: {"sampled": True})
     broker.register_effect("state", "set_load_target", lambda args: {"load_target": args["load"]})
-    broker.register_effect("state", "set_reply_tokens", lambda args: {"reply_tokens": args["tokens"]})
+    broker.register_effect(
+        "state", "set_reply_tokens", lambda args: {"reply_tokens": args["tokens"]}
+    )
     broker.register_effect("state", "set_vision_fps", lambda args: {"vision_fps": args["fps"]})
     broker.register_effect("memory", "remember", lambda args: {"memory_id": 1})
     broker.register_effect("memory", "recall", lambda args: {"matches": 0})
     broker.register_effect("goal", "set", lambda args: {"goal_id": 1})
     broker.register_effect(
-        "control", "cooldown",
+        "control",
+        "cooldown",
         lambda args: {"cooldown_until_tick": int(args["tick"]) + int(args["seconds"])},
     )
     broker.register_effect("control", "reflect", lambda args: {})
@@ -345,9 +350,7 @@ def run_soak(
                 response = faults.report(name, reason="simulated fault injection")
                 active_fault = name
                 active_fault_at = tick
-                fault_rows.append(
-                    {"tick": tick, "fault": name, "safe_state": response.safe_state}
-                )
+                fault_rows.append({"tick": tick, "fault": name, "safe_state": response.safe_state})
                 bus.emit(POLICY_CHANGE, mode="constrained", reason=name)
             elif active_fault is not None and tick - active_fault_at >= _FAULT_HOLD_TICKS:
                 faults.clear(active_fault)
@@ -510,7 +513,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hours", type=float, default=0.0, help="simulated soak hours")
     parser.add_argument("--minutes", type=float, default=0.0, help="simulated soak minutes")
     parser.add_argument("--seconds", type=float, default=0.0, help="simulated soak seconds")
-    parser.add_argument("--tick-seconds", type=float, default=1.0, help="simulated seconds per tick")
+    parser.add_argument(
+        "--tick-seconds", type=float, default=1.0, help="simulated seconds per tick"
+    )
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--max-ticks", type=int, default=0)
     parser.add_argument("--data-dir", default="")
