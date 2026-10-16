@@ -1,0 +1,19 @@
+delivery:
+  contract: TOON_v2.0
+  date: 2026-10-16
+  repo: vitorcalvi/jetson-xavier-rlr
+  branch: feature/toon-v2-production-wiring
+  status: RESEARCH_PATCH_TESTED_NOT_INSTALLED
+  code_published_to_this_branch: false
+  source_patch_sha256: abdb6daeaaa3fddb3478448ae7c4c18eac6571acfafa6e39b3e94606de2654db
+  source_zip_sha256: f67e8546d0b8d57acdd9502b77fc9760a9fbbf8b739a1b836f16b17b4bc1b2fd
+  isolated_tests_passed: 30
+  isolated_tests_failed: 0
+  full_original_repository_suite: NOT_RUN
+  shadow_simulated_ticks: 500
+  real_broker_orders_sent: 0
+  actual_alpaca_paper_fills: 0
+  D4_legacy_main_entrypoint_wired: false
+  Stage2_HALT_ENTRIES_rearm: FORBIDDEN
+  real_live_profitability: NOT_PROVEN
+  next_action: apply_research_patch_to_disposable_worktree_run_full_regression_and_review_before_merge
