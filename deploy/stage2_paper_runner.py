@@ -40,6 +40,16 @@ def loop():
         LEDGER.mkdir(exist_ok=True);os.chmod(LEDGER,0o700)
         controller=Stage2DurableController(LEDGER,HOME/'flags',api,max_cycles=MAX_CYCLES,notional_usd=25,stop_bps=40)
         state=controller.startup_reconcile()
+        # Observer-only: broker execution remains exclusively Stage2-owned.
+        _toon_bridge=None
+        try:
+            from stage2_toon_bridge import Stage2ShadowInterceptor,SafetyLockViolation
+            _toon_bridge=Stage2ShadowInterceptor.from_env(
+                ledger=LEDGER,halt_file=HOME/'flags/HALT_ENTRIES')
+        except SafetyLockViolation:
+            raise  # Explicit override attempt under a halt is fatal.
+        except Exception:
+            _toon_bridge=None  # Absent/broken shadow code cannot block Stage2.
         gate=StrictSessionQuoteGate()
         last_entry=0.0;last_completed=time.monotonic()
         while True:
@@ -54,6 +64,13 @@ def loop():
             if (HOME/'KILL').exists() or (HOME/'flags/EMERGENCY_STOP').exists():
                 controller.evaluate_kill_switch();break
             state=controller.state_row(); mode=state['state']
+            if _toon_bridge is not None:
+                try:
+                    _toon_bridge.on_controller_tick(mode=mode,
+                        timestamp_ms=int(now*1000),
+                        transition_seq=int(state['transition_seq']))
+                except Exception:
+                    pass  # Shadow must not affect legacy control.
             if mode=='COMPLETED_DIAGNOSTIC_QUOTA':
                 if api.get_positions() or api.get_orders(status='open'):
                     raise RuntimeError('completion attempted while broker not flat')
@@ -103,6 +120,13 @@ def loop():
                     time.sleep(5);continue
                 snap=fetch_snapshots(('SPY',),http=__import__('reflective_loop_runtime.trading.http',fromlist=['_default_http'])._default_http,
                                      now=now,headers=api.market_headers())['SPY']
+                if _toon_bridge is not None:
+                    try:
+                        _toon_bridge.on_market_snapshot(symbol='SPY',snapshot=snap,
+                             timestamp_ms=int(now*1000),position={
+                                 'state':mode,'held_qty':state['held_qty']})
+                    except Exception:
+                        pass  # Observer is strictly advisory.
                 closed=[bar for bar in snap.bars if bar.ts+60<=now]
                 if snap.quote and closed:
                     q=snap.quote;b=closed[-1]
@@ -113,6 +137,13 @@ def loop():
                         if api.get_positions() or api.get_orders(status='open'):
                             raise RuntimeError('unknown account exposure blocks entry')
                         cycle_id='stage2-'+str(state['completed_cycles']+1)+'-'+str(int(now//60))
+                        if _toon_bridge is not None:
+                            try:
+                                _toon_bridge.on_stage2_signal(action='BUY',
+                                    qty=25/max(float(q.ask),.01),price=float(q.ask),
+                                    timestamp_ms=int(now*1000))
+                            except Exception:
+                                pass
                         controller.execute_entry(cycle_id,gate_value)
                         last_entry=now
             elif mode=='HALT_ENTRIES':
