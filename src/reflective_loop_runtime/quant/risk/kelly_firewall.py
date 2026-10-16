@@ -48,6 +48,11 @@ def shrink_covariance(data:dict[str,list[tuple[int,float]]], asof_ms:int,
     shared=sorted(set.intersection(*(set(aligned[n]) for n in names)))
     if len(shared)<min_samples:raise ValueError('insufficient aligned return history')
     x=[[aligned[n][t] for t in shared] for n in names]
+    # Reject numerically constant return series across Python runtimes.
+    # Tiny rounding residuals must never count as usable covariance evidence.
+    if any(max(row)-min(row) <= 1e-12*max(1.0,max(abs(v) for v in row))
+           for row in x):
+        raise ValueError('zero variance or numerically degenerate returns')
     avg=[sum(row)/len(row) for row in x]
     cov=tuple(tuple(
         sum((u-avg[i])*(v-avg[j]) for u,v in zip(x[i],x[j]))/(len(shared)-1)*
