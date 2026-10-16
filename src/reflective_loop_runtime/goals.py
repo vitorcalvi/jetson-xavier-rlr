@@ -247,9 +247,7 @@ class GoalManager:
 
     def active_goals(self) -> tuple[Goal, ...]:
         """Committed and paused goals, in deterministic arbitration order."""
-        return tuple(
-            sorted((g for g in self._goals.values() if g.active), key=_arbitration_key)
-        )
+        return tuple(sorted((g for g in self._goals.values() if g.active), key=_arbitration_key))
 
     def committed_goals(self) -> tuple[Goal, ...]:
         return tuple(g for g in self.goals() if g.committed)
@@ -288,9 +286,7 @@ class GoalManager:
             raise GoalRejected(f"goal without parent: unknown parent_id {parent_id!r}")
         depth = parent.depth + 1
         if depth > self._max_depth:
-            raise GoalRejected(
-                f"goal depth {depth} exceeds the cap of {self._max_depth}"
-            )
+            raise GoalRejected(f"goal depth {depth} exceeds the cap of {self._max_depth}")
         if len(self._goals) >= self._max_goals:
             raise GoalRejected(
                 f"goal explosion: {len(self._goals)} goals already reach the cap of "

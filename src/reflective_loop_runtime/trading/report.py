@@ -69,9 +69,7 @@ def _utc_day_window(day: float) -> tuple[float, float]:
     return start, start + 86400.0
 
 
-def _bars_in_window(
-    bars: Sequence[Any], start: float, end: float
-) -> list[Any]:
+def _bars_in_window(bars: Sequence[Any], start: float, end: float) -> list[Any]:
     """The ``bars`` whose ``ts`` falls inside the day window, by ascending ``ts``.
 
     Bars may be plain ``dict`` rows or dataclass instances; we read ``ts``
@@ -160,9 +158,7 @@ def _atr_proxy(bars: Sequence[Any], index: int) -> float:
         high = _attr(window[i], "h")
         low = _attr(window[i], "l")
         prev_close = _attr(window[i - 1], "c")
-        true_ranges.append(
-            max(high - low, abs(high - prev_close), abs(low - prev_close))
-        )
+        true_ranges.append(max(high - low, abs(high - prev_close), abs(low - prev_close)))
     if not true_ranges:
         return 0.0
     return sum(true_ranges) / len(true_ranges)

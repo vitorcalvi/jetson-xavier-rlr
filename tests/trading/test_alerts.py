@@ -25,7 +25,9 @@ def test_writes_outbox_record(tmp_path) -> None:
     a = from_env({"RLR_ALERTS": "1"}, data_dir=tmp_path)
     assert a.send("order", "IREN buy", priority="high")
     rec = json.loads((tmp_path / "alerts_outbox.jsonl").read_text().strip())
-    assert rec["title"] == "RLR order" and rec["priority"] == "high" and rec["message"] == "IREN buy"
+    assert (
+        rec["title"] == "RLR order" and rec["priority"] == "high" and rec["message"] == "IREN buy"
+    )
 
 
 def test_rate_limit_dedupes() -> None:
@@ -65,8 +67,16 @@ def test_ledger_proxy_alerts_orders_and_incidents() -> None:
 
     base = L()
     led = AlertingLedger(base, _alerter(sent, min_interval_s=0), label="paper")
-    led.journal({"kind": "decision", "ts": 1, "symbol": "IREN", "executed": True,
-                 "decision": {"action": "enter_long", "reason": "orb5_breakout"}, "features": {"price": 35}})
+    led.journal(
+        {
+            "kind": "decision",
+            "ts": 1,
+            "symbol": "IREN",
+            "executed": True,
+            "decision": {"action": "enter_long", "reason": "orb5_breakout"},
+            "features": {"price": 35},
+        }
+    )
     led.journal({"kind": "decision", "ts": 2, "executed": False, "veto": "daily_loss_halt"})
     led.journal({"kind": "prelude_failed", "ts": 3, "stage": "reconcile"})
     led.journal({"kind": "decision", "ts": 4, "executed": False})

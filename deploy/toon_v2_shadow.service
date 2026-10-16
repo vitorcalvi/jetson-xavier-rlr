@@ -1,0 +1,21 @@
+[Unit]
+Description=RLR TOON v2 isolated SHADOW-only research smoke (no broker orders)
+ConditionPathExists=/home/vitor/rlr/flags/HALT_ENTRIES
+[Service]
+Type=oneshot
+User=vitor
+Group=vitor
+WorkingDirectory=/home/vitor/rlr/rlr-runtime
+Environment=PYTHONPATH=/home/vitor/rlr/rlr-runtime/src:/home/vitor/rlr/rlr-runtime
+Environment=EXECUTION_MODE=SHADOW_SIMULATION
+ExecStart=/home/vitor/rlr/venv/bin/python deploy/toon_v2_main.py --synthetic-smoke-ticks 500
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+RestrictAddressFamilies=AF_UNIX
+MemoryMax=450M
+CPUQuota=70%%
+TimeoutStartSec=150
+[Install]
+# Intentionally no WantedBy, not installed or auto-enabled.

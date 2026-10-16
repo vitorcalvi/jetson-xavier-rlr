@@ -373,17 +373,13 @@ class PlanGraph:
 
     def mark_done(self, step_id: str, *, result: Mapping[str, Any] | None = None) -> PlanStep:
         step = self._require(step_id)
-        return self._update(
-            step, status=STEP_DONE, result=dict(result or {}), reason=""
-        )
+        return self._update(step, status=STEP_DONE, result=dict(result or {}), reason="")
 
     def mark_failed(
         self, step_id: str, *, reason: str = "", result: Mapping[str, Any] | None = None
     ) -> PlanStep:
         step = self._require(step_id)
-        return self._update(
-            step, status=STEP_FAILED, result=dict(result or {}), reason=str(reason)
-        )
+        return self._update(step, status=STEP_FAILED, result=dict(result or {}), reason=str(reason))
 
     def mark_uncertain(
         self, step_id: str, *, reason: str = "", result: Mapping[str, Any] | None = None
@@ -529,9 +525,7 @@ class PlanGraph:
         ).fetchone()
         return _row_to_step(row) if row is not None else None
 
-    def steps(
-        self, *, plan_id: str | None = None, goal_id: str | None = None
-    ) -> list[PlanStep]:
+    def steps(self, *, plan_id: str | None = None, goal_id: str | None = None) -> list[PlanStep]:
         clauses: list[str] = []
         params: list[Any] = []
         if plan_id is not None:
@@ -563,9 +557,7 @@ class PlanGraph:
         for step in steps:
             for dep in step.depends_on:
                 if dep not in by_id:
-                    raise PlanError(
-                        f"step {step.step_id!r} depends on unknown step {dep!r}"
-                    )
+                    raise PlanError(f"step {step.step_id!r} depends on unknown step {dep!r}")
         ordered_ids = [step.step_id for step in sorted(steps, key=lambda s: (s.seq, s.step_id))]
         resolved: set[str] = set()
         remaining = set(ordered_ids)
@@ -633,8 +625,9 @@ class PlanGraph:
         self._db.execute(
             "UPDATE replan_requests SET resolved=1 WHERE replan_id=?", (str(replan_id),)
         )
-        self._emit_replan("plan.replan_resolved", str(row["goal_id"]), str(row["plan_id"]),
-                          str(replan_id))
+        self._emit_replan(
+            "plan.replan_resolved", str(row["goal_id"]), str(row["plan_id"]), str(replan_id)
+        )
         return _row_to_replan(
             self._db.execute(
                 "SELECT * FROM replan_requests WHERE replan_id=?", (str(replan_id),)
@@ -879,9 +872,7 @@ class Executive:
         if step is None:
             raise ExecutiveError(f"unknown step {step_id!r}")
         if step.status not in (STEP_PENDING, STEP_READY):
-            raise StepNotRunnable(
-                f"step {step_id!r} is {step.status} and will not run implicitly"
-            )
+            raise StepNotRunnable(f"step {step_id!r} is {step.status} and will not run implicitly")
         # 0. The kill latch and the active safe state gate every launch.
         if self.kill_switch is not None:
             self.kill_switch.check()
@@ -907,9 +898,7 @@ class Executive:
         except (PermitDenied, BudgetError) as exc:
             if isinstance(exc, BudgetError):
                 self._emit(BUDGET_THRESHOLD, step_id=step_id, reason=str(exc))
-            denied = self.plan.mark_failed(
-                step_id, reason=f"permit denied: {exc}"
-            )
+            denied = self.plan.mark_failed(step_id, reason=f"permit denied: {exc}")
             self._audit.append(
                 goal_version=step.goal_id,
                 plan_version=step.plan_id,
@@ -923,14 +912,18 @@ class Executive:
             )
             self._emit(STATE_CHANGE, step_id=step_id, status=denied.status)
             return StepExecution(
-                step_id=step_id, status=denied.status, ok=False,
+                step_id=step_id,
+                status=denied.status,
+                ok=False,
                 note=f"permit denied: {exc}",
             )
         if permit is None:
             self.plan.mark_failed(step_id, reason="no permit was issued")
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_FAILED)
             return StepExecution(
-                step_id=step_id, status=STEP_FAILED, ok=False,
+                step_id=step_id,
+                status=STEP_FAILED,
+                ok=False,
                 note="no permit issued; refusing to run the step",
             )
 
@@ -946,12 +939,16 @@ class Executive:
             self._emit(TOOL_FAILURE, step_id=step_id, reason="fault guard withheld permit")
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_FAILED)
             return StepExecution(
-                step_id=step_id, status=STEP_FAILED, ok=False,
+                step_id=step_id,
+                status=STEP_FAILED,
+                ok=False,
                 permit_id=permit.permit_id,
                 note=f"fault guard withheld a {permit.risk_class} permit",
             )
         self._emit(
-            DEADLINE, step_id=step_id, permit_id=permit.permit_id,
+            DEADLINE,
+            step_id=step_id,
+            permit_id=permit.permit_id,
             expires_at=getattr(permit, "expires_at", None),
         )
 
@@ -961,17 +958,18 @@ class Executive:
         try:
             if self.kill_switch is not None:
                 self.kill_switch.require_launch(permit.permit_id)
-            result = self.broker.invoke(
-                permit, step.tool, step.op, dict(step.args)
-            )
+            result = self.broker.invoke(permit, step.tool, step.op, dict(step.args))
         except LaunchBlocked as exc:
             self.plan.mark_failed(step_id, reason=f"kill switch: {exc}")
             self._finalise_budget(permit, success=False, actual_spend=None)
             self._emit(KILL, step_id=step_id, reason=str(exc))
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_FAILED)
             return StepExecution(
-                step_id=step_id, status=STEP_FAILED, ok=False,
-                permit_id=permit.permit_id, note=f"kill switch: {exc}",
+                step_id=step_id,
+                status=STEP_FAILED,
+                ok=False,
+                permit_id=permit.permit_id,
+                note=f"kill switch: {exc}",
             )
         except (ToolNotPermitted, ToolExecutionError) as exc:
             self.plan.mark_failed(step_id, reason=f"tool refused: {exc}")
@@ -991,8 +989,11 @@ class Executive:
             self._emit(TOOL_FAILURE, step_id=step_id, reason=str(exc))
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_FAILED)
             return StepExecution(
-                step_id=step_id, status=STEP_FAILED, ok=False,
-                permit_id=permit.permit_id, note=f"tool refused: {exc}",
+                step_id=step_id,
+                status=STEP_FAILED,
+                ok=False,
+                permit_id=permit.permit_id,
+                note=f"tool refused: {exc}",
             )
 
         result_dict = result.as_dict()
@@ -1000,23 +1001,32 @@ class Executive:
         # 3. A failed result is a failure; a wrong-but-successful result is a
         #    discrepancy that pauses the branch and asks for a re-plan.
         if not result.ok:
-            self.plan.mark_failed(step_id, reason=result.note or "tool reported failure",
-                                  result=result_dict)
+            self.plan.mark_failed(
+                step_id, reason=result.note or "tool reported failure", result=result_dict
+            )
             self._finalise_budget(permit, success=False, actual_spend=None)
             self._record_result(step, permit, result_dict, outcome="step.failed")
-            self._emit(TOOL_FAILURE, step_id=step_id, permit_id=permit.permit_id,
-                       reason=result.note or "tool reported failure")
+            self._emit(
+                TOOL_FAILURE,
+                step_id=step_id,
+                permit_id=permit.permit_id,
+                reason=result.note or "tool reported failure",
+            )
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_FAILED)
             return StepExecution(
-                step_id=step_id, status=STEP_FAILED, ok=False,
-                permit_id=permit.permit_id, result=result_dict,
+                step_id=step_id,
+                status=STEP_FAILED,
+                ok=False,
+                permit_id=permit.permit_id,
+                result=result_dict,
                 note=result.note or "tool reported failure",
             )
 
         discrepancy = self._effect_discrepancy(step, result_dict)
         if discrepancy is not None:
             self.plan.mark_uncertain(
-                step_id, reason="observed effect did not match expectation",
+                step_id,
+                reason="observed effect did not match expectation",
                 result=result_dict,
             )
             request = self.plan.pause_branch(
@@ -1029,12 +1039,20 @@ class Executive:
             )
             self._finalise_budget(permit, success=False, actual_spend=None)
             self._record_result(step, permit, result_dict, outcome="step.discrepancy")
-            self._emit(TOOL_FAILURE, step_id=step_id, permit_id=permit.permit_id,
-                       reason="effect discrepancy")
+            self._emit(
+                TOOL_FAILURE,
+                step_id=step_id,
+                permit_id=permit.permit_id,
+                reason="effect discrepancy",
+            )
             self._emit(STATE_CHANGE, step_id=step_id, status=STEP_UNCERTAIN)
             return StepExecution(
-                step_id=step_id, status=STEP_UNCERTAIN, ok=False,
-                permit_id=permit.permit_id, result=result_dict, replan=request,
+                step_id=step_id,
+                status=STEP_UNCERTAIN,
+                ok=False,
+                permit_id=permit.permit_id,
+                result=result_dict,
+                replan=request,
                 note="effect discrepancy; branch paused and re-plan requested",
             )
 
@@ -1044,8 +1062,12 @@ class Executive:
         self._emit(TOOL_COMPLETION, step_id=step_id, permit_id=permit.permit_id)
         self._emit(STATE_CHANGE, step_id=step_id, status=STEP_DONE)
         return StepExecution(
-            step_id=step_id, status=STEP_DONE, ok=True,
-            permit_id=permit.permit_id, result=result_dict, note="executed",
+            step_id=step_id,
+            status=STEP_DONE,
+            ok=True,
+            permit_id=permit.permit_id,
+            result=result_dict,
+            note="executed",
         )
 
     def run_ready(
@@ -1083,8 +1105,7 @@ class Executive:
                 pending.append(f"{dep} ({other.status})")
         if pending:
             raise DependencyNotSatisfied(
-                f"step {step.step_id!r} is not ready; unfinished dependencies: "
-                f"{', '.join(pending)}"
+                f"step {step.step_id!r} is not ready; unfinished dependencies: {', '.join(pending)}"
             )
 
     @staticmethod

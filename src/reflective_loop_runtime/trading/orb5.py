@@ -89,9 +89,18 @@ def completed_5m_bars(bars: tuple[Bar, ...], now: float) -> list[Bar5]:
     out = []
     for start in sorted(buckets):
         grp = sorted(buckets[start], key=lambda x: x.ts)
-        out.append(Bar5(start, grp[0].o, max(x.h for x in grp), min(x.l for x in grp),
-                        grp[-1].c, sum(x.v for x in grp), len(grp),
-                        any(abs(x.ts - (start + 240)) < 1 for x in grp)))
+        out.append(
+            Bar5(
+                start,
+                grp[0].o,
+                max(x.h for x in grp),
+                min(x.l for x in grp),
+                grp[-1].c,
+                sum(x.v for x in grp),
+                len(grp),
+                any(abs(x.ts - (start + 240)) < 1 for x in grp),
+            )
+        )
     return out
 
 
@@ -99,7 +108,10 @@ def atr14(bars5: list[Bar5]) -> float | None:
     """Wilder ATR(14) over the 5m sequence (prior sessions included)."""
     if len(bars5) < ATR_PERIOD + 1:
         return None
-    trs = [max(b.h - b.l, abs(b.h - p.c), abs(b.l - p.c)) for p, b in zip(bars5, bars5[1:], strict=False)]
+    trs = [
+        max(b.h - b.l, abs(b.h - p.c), abs(b.l - p.c))
+        for p, b in zip(bars5, bars5[1:], strict=False)
+    ]
     atr = sum(trs[:ATR_PERIOD]) / ATR_PERIOD
     for tr in trs[ATR_PERIOD:]:
         atr = (atr * (ATR_PERIOD - 1) + tr) / ATR_PERIOD
@@ -176,9 +188,11 @@ def decide_orb5(
     price = last.c
     if price < MIN_PRICE or not (ATR_PCT_BAND[0] <= atr / price <= ATR_PCT_BAND[1]):
         return Decision(symbol=symbol, action=ACTION_HOLD, reason="atr_or_price_out_of_band")
-    stop_dist = max(float(limits.stop_atr) * atr,
-                    float(limits.min_stop_pct) * price,
-                    float(limits.cost_mult) * _spread_frac(snap) * price)
+    stop_dist = max(
+        float(limits.stop_atr) * atr,
+        float(limits.min_stop_pct) * price,
+        float(limits.cost_mult) * _spread_frac(snap) * price,
+    )
     return Decision(
         symbol=symbol,
         action=ACTION_ENTER_LONG,
@@ -198,7 +212,11 @@ ORB5_EXPLORE_LIMITS = {"stop_atr": 1.0, "max_entries_per_day": 3, "notional": 10
 
 
 def decide_orb5_explore(
-    snap: Snapshot, position: Position | None, limits: Limits, *, now: float,
+    snap: Snapshot,
+    position: Position | None,
+    limits: Limits,
+    *,
+    now: float,
 ) -> Decision:
     """Unproven exploratory PAPER strategy with a later last signal time.
 
@@ -209,5 +227,12 @@ def decide_orb5_explore(
     return decide_orb5(snap, position, limits, now=now, signal_last=SIGNAL_LAST_EXPERIMENTAL)
 
 
-__all__ = ["ORB5_LIMITS", "ORB5_EXPLORE_LIMITS", "completed_5m_bars",
-           "decide_orb5", "decide_orb5_explore", "atr14", "session_vwap"]
+__all__ = [
+    "ORB5_LIMITS",
+    "ORB5_EXPLORE_LIMITS",
+    "completed_5m_bars",
+    "decide_orb5",
+    "decide_orb5_explore",
+    "atr14",
+    "session_vwap",
+]

@@ -67,7 +67,7 @@ def test_ordering_is_not_offered_as_the_gate():
     index = lines.index("Before=user@1000.service")
     comment = " ".join(
         line.strip().lstrip("#").strip()
-        for line in lines[max(0, index - 5):index]
+        for line in lines[max(0, index - 5) : index]
         if line.strip().startswith("#")
     )
     lowered = comment.lower()

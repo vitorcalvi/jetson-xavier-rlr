@@ -58,9 +58,7 @@ def _make_snapshot(
     bars: tuple[Bar, ...], quote: Quote | None = None, *, symbol: str = "BTC/USD", now: float = 0.0
 ) -> Snapshot:
     last_bar_ts = bars[-1].ts if bars else 0.0
-    return Snapshot(
-        symbol=symbol, bars=bars, quote=quote, fetched_at=now, last_bar_ts=last_bar_ts
-    )
+    return Snapshot(symbol=symbol, bars=bars, quote=quote, fetched_at=now, last_bar_ts=last_bar_ts)
 
 
 def _epoch(*args: int) -> float:
@@ -70,6 +68,7 @@ def _epoch(*args: int) -> float:
 
 def _fake_http(payloads: dict[str, dict]) -> Callable[[str, dict], object]:
     """Route URLs to fixtures by endpoint; bars vs quotes decided by path."""
+
     def fake(url: str, headers: dict) -> object:
         if "/bars" in url:
             return payloads["bars"]
@@ -158,9 +157,7 @@ def test_vwap_resets_each_utc_day() -> None:
     assert features.vwap > 220.0, (
         f"VWAP should sit near the day-2 closes (~250); got {features.vwap}"
     )
-    assert features.vwap > 200.0, (
-        f"VWAP must not be polluted by day-1 bars; got {features.vwap}"
-    )
+    assert features.vwap > 200.0, f"VWAP must not be polluted by day-1 bars; got {features.vwap}"
 
     # Conversely, a snapshot anchored on day-1 sees only day-1 bars:
     # the day-1 closes sit around 50, so VWAP must be near there.
@@ -192,9 +189,7 @@ def test_crossed_above_vwap() -> None:
     )
 
     # Empty snapshot -> crossed is False (no vwap, no previous bars).
-    empty = Snapshot(
-        symbol="X", bars=(), quote=None, fetched_at=0.0, last_bar_ts=0.0
-    )
+    empty = Snapshot(symbol="X", bars=(), quote=None, fetched_at=0.0, last_bar_ts=0.0)
     assert compute(empty, now=0.0).crossed_above_vwap is False
 
 
@@ -251,11 +246,15 @@ def test_features_via_fetch_snapshots_round_trip() -> None:
 
 
 def test_invalid_iex_quotes_fail_closed_in_spread_feature() -> None:
-    from dataclasses import replace
     bars = _bars_from_fixture("bars_full.json", "BTC/USD")
     now = _epoch(2024, 1, 1, 0, 5, 0)
-    for bid, ask in ((30.56, 0.0), (0.0, 30.56), (30.58, 30.55),
-                     (float("nan"), 30.56), (30.56, float("inf"))):
+    for bid, ask in (
+        (30.56, 0.0),
+        (0.0, 30.56),
+        (30.58, 30.55),
+        (float("nan"), 30.56),
+        (30.56, float("inf")),
+    ):
         snap = _make_snapshot(bars, Quote(bid=bid, ask=ask, ts=now), now=now)
         assert compute(snap, now=now).spread_pct is None
     valid = _make_snapshot(bars, Quote(bid=30.55, ask=30.56, ts=now), now=now)

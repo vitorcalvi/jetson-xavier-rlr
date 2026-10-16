@@ -444,8 +444,15 @@ def test_run_blocked_by_live_buy_from_older_epoch(tmp_path):
     cid = c.prepare_order("BTC/USD", "buy", 1, 1)
     c.mark_submitting(cid)  # trips HALT_ENTRIES and bumps the epoch
     c.acknowledge_order(cid, broker_status="new")
-    broker = [{"client_order_id": cid, "symbol": "BTC/USD", "side": "buy",
-               "filled_qty": "0", "status": "new"}]
+    broker = [
+        {
+            "client_order_id": cid,
+            "symbol": "BTC/USD",
+            "side": "buy",
+            "filled_qty": "0",
+            "status": "new",
+        }
+    ]
     assert reconcile(c, orders=broker)
     with pytest.raises(OrderSafetyError, match="unresolved buy"):
         c.set_mode(RUN, operator_approved=True)
@@ -472,8 +479,15 @@ def test_fill_under_hard_incident_marks_uncertain(tmp_path):
     # a broker snapshot matching local state clears "uncertain" but not the HARD incident
     snap = c.snapshot()
     o = snap["orders"][cid]
-    broker = [{"client_order_id": cid, "symbol": "BTC/USD", "side": "buy",
-               "filled_qty": o["filled_qty"], "status": "partially_filled"}]
+    broker = [
+        {
+            "client_order_id": cid,
+            "symbol": "BTC/USD",
+            "side": "buy",
+            "filled_qty": o["filled_qty"],
+            "status": "partially_filled",
+        }
+    ]
     reconcile(c, orders=broker, positions=dict(snap["positions"]))
     assert c.snapshot()["incident"] == hard and not c.snapshot()["uncertain"]
     c.record_fill(cid, "e2", "1")
@@ -495,8 +509,15 @@ def test_reconcile_tolerates_broker_9_decimal_rounding(tmp_path):
     c.acknowledge_order(cid, broker_status="new")
     fee = Decimal("4.534653824") * Decimal("0.0025")
     c.record_fill(cid, "e1", "4.534653824", fee_in_asset=str(fee))
-    broker_orders = [{"client_order_id": cid, "symbol": "SOL/USD", "side": "buy",
-                      "filled_qty": "4.534653824", "status": "filled"}]
+    broker_orders = [
+        {
+            "client_order_id": cid,
+            "symbol": "SOL/USD",
+            "side": "buy",
+            "filled_qty": "4.534653824",
+            "status": "filled",
+        }
+    ]
     assert reconcile(c, orders=broker_orders, positions={"SOL/USD": "4.523317189"})
     assert c.snapshot()["incident"] == ""
 
@@ -512,10 +533,19 @@ def test_reconcile_adopts_broker_terminal_state_for_notional_buy(tmp_path):
     cid = c.prepare_order("SOL/USD", "buy", 1, "4.6275")
     c.mark_submitting(cid)
     c.acknowledge_order(cid, broker_status="new")
-    c.record_fill(cid, "e1", "4.534653824", fee_in_asset=str(Decimal("4.534653824") * Decimal("0.0025")))
+    c.record_fill(
+        cid, "e1", "4.534653824", fee_in_asset=str(Decimal("4.534653824") * Decimal("0.0025"))
+    )
     assert c.snapshot()["orders"][cid]["status"] == "PARTIAL"
-    broker_orders = [{"client_order_id": cid, "symbol": "SOL/USD", "side": "buy",
-                      "filled_qty": "4.534653824", "status": "filled"}]
+    broker_orders = [
+        {
+            "client_order_id": cid,
+            "symbol": "SOL/USD",
+            "side": "buy",
+            "filled_qty": "4.534653824",
+            "status": "filled",
+        }
+    ]
     assert reconcile(c, orders=broker_orders, positions={"SOL/USD": "4.523317189"})
     assert c.snapshot()["orders"][cid]["status"] == "FILLED"
 
@@ -526,6 +556,13 @@ def test_reconcile_terminal_with_different_fill_is_mismatch(tmp_path):
     c.mark_submitting(cid)
     c.acknowledge_order(cid, broker_status="new")
     c.record_fill(cid, "e1", "4.0", fee_in_asset="0")
-    broker_orders = [{"client_order_id": cid, "symbol": "SOL/USD", "side": "buy",
-                      "filled_qty": "4.534653824", "status": "filled"}]
+    broker_orders = [
+        {
+            "client_order_id": cid,
+            "symbol": "SOL/USD",
+            "side": "buy",
+            "filled_qty": "4.534653824",
+            "status": "filled",
+        }
+    ]
     assert not reconcile(c, orders=broker_orders, positions={"SOL/USD": "4.0"})

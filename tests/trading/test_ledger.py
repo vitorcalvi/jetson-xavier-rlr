@@ -19,6 +19,7 @@ from reflective_loop_runtime.trading.model import Position, RiskState
 
 # -- helpers ---------------------------------------------------------------
 
+
 def _ts(year: int, month: int, day: int, hour: int = 0, minute: int = 0) -> float:
     """Return a UTC epoch second for the given calendar fields."""
     return datetime(year, month, day, hour, minute, tzinfo=timezone.utc).timestamp()
@@ -31,6 +32,7 @@ def _make_ledger(tmp_path: Path, *, name: str = "ledger.db") -> Ledger:
 
 
 # -- test_r_multiple_computation -------------------------------------------
+
 
 def test_r_multiple_computation(tmp_path: Path) -> None:
     """``close_trade`` must compute R as ``(exit - entry) / (entry - stop)``.
@@ -125,6 +127,7 @@ def test_r_multiple_computation(tmp_path: Path) -> None:
 
 # -- test_keys_never_in_journal --------------------------------------------
 
+
 def test_keys_never_in_journal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Full values and >= 6-char substrings of the Alpaca secrets must be scrubbed.
 
@@ -168,6 +171,7 @@ def test_keys_never_in_journal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
 
 # -- test_risk_state_counts_utc_day ----------------------------------------
+
 
 def test_risk_state_counts_utc_day(tmp_path: Path) -> None:
     """``risk_state`` must aggregate over the UTC day boundary only.
@@ -287,6 +291,7 @@ def test_risk_state_counts_utc_day(tmp_path: Path) -> None:
 
 
 # -- test_open_positions_roundtrip -----------------------------------------
+
 
 def test_open_positions_roundtrip(tmp_path: Path) -> None:
     """``open_positions`` must reflect every ``open_trade`` and drop closed ones.

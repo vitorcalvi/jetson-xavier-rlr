@@ -100,9 +100,7 @@ def test_json_mode_reports_the_summary(tmp_path, capsys):
 
 
 def test_toon_encode_tabular_and_scalars():
-    text = toon_encode(
-        {"a": 1, "b": "x,y", "rows": [{"k": "v", "n": 2}, {"k": "w", "n": 3}]}
-    )
+    text = toon_encode({"a": 1, "b": "x,y", "rows": [{"k": "v", "n": 2}, {"k": "w", "n": 3}]})
     assert "a: 1" in text
     assert '"x,y"' in text
     assert "rows[2]{k,n}:" in text
@@ -126,15 +124,26 @@ def _simulate_sandbox(monkeypatch, *, host_write: bool) -> None:
         command = str((args or {}).get("command", ""))
         if "rlr-sandbox-ok" in command:
             return ToolResult(
-                tool=tool, op=op, risk_class="A1", executed=True, simulated=False,
-                recorded=True, ok=True, stdout="rlr-sandbox-ok",
+                tool=tool,
+                op=op,
+                risk_class="A1",
+                executed=True,
+                simulated=False,
+                recorded=True,
+                ok=True,
+                stdout="rlr-sandbox-ok",
             )
         target = command.split(">", 1)[-1].strip()
         if host_write and target:
             Path(target).write_text("x", encoding="utf-8")
         return ToolResult(
-            tool=tool, op=op, risk_class="A1", executed=True, simulated=False,
-            recorded=True, ok=True,
+            tool=tool,
+            op=op,
+            risk_class="A1",
+            executed=True,
+            simulated=False,
+            recorded=True,
+            ok=True,
         )
 
     monkeypatch.setattr(redteam.ToolBroker, "invoke", fake_invoke)

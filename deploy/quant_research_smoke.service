@@ -1,0 +1,20 @@
+[Unit]
+Description=RLR offline-only quantitative research regression smoke
+ConditionPathExists=/home/vitor/rlr/rlr-runtime/src/reflective_loop_runtime/quant
+[Service]
+Type=oneshot
+User=vitor
+Group=vitor
+WorkingDirectory=/home/vitor/rlr/rlr-runtime
+Environment=PYTHONPATH=/home/vitor/rlr/rlr-runtime/src
+ExecStart=/home/vitor/rlr/venv/bin/python -m pytest -q tests/quant
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+RestrictAddressFamilies=AF_UNIX
+MemoryMax=400M
+CPUQuota=70%%
+TimeoutStartSec=120
+[Install]
+# Intentionally no WantedBy: do not enable or auto-run.

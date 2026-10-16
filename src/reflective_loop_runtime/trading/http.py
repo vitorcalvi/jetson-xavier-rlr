@@ -30,9 +30,8 @@ refusal surfaces as a configuration error rather than a runtime exception.
 from __future__ import annotations
 
 import json
-import time
 import ssl
-import socket
+import time
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -59,14 +58,11 @@ def _validate_egress(url: str) -> str:
     parsed = urlparse(url)
     scheme = (parsed.scheme or "").lower()
     if scheme != "https":
-        raise ValueError(
-            f"refusing non-https egress: scheme={scheme!r} host={parsed.hostname!r}"
-        )
+        raise ValueError(f"refusing non-https egress: scheme={scheme!r} host={parsed.hostname!r}")
     host = (parsed.hostname or "").lower()
     if host not in ALLOWED_HOSTS:
         raise ValueError(
-            f"refusing non-alpaca egress: host={host!r} "
-            f"(allowed={sorted(ALLOWED_HOSTS)})"
+            f"refusing non-alpaca egress: host={host!r} (allowed={sorted(ALLOWED_HOSTS)})"
         )
     return url
 
@@ -92,7 +88,8 @@ def _default_http(url: str, headers: dict[str, str]) -> Any:
     for attempt in range(3):
         try:
             with urlopen(
-                request, timeout=_DEFAULT_TIMEOUT_SECONDS  # noqa: S310 - validated
+                request,
+                timeout=_DEFAULT_TIMEOUT_SECONDS,  # noqa: S310 - validated
             ) as response:
                 raw = response.read()
             break
@@ -110,9 +107,7 @@ def _default_http(url: str, headers: dict[str, str]) -> Any:
     try:
         return json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError) as exc:
-        raise RuntimeError(
-            f"http transport returned non-JSON for {safe_url!r}"
-        ) from exc
+        raise RuntimeError(f"http transport returned non-JSON for {safe_url!r}") from exc
 
 
 def _default_post(url: str, headers: dict[str, str], body: dict) -> Any:
@@ -137,7 +132,8 @@ def _default_post(url: str, headers: dict[str, str], body: dict) -> Any:
         request.add_header(key, value)
     try:
         with urlopen(
-            request, timeout=_DEFAULT_TIMEOUT_SECONDS  # noqa: S310 - URL validated above
+            request,
+            timeout=_DEFAULT_TIMEOUT_SECONDS,  # noqa: S310 - URL validated above
         ) as response:
             raw = response.read()
     except HTTPError as exc:
@@ -149,17 +145,14 @@ def _default_post(url: str, headers: dict[str, str], body: dict) -> Any:
         except Exception:  # noqa: BLE001 - best effort; never let logging break the loop
             body_text = "<unreadable>"
         raise RuntimeError(
-            f"http transport failed for {safe_url!r}: "
-            f"status={exc.code} body={body_text!r}: {exc}"
+            f"http transport failed for {safe_url!r}: status={exc.code} body={body_text!r}: {exc}"
         ) from exc
     except URLError as exc:
         raise RuntimeError(f"http transport failed for {safe_url!r}: {exc}") from exc
     try:
         return json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError) as exc:
-        raise RuntimeError(
-            f"http transport returned non-JSON for {safe_url!r}"
-        ) from exc
+        raise RuntimeError(f"http transport returned non-JSON for {safe_url!r}") from exc
 
 
 __all__ = ["ALLOWED_HOSTS", "_default_http", "_default_post"]

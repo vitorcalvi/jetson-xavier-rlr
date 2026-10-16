@@ -146,8 +146,7 @@ def _spread_pct(snap: Snapshot) -> float | None:
     # An IEX close/overnight quote can carry bid>0 with ask=0 (seen on
     # 2026-10-15). Never turn that into a negative, "cheap" spread.
     # Reject malformed/crossed/non-finite BBO before it reaches risk policy.
-    if not (math.isfinite(bid) and math.isfinite(ask)
-            and bid > 0 and ask > 0 and ask >= bid):
+    if not (math.isfinite(bid) and math.isfinite(ask) and bid > 0 and ask > 0 and ask >= bid):
         return None
     mid = (bid + ask) / 2.0
     if mid <= 0:
@@ -188,7 +187,8 @@ def compute(snap: Snapshot, *, now: float) -> Features:
     # current VWAP, immediately preceded by one below. Prevents 15m-old
     # dips from being treated as fresh reclaims.
     confirmed = bool(
-        vwap is not None and len(bars) >= 3
+        vwap is not None
+        and len(bars) >= 3
         and bars[-1].ts - bars[-2].ts == 60
         and bars[-2].ts - bars[-3].ts == 60
         and bars[-3].c < vwap

@@ -79,9 +79,7 @@ class TestCandidateGeneration:
 
     def test_no_actuator_candidates_under_cooldown(self, tmp_path):
         config = make_config(tmp_path)
-        ids = candidate_ids(
-            build_candidates(_state(thermal_level="cooldown"), config=config)
-        )
+        ids = candidate_ids(build_candidates(_state(thermal_level="cooldown"), config=config))
         assert "set_vision_fps" not in ids
         assert "set_reply_tokens" not in ids
         assert "reflect" not in ids
@@ -112,11 +110,15 @@ class TestCandidateGeneration:
         from reflective_loop_runtime.contracts import ACTION_FIELDS
 
         config = make_config(tmp_path)
-        for candidate in build_candidates(_state(episode_count=1, memory_count=1,
-                                                 active_goals=[{"id": 1, "text": "x"}],
-                                                 capabilities=["vision", "generation",
-                                                               "load_control"]),
-                                          config=config):
+        for candidate in build_candidates(
+            _state(
+                episode_count=1,
+                memory_count=1,
+                active_goals=[{"id": 1, "text": "x"}],
+                capabilities=["vision", "generation", "load_control"],
+            ),
+            config=config,
+        ):
             assert candidate.action in ACTION_FIELDS
             # Every candidate must materialise into a valid, bounded action.
             from reflective_loop_runtime.contracts import validate_action

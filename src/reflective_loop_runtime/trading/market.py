@@ -79,6 +79,7 @@ def configured_symbols() -> tuple[str, ...]:
     syms = tuple(s.strip().upper() for s in raw.split(",") if s.strip())
     return syms or SYMBOLS
 
+
 # Bars request page size: Alpaca's documented maximum for a single call.
 # Keeping this fixed makes pagination predictable: one ``limit=10000`` page
 # covers ~6.9 days of one-minute bars, so the 20-page safety cap below

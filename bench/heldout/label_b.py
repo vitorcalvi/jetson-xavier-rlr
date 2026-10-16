@@ -25,10 +25,10 @@ from __future__ import annotations
 from typing import Any
 
 # --- Frozen thresholds (spec section 1) --------------------------------------
-CONSERV_C = 70.0          # T1
-DEGRADED_C = 75.0         # T2
-COOLDOWN_C = 78.0         # T3
-STALE_SECONDS = 30.0      # T5
+CONSERV_C = 70.0  # T1
+DEGRADED_C = 75.0  # T2
+COOLDOWN_C = 78.0  # T3
+STALE_SECONDS = 30.0  # T5
 RAM_PRESSURE_FRACTION = 0.90  # T23, benchmark-owned line (spec section 3)
 
 # Ambiguity markers (T19 / R9). Text carrying any of them is unstructured.
@@ -222,10 +222,10 @@ def label(case: Any) -> str:
     # --- R4 / R7: conserve band -------------------------------------------
     if peak >= CONSERV_C:
         if not structured:
-            return OBSERVE          # R9 / R12: text withholds an optional throttle
+            return OBSERVE  # R9 / R12: text withholds an optional throttle
         if not _has_vision(case):
-            return OBSERVE          # R7: the candidate does not exist
-        return SET_VISION_FPS       # R4 / R11: pressure never suppresses shedding
+            return OBSERVE  # R7: the candidate does not exist
+        return SET_VISION_FPS  # R4 / R11: pressure never suppresses shedding
 
     # --- R3: normal band (R8 and R9 both land on the same label) -----------
     del pressure  # RAM pressure only ever caps the normal band at OBSERVE

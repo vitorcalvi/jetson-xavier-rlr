@@ -91,9 +91,7 @@ def _write_policy(
     )
     policy_path = tmp_path / policy_name
     policy_path.write_text(
-        json.dumps(
-            sign_envelope(deepcopy(bundle), private_key=private, key_id=key_id)
-        ),
+        json.dumps(sign_envelope(deepcopy(bundle), private_key=private, key_id=key_id)),
         encoding="utf-8",
     )
     return policy_path, public_path
@@ -177,9 +175,7 @@ def test_trading_policy_rejects_expired(tmp_path):
         issued_at=NOW - 3600,
         lifetime_seconds=60,
     )
-    policy_path, public_path, _private, _public_pem = _signed_trading(
-        tmp_path, bundle=expired
-    )
+    policy_path, public_path, _private, _public_pem = _signed_trading(tmp_path, bundle=expired)
 
     with pytest.raises(AuthorityError, match="expired"):
         load_trading_policy(policy_path, public_path, now=NOW)
@@ -209,20 +205,22 @@ def test_signer_domain_flag_default_unchanged(tmp_path):
     """The trusted-host signer must keep the default self-maintenance behaviour."""
     spec = importlib.util.spec_from_file_location(
         "g1_signer",
-        Path(__file__).resolve().parents[1]
-        / "deploy"
-        / "sign_self_maintenance_policy.py",
+        Path(__file__).resolve().parents[1] / "deploy" / "sign_self_maintenance_policy.py",
     )
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
     args = [
-        "--operator-key-env", str(tmp_path / "operator-key.env"),
-        "--public-key-out", str(tmp_path / "operator-public.pem"),
-        "--policy-out", str(tmp_path / "policy.json"),
+        "--operator-key-env",
+        str(tmp_path / "operator-key.env"),
+        "--public-key-out",
+        str(tmp_path / "operator-public.pem"),
+        "--policy-out",
+        str(tmp_path / "policy.json"),
         "--generate",
-        "--valid-hours", "24",
+        "--valid-hours",
+        "24",
     ]
     assert module.main(args) == 0
 
@@ -250,6 +248,7 @@ def test_signer_domain_flag_default_unchanged(tmp_path):
             tmp_path / "operator-public.pem",
             now=now,
         )
+
 
 def test_trading_policy_scope_matches_kernel_permit(tmp_path):
     """A signed paper-trading bundle scopes exactly the kernel-permit domain/capability.

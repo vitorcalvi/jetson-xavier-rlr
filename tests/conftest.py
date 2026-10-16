@@ -93,8 +93,12 @@ def make_scored(candidates: list[Candidate], choice: str, confidence: float) -> 
         probabilities[rest[-1]] += 1.0 - sum(probabilities.values())
     else:
         probabilities[choice] = 1.0
-    return ScoredDecision(choice=choice, confidence=probabilities[choice],
-                          probabilities=probabilities, advice="test score")
+    return ScoredDecision(
+        choice=choice,
+        confidence=probabilities[choice],
+        probabilities=probabilities,
+        advice="test score",
+    )
 
 
 __all__ = [

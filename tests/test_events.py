@@ -221,9 +221,7 @@ class TestAsyncReasoner:
             return "eventually"
 
         started = time.monotonic()
-        call_id = reasoner.submit(
-            "lan_reasoner", hanging, state_version="v1", expiry_seconds=600
-        )
+        call_id = reasoner.submit("lan_reasoner", hanging, state_version="v1", expiry_seconds=600)
         assert time.monotonic() - started < 0.5  # submit is non-blocking
         assert reasoner.poll(current_state_version="v1") == []  # poll returns immediately
         assert reasoner.pending() == 1
@@ -357,17 +355,13 @@ class TestExecutiveEvents:
             lambda args: calls.__setitem__("n", calls["n"] + 1) or {"load_target": args["load"]},
         )
         plan = PlanGraph(":memory:", audit=audit)
-        executive = Executive(
-            plan, permits, broker, audit=audit, bus=bus, kill_switch=kill_switch
-        )
+        executive = Executive(plan, permits, broker, audit=audit, bus=bus, kill_switch=kill_switch)
         return plan, executive, calls
 
     def test_lifecycle_events_are_published(self, tmp_path):
         bus = EventBus()
         plan, executive, calls = self._executive(tmp_path, bus=bus)
-        step = plan.add_step(
-            goal_id="g-1", tool="state", op="set_load_target", args={"load": 0.25}
-        )
+        step = plan.add_step(goal_id="g-1", tool="state", op="set_load_target", args={"load": 0.25})
         result = executive.run_step(step.step_id)
         assert result.ok
         assert calls["n"] == 1
@@ -379,9 +373,7 @@ class TestExecutiveEvents:
         bus = EventBus()
         switch = KillSwitch(None, bus=bus)
         plan, executive, calls = self._executive(tmp_path, bus=bus, kill_switch=switch)
-        first = plan.add_step(
-            goal_id="g-1", tool="state", op="set_load_target", args={"load": 0.1}
-        )
+        first = plan.add_step(goal_id="g-1", tool="state", op="set_load_target", args={"load": 0.1})
         assert executive.run_step(first.step_id).ok
         assert calls["n"] == 1
 

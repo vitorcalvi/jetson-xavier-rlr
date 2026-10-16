@@ -48,9 +48,7 @@ def _signed(tmp_path, bundle=None):
             sign_envelope(
                 deepcopy(
                     bundle
-                    or self_maintenance_policy_bundle(
-                        issued_at=NOW - 60, lifetime_seconds=3600
-                    )
+                    or self_maintenance_policy_bundle(issued_at=NOW - 60, lifetime_seconds=3600)
                 ),
                 private_key=private,
                 key_id="test-operator",
@@ -133,9 +131,7 @@ def test_missing_invariant_wrong_mission_and_any_mandate_are_rejected(tmp_path):
         ("inf", lambda d: d.__setitem__("io_read", "inf")),
         (
             "over",
-            lambda d: d.__setitem__(
-                "io_read", SELF_MAINTENANCE_BUDGET_MAX["io_read"] + 1.0
-            ),
+            lambda d: d.__setitem__("io_read", SELF_MAINTENANCE_BUDGET_MAX["io_read"] + 1.0),
         ),
     ],
 )
@@ -164,9 +160,7 @@ def test_dev_hmac_and_wrong_ed25519_key_are_rejected(tmp_path):
     hmac_path.write_text(
         json.dumps(
             sign_envelope(
-                self_maintenance_policy_bundle(
-                    issued_at=NOW - 60, lifetime_seconds=3600
-                ),
+                self_maintenance_policy_bundle(issued_at=NOW - 60, lifetime_seconds=3600),
                 secret=b"x" * 32,
             )
         ),
@@ -193,9 +187,7 @@ def test_symlinked_policy_or_public_key_is_rejected(tmp_path):
 
 
 def test_expired_and_not_yet_valid_signed_policies_are_rejected(tmp_path):
-    expired = self_maintenance_policy_bundle(
-        issued_at=NOW - 3600, lifetime_seconds=60
-    )
+    expired = self_maintenance_policy_bundle(issued_at=NOW - 3600, lifetime_seconds=60)
     p1, k1 = _signed(tmp_path / "expired", expired)
     with pytest.raises(AuthorityError, match="expired"):
         load_operator_policy(p1, k1, now=NOW)

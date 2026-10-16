@@ -48,8 +48,17 @@ class TestStore:
             }
         finally:
             store.close()
-        for table in ("telemetry", "episodes", "memories", "goals", "decisions",
-                      "actions", "vetoes", "outcomes", "runs"):
+        for table in (
+            "telemetry",
+            "episodes",
+            "memories",
+            "goals",
+            "decisions",
+            "actions",
+            "vetoes",
+            "outcomes",
+            "runs",
+        ):
             assert table in names
 
     def test_roundtrip_and_counts(self, tmp_path):
@@ -60,8 +69,15 @@ class TestStore:
             store.add_episode("telemetry", "digest", None)
             store.add_memory("a lesson", 3)
             goal = store.add_goal("stay cool")
-            store.record_decision(phase="p", engine="e", choice="observe", confidence=0.6,
-                                  probabilities={"observe": 1.0}, mode="fast", latency_ms=0.5)
+            store.record_decision(
+                phase="p",
+                engine="e",
+                choice="observe",
+                confidence=0.6,
+                probabilities={"observe": 1.0},
+                mode="fast",
+                latency_ms=0.5,
+            )
             action_id = store.record_action("observe", {}, "executed")
             store.record_outcome(action_id, {"ok": True})
             counts = store.counts()

@@ -1,0 +1,43 @@
+report:
+  schema: TOON_v2.0
+  date: 2026-10-16
+  target_repo: vitorcalvi/jetson-xavier-rlr
+  mode: RESEARCH_ONLY_SHADOW_NO_BROKER_POST
+  stage2_HALT_ENTRIES: last_verified_true_remote
+
+verified_local:
+  focused_tests_passed: 29
+  focused_tests_failed: 0
+  shadow_ticks: 500
+  shadow_intents: 500
+  actual_broker_orders: 0
+  B1_synthetic_payloads: 100
+  B1_lossless_roundtrips: 100
+  B1_toon_byte_saving_pct: -1.32
+  B1_cl100k_token_saving: unavailable_tiktoken_missing
+  B1_synthetic_p99_ms: 0.094
+  B1_pass: false
+  B3_null_paths: 100
+  B3_variants_per_path: 200
+  B3_trials_recorded: 20000
+  B3_dsr_ge_095_count: 0
+  B3_fold_overlap_failures: 0
+  B3_real_world_FPR_proven: false
+  B2_TensorRT_FP16: not_measured
+  B2_onnx_vs_torch: not_measured
+  B4_live_paper_30_fills: not_attempted
+  live_profitability: not_proven
+
+proposed_changes:
+  D1: synthetic_limit_guard_RTT_and_spread_veto_no_guaranteed_maker
+  D2: venue_cost_profiles_with_fail_closed_equity_fees
+  D3: sqlite_trials_DSR_fold_scalers_memory_isolation
+  D4: isolated_500_tick_main_shadow_pipeline_no_order_transport
+  D5: synchronized_covariance_downside_tail_rho
+  D6: sysfs_75C_thermal_pause_affinity_dryrun_TRT_fallback
+
+pending:
+  full_existing_repo_regression: not_run_on_Jetson_at_report_time
+  source_branch_commit_and_sync: pending_publication
+  real_paper_certification: blocked_by_HALT_ENTRIES_and_missing_30_actual_trades
+  migration_to_legacy_stage2_main_loop: deferred_for_broker_safety

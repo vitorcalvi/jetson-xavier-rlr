@@ -41,6 +41,7 @@ try:
         RiskState,
     )
 except ImportError:  # pragma: no cover - decider lane will resolve the merge
+
     @dataclass(frozen=True)
     class Position:  # noqa: D401 - stand-in for the shared Position dataclass
         """Stub ``Position`` matching the wave-2 shared interface."""
@@ -178,8 +179,9 @@ class Ledger:
     flushed to disk synchronously so a crash never loses the last tick.
     """
 
-    def __init__(self, db_path: str | Path, journal_path: str | Path, *,
-                 modeled_crypto_fee_rate: float = 0.0) -> None:
+    def __init__(
+        self, db_path: str | Path, journal_path: str | Path, *, modeled_crypto_fee_rate: float = 0.0
+    ) -> None:
         # Modeled fee risk is conservative until broker CFEE is reconciled.
         if not 0.0 <= modeled_crypto_fee_rate < 1.0:
             raise ValueError("invalid modeled fee")
@@ -350,14 +352,16 @@ class Ledger:
             # a substitute for separately reconciling broker activities.
             rows = self._conn.execute(
                 "SELECT entry_px, exit_px, stop FROM trades WHERE closed=1 "
-                "AND exit_ts IS NOT NULL AND exit_ts>=?", (day_start,)
+                "AND exit_ts IS NOT NULL AND exit_ts>=?",
+                (day_start,),
             ).fetchall()
             net_r = 0.0
             for row in rows:
                 risk = float(row["entry_px"]) - float(row["stop"])
                 if risk > 0:
-                    net_r += (float(row["exit_px"]) * (1 - self._fee_rate) ** 2 -
-                              float(row["entry_px"])) / risk
+                    net_r += (
+                        float(row["exit_px"]) * (1 - self._fee_rate) ** 2 - float(row["entry_px"])
+                    ) / risk
 
         last_loss_rows = self._conn.execute(
             "SELECT symbol, MAX(exit_ts) AS last FROM trades "

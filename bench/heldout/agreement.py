@@ -37,9 +37,7 @@ def main() -> int:
         if mine == author:
             agree += 1
         else:
-            lines.append(
-                f"DISAGREE {case.name} author={author} b={mine}"
-            )
+            lines.append(f"DISAGREE {case.name} author={author} b={mine}")
 
     print(f"AGREE {agree}/{total}")
     for line in lines:

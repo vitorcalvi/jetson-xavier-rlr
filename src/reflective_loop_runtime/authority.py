@@ -66,10 +66,7 @@ class AuthorityError(RuntimeError):
 
 
 def _version_with_window(issued_at: int, not_after: int) -> str:
-    return (
-        f"{POLICY_VERSION_PREFIX};issued_at={int(issued_at)};"
-        f"not_after={int(not_after)}"
-    )
+    return f"{POLICY_VERSION_PREFIX};issued_at={int(issued_at)};not_after={int(not_after)}"
 
 
 def self_maintenance_policy_bundle(
@@ -268,10 +265,7 @@ TRADING_POLICY_VERSION_PREFIX = "rlr-paper-trading-1"
 
 
 def _trading_version_with_window(issued_at: int, not_after: int) -> str:
-    return (
-        f"{TRADING_POLICY_VERSION_PREFIX};issued_at={int(issued_at)};"
-        f"not_after={int(not_after)}"
-    )
+    return f"{TRADING_POLICY_VERSION_PREFIX};issued_at={int(issued_at)};not_after={int(not_after)}"
 
 
 def paper_trading_policy_bundle(

@@ -47,7 +47,6 @@ class OrderSafetyError(RuntimeError):
     """An unsafe transition was refused; never retry blindly."""
 
 
-
 # Alpaca reports quantities with 9 decimals; the controller derives positions
 # exactly (fee in kind: qty * (1 - fee)), so compare within broker precision.
 QTY_TOLERANCE = Decimal("0.000000002")
@@ -55,6 +54,7 @@ QTY_TOLERANCE = Decimal("0.000000002")
 
 def _qty_equal(a: Any, b: Any) -> bool:
     return abs(_qty(a) - _qty(b)) <= QTY_TOLERANCE
+
 
 def _qty(value: Any) -> Decimal:
     try:
@@ -220,10 +220,7 @@ class OrderController:
         s.setdefault("incident_history", []).append(reason)
         # A HARD incident must survive a subsequent clearable trigger; HARD
         # anomalies always require operator review (clear_incident).
-        if (
-            OrderController._is_hard_incident(s["incident"])
-            and reason in CLEARABLE_INCIDENTS
-        ):
+        if OrderController._is_hard_incident(s["incident"]) and reason in CLEARABLE_INCIDENTS:
             return
         s["incident"] = reason
 
@@ -379,9 +376,7 @@ class OrderController:
             elif side == "sell":
                 if s["mode"] == EMERGENCY_STOP:
                     o["status"] = "CANCELED_LOCAL"
-                    refusal[0] = (
-                        "automated sell submit blocked: operator-managed exits required"
-                    )
+                    refusal[0] = "automated sell submit blocked: operator-managed exits required"
                     return
             o["status"] = "SUBMITTING"
             self._trip(s, "unknown_post_must_lookup_before_retry")

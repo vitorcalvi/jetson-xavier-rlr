@@ -131,9 +131,7 @@ class TestReconcile(unittest.TestCase):
         # Broker holds 0.00005 BTC, ledger knows nothing.  At $10_000/BTC the
         # notional difference is $0.50, below the default $1.00 dust floor.
         broker = _StubBroker(positions=[{"symbol": "BTCUSD", "qty": "0.00005"}])
-        result = reconcile(
-            broker, {}, prices={"BTCUSD": 10_000.0}, dust_usd=1.0
-        )
+        result = reconcile(broker, {}, prices={"BTCUSD": 10_000.0}, dust_usd=1.0)
         self.assertTrue(result.ok)
         self.assertFalse(result.uncertain)
         self.assertIn("dust:BTCUSD", result.reasons)

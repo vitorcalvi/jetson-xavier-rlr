@@ -27,9 +27,7 @@ def _raise_urlopen(*_args: Any, **_kwargs: Any) -> Any:
 
 def test_http_refuses_non_alpaca_host(monkeypatch: pytest.MonkeyPatch) -> None:
     """A URL whose host is not in :data:`ALLOWED_HOSTS` is refused pre-I/O."""
-    monkeypatch.setattr(
-        "reflective_loop_runtime.trading.http.urlopen", _raise_urlopen
-    )
+    monkeypatch.setattr("reflective_loop_runtime.trading.http.urlopen", _raise_urlopen)
     bad = "https://example.com/v1beta3/crypto/us/bars?symbols=BTC/USD"
     with pytest.raises(ValueError) as excinfo:
         _default_http(bad, {})
@@ -41,9 +39,7 @@ def test_http_refuses_non_alpaca_host(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_http_refuses_plain_http(monkeypatch: pytest.MonkeyPatch) -> None:
     """A non-https scheme is refused even when the host is otherwise allowed."""
-    monkeypatch.setattr(
-        "reflective_loop_runtime.trading.http.urlopen", _raise_urlopen
-    )
+    monkeypatch.setattr("reflective_loop_runtime.trading.http.urlopen", _raise_urlopen)
     bad = "http://data.alpaca.markets/v1beta3/crypto/us/bars"
     with pytest.raises(ValueError) as excinfo:
         _default_http(bad, {})
@@ -64,16 +60,12 @@ def test_http_refuses_non_string_url() -> None:
 
 def test_allowed_hosts_contains_only_alpaca_hosts() -> None:
     """The allow-list is the two Alpaca hosts and nothing else."""
-    assert ALLOWED_HOSTS == frozenset(
-        {"data.alpaca.markets", "paper-api.alpaca.markets"}
-    )
+    assert ALLOWED_HOSTS == frozenset({"data.alpaca.markets", "paper-api.alpaca.markets"})
 
 
 def test_post_refuses_non_alpaca_host(monkeypatch: pytest.MonkeyPatch) -> None:
     """A POST whose host is not in :data:`ALLOWED_HOSTS` is refused pre-I/O."""
-    monkeypatch.setattr(
-        "reflective_loop_runtime.trading.http.urlopen", _raise_urlopen
-    )
+    monkeypatch.setattr("reflective_loop_runtime.trading.http.urlopen", _raise_urlopen)
     bad = "https://example.com/v2/orders"
     body = {"symbol": "BTCUSD", "side": "buy", "notional": 10.0}
     with pytest.raises(ValueError) as excinfo:
@@ -106,9 +98,7 @@ def test_post_sends_json_body(monkeypatch: pytest.MonkeyPatch) -> None:
         captured["timeout"] = _kwargs.get("timeout")
         return _FakeResponse(b'{"id": "order-1", "status": "accepted"}')
 
-    monkeypatch.setattr(
-        "reflective_loop_runtime.trading.http.urlopen", _fake_urlopen
-    )
+    monkeypatch.setattr("reflective_loop_runtime.trading.http.urlopen", _fake_urlopen)
 
     url = "https://paper-api.alpaca.markets/v2/orders"
     headers = {"APCA-API-KEY-ID": "PKfake", "APCA-API-SECRET-KEY": "secret"}

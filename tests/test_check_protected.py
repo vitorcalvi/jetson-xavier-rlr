@@ -59,9 +59,7 @@ def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
         "init.defaultBranch=main",
         *args,
     ]
-    return subprocess.run(
-        cmd, cwd=str(repo), env=_clean_env(), capture_output=True, text=True
-    )
+    return subprocess.run(cmd, cwd=str(repo), env=_clean_env(), capture_output=True, text=True)
 
 
 def _init_repo(tmp_path: Path) -> Path:
@@ -152,9 +150,7 @@ class TestCheckProtected:
         )
 
         blocked = _run_guard(repo, f"{base}..{head}", env=_clean_env())
-        allowed = _run_guard(
-            repo, f"{base}..{head}", env=_clean_env(KERNEL_CHANGE="1")
-        )
+        allowed = _run_guard(repo, f"{base}..{head}", env=_clean_env(KERNEL_CHANGE="1"))
 
         assert blocked.returncode == 1
         assert allowed.returncode == 0, allowed.stderr
@@ -187,9 +183,7 @@ class TestCheckProtected:
         alt = tmp_path / "alt_protected.txt"
         alt.write_text("docs/\n", encoding="utf-8")
 
-        proc = _run_guard(
-            repo, base, head, env=_clean_env(KERNEL_PROTECTED_PATHS=str(alt))
-        )
+        proc = _run_guard(repo, base, head, env=_clean_env(KERNEL_PROTECTED_PATHS=str(alt)))
 
         assert proc.returncode == 0, proc.stderr
 

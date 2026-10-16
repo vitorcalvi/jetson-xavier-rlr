@@ -43,9 +43,7 @@ class TestParser:
 class TestDemoCommand:
     def test_demo_runs_and_reports_a_summary(self, capsys, tmp_path):
         data_dir = tmp_path / "demo"
-        code, summary = _run_json(
-            capsys, ["demo", "--ticks", "4", "--data-dir", str(data_dir)]
-        )
+        code, summary = _run_json(capsys, ["demo", "--ticks", "4", "--data-dir", str(data_dir)])
         assert code == 0
         assert summary["ticks"] == 4
         assert len(summary["thermal_levels"]) == 4
@@ -68,8 +66,7 @@ class TestDemoCommand:
     def test_demo_low_confidence_exercises_qwen_advice(self, capsys, tmp_path):
         code, summary = _run_json(
             capsys,
-            ["demo", "--ticks", "4", "--low-confidence",
-             "--data-dir", str(tmp_path / "demo")],
+            ["demo", "--ticks", "4", "--low-confidence", "--data-dir", str(tmp_path / "demo")],
         )
         assert code == 0
         # Forcing confidence below the gate must route through the advisor.
@@ -78,22 +75,20 @@ class TestDemoCommand:
         assert all(d for d in summary["decisions"])
 
     def test_demo_is_deterministic_across_runs(self, capsys, tmp_path):
-        _, first = _run_json(
-            capsys, ["demo", "--ticks", "5", "--data-dir", str(tmp_path / "a")]
-        )
-        _, second = _run_json(
-            capsys, ["demo", "--ticks", "5", "--data-dir", str(tmp_path / "b")]
-        )
+        _, first = _run_json(capsys, ["demo", "--ticks", "5", "--data-dir", str(tmp_path / "a")])
+        _, second = _run_json(capsys, ["demo", "--ticks", "5", "--data-dir", str(tmp_path / "b")])
         assert first["thermal_levels"] == second["thermal_levels"]
         assert first["decisions"] == second["decisions"]
 
 
 class TestTickCommand:
     def test_hot_tick_selects_cooldown(self, capsys, tmp_path):
-        payload = json.dumps({
-            "temperature_c": 80.0,
-            "capabilities": ["vision", "generation"],
-        })
+        payload = json.dumps(
+            {
+                "temperature_c": 80.0,
+                "capabilities": ["vision", "generation"],
+            }
+        )
         code, result = _run_json(
             capsys,
             ["tick", "--json", payload, "--data-dir", str(tmp_path / "tick")],
@@ -106,13 +101,15 @@ class TestTickCommand:
         assert result["execution"]["ok"] is True
 
     def test_stale_tick_fails_closed_to_abstain(self, capsys, tmp_path):
-        payload = json.dumps({
-            "temperature_c": 80.0,
-            "ram_total_mib": 8192.0,
-            "ram_used_mib": 2048.0,
-            "age_seconds": 999.0,
-            "capabilities": ["vision", "generation"],
-        })
+        payload = json.dumps(
+            {
+                "temperature_c": 80.0,
+                "ram_total_mib": 8192.0,
+                "ram_used_mib": 2048.0,
+                "age_seconds": 999.0,
+                "capabilities": ["vision", "generation"],
+            }
+        )
         code, result = _run_json(
             capsys,
             ["tick", "--json", payload, "--data-dir", str(tmp_path / "tick")],
@@ -125,17 +122,28 @@ class TestTickCommand:
     def test_file_telemetry_is_used_when_requested(self, capsys, tmp_path):
         sample_file = tmp_path / "sample.json"
         sample_file.write_text(
-            json.dumps({
-                "temperature_c": 80.0,
-                "ram_total_mib": 8192.0,
-                "ram_used_mib": 2048.0,
-            }),
+            json.dumps(
+                {
+                    "temperature_c": 80.0,
+                    "ram_total_mib": 8192.0,
+                    "ram_used_mib": 2048.0,
+                }
+            ),
             encoding="utf-8",
         )
         code, result = _run_json(
             capsys,
-            ["tick", "--json", "{}", "--telemetry", "file",
-             "--file", str(sample_file), "--data-dir", str(tmp_path / "tick")],
+            [
+                "tick",
+                "--json",
+                "{}",
+                "--telemetry",
+                "file",
+                "--file",
+                str(sample_file),
+                "--data-dir",
+                str(tmp_path / "tick"),
+            ],
         )
         assert code == 0
         assert result["thermal_level"] == "cooldown"
@@ -156,7 +164,10 @@ class TestModuleEntrypoint:
     def test_python_dash_m_help(self):
         proc = subprocess.run(
             [sys.executable, "-m", "reflective_loop_runtime", "--help"],
-            capture_output=True, text=True, env=_env(), timeout=60,
+            capture_output=True,
+            text=True,
+            env=_env(),
+            timeout=60,
         )
         assert proc.returncode == 0
         assert "demo" in proc.stdout and "tick" in proc.stdout

@@ -30,8 +30,11 @@ def _demo_script(index: int) -> tuple[dict[str, Any], dict[str, Any]]:
     to OpenDecider.
     """
     script = [
-        (58.0, {"vision", "generation"},
-         "maybe the camera queue is unclear; backups: 3; note: sensors warming up"),
+        (
+            58.0,
+            {"vision", "generation"},
+            "maybe the camera queue is unclear; backups: 3; note: sensors warming up",
+        ),
         (66.0, {"vision", "generation"}, ""),
         (72.0, {"vision", "generation"}, ""),
         (76.5, {"vision", "generation"}, ""),
@@ -50,8 +53,7 @@ def _demo_script(index: int) -> tuple[dict[str, Any], dict[str, Any]]:
         "sampled_monotonic": None,  # filled by StaticTelemetry
         "age_seconds": 0.0,
     }
-    return sample, {"capabilities": sorted(capabilities), "raw_text": raw,
-                    "structured": structured}
+    return sample, {"capabilities": sorted(capabilities), "raw_text": raw, "structured": structured}
 
 
 def _make_demo_runtime(data_dir: str, *, low_confidence: bool, qwen: bool) -> ReflectiveLoopRuntime:
@@ -77,20 +79,22 @@ def _make_demo_runtime(data_dir: str, *, low_confidence: bool, qwen: bool) -> Re
                 if match and match.group(1) in ids:
                     target = match.group(1)
                     rest = max(1, len(ids) - 1)
-                    probabilities = {
-                        k: (0.9 if k == target else round(0.1 / rest, 6)) for k in ids
-                    }
+                    probabilities = {k: (0.9 if k == target else round(0.1 / rest, 6)) for k in ids}
                     drift = 1.0 - sum(probabilities.values())
                     probabilities[target] += drift
-                    return ScoredDecision(target, 0.9, probabilities,
-                                          advice="followed advisor suggestion")
+                    return ScoredDecision(
+                        target, 0.9, probabilities, advice="followed advisor suggestion"
+                    )
                 scored = self._inner.score(candidates, state, context=context)
                 # Keep the shape but flatten confidence below the gate.
-                probabilities = {k: 1.0 / len(scored.probabilities)
-                                 for k in scored.probabilities}
+                probabilities = {k: 1.0 / len(scored.probabilities) for k in scored.probabilities}
                 choice = max(probabilities, key=lambda k: (probabilities[k], k))
-                return ScoredDecision(choice=choice, confidence=probabilities[choice],
-                                      probabilities=probabilities, advice=scored.advice)
+                return ScoredDecision(
+                    choice=choice,
+                    confidence=probabilities[choice],
+                    probabilities=probabilities,
+                    advice=scored.advice,
+                )
 
         runtime.decider = _LowConfidenceDecider()
     if qwen:
@@ -121,9 +125,12 @@ def cmd_demo(args: argparse.Namespace) -> int:
     for index in range(args.ticks):
         sample, extra = _demo_script(index)
         result = runtime.tick(
-            sample, capabilities=extra["capabilities"], raw_text=extra["raw_text"],
+            sample,
+            capabilities=extra["capabilities"],
+            raw_text=extra["raw_text"],
             structured=extra["structured"],
-            context="recent outcomes: stable", goal_digest="maintain stable operation",
+            context="recent outcomes: stable",
+            goal_digest="maintain stable operation",
         )
         ticks.append(result.to_dict())
 
@@ -173,15 +180,17 @@ def cmd_tick(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="reflective-loop-runtime",
-                                     description="Reflective Loop Runtime CLI")
+    parser = argparse.ArgumentParser(
+        prog="reflective-loop-runtime", description="Reflective Loop Runtime CLI"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     demo = sub.add_parser("demo", help="run an offline multi-tick simulation")
     demo.add_argument("--ticks", type=int, default=8)
     demo.add_argument("--data-dir", default="./rlr_demo")
-    demo.add_argument("--low-confidence", action="store_true",
-                      help="force the low-confidence Qwen-advice path")
+    demo.add_argument(
+        "--low-confidence", action="store_true", help="force the low-confidence Qwen-advice path"
+    )
     demo.add_argument("--no-qwen", action="store_true", help="disable the slow brain")
     demo.set_defaults(func=cmd_demo)
 

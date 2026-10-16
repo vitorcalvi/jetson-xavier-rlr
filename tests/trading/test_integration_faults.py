@@ -128,9 +128,7 @@ def _build_broker(
 ) -> tuple[PermitService, ToolBroker]:
     """Build a real ``PermitService`` + ``ToolBroker`` for the trader manifest."""
     service = _service(tmp_path, trading_manifest())
-    adapters: dict[
-        tuple[str, str], Callable[[Mapping[str, object]], dict[str, object]]
-    ] = {}
+    adapters: dict[tuple[str, str], Callable[[Mapping[str, object]], dict[str, object]]] = {}
     if adapter is not None:
         adapters[("alpaca_paper", "order")] = adapter
     broker = ToolBroker(
@@ -233,9 +231,7 @@ def _build_loop(cfg: LoopConfig) -> TraderLoop:
 def _make_buy_decide(
     *, symbol: str = "BTC/USD", notional: float = 100.0
 ) -> Callable[..., Decision]:
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(
             symbol=symbol,
             action="enter_long",
@@ -248,25 +244,17 @@ def _make_buy_decide(
     return decide_fn
 
 
-def _make_exit_decide(
-    *, symbol: str = "BTC/USD"
-) -> Callable[..., Decision]:
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+def _make_exit_decide(*, symbol: str = "BTC/USD") -> Callable[..., Decision]:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(symbol=symbol, action="exit", reason="target")
 
     return decide_fn
 
 
-def _make_hold_decide(
-    *, symbol: str = "BTC/USD"
-) -> Callable[..., Decision]:
+def _make_hold_decide(*, symbol: str = "BTC/USD") -> Callable[..., Decision]:
     """A decide_fn that returns ``hold`` so no execution happens."""
 
-    def decide_fn(
-        features: object, position: object, limits: object, *, now: float
-    ) -> Decision:
+    def decide_fn(features: object, position: object, limits: object, *, now: float) -> Decision:
         return Decision(symbol=symbol, action="hold", reason="no-trade")
 
     return decide_fn
@@ -279,9 +267,7 @@ def _new_controller(tmp_path: Path) -> OrderController:
 
 def _reconcile_clean(c: OrderController, *, positions: dict[str, Any] | None = None) -> bool:
     """Reconcile with an empty broker view (clean and complete)."""
-    return c.reconcile(
-        positions or {}, [], account_active=True, complete_snapshot=True
-    )
+    return c.reconcile(positions or {}, [], account_active=True, complete_snapshot=True)
 
 
 # ---------------------------------------------------------------------------
@@ -441,9 +427,7 @@ def test_broker_outage_fails_closed(
     loop.tick(1000.0)
 
     try:
-        assert fault.submit_calls == [], (
-            f"outage must block entries, got {fault.submit_calls!r}"
-        )
+        assert fault.submit_calls == [], f"outage must block entries, got {fault.submit_calls!r}"
         snap = controller.snapshot()
         assert snap["mode"] == HALT_ENTRIES
         assert snap["uncertain"] is True
@@ -475,7 +459,9 @@ def test_delayed_cancel_ack_blocks_entries(tmp_path: Path) -> None:
 
         # Until confirm_canceled, the order is still ACTIVE; new entries on the
         # same symbol must be refused by the existing-unresolved gate.
-        with pytest.raises(OrderSafetyError, match="existing unresolved|broker reconciliation required"):
+        with pytest.raises(
+            OrderSafetyError, match="existing unresolved|broker reconciliation required"
+        ):
             c.prepare_order("BTC/USD", "buy", 2, 1)
 
         # Reconcile (broker view: order still in pending_cancel, no broker
@@ -660,8 +646,15 @@ def test_emergency_blocks_automated_sends(
     controller.record_fill(seed, "seed-fill", 1, fee_in_asset="0")
     assert controller.reconcile(
         {"BTC/USD": 1.0},
-        [{"client_order_id": seed, "symbol": "BTC/USD", "side": "buy",
-          "filled_qty": "1", "status": "filled"}],
+        [
+            {
+                "client_order_id": seed,
+                "symbol": "BTC/USD",
+                "side": "buy",
+                "filled_qty": "1",
+                "status": "filled",
+            }
+        ],
         account_active=True,
         complete_snapshot=True,
     )
@@ -730,7 +723,9 @@ def test_flatten_allows_exits_blocks_entries(
     controller.set_mode(RUN, operator_approved=True)
     # Seed a buy that filled, then reconcile against the broker so the
     # controller has a non-zero BTC/USD position.
-    buy_id = controller.prepare_order("BTC/USD", "buy", 1, 1)  # integer tick: the prelude proves history coverage from it
+    buy_id = controller.prepare_order(
+        "BTC/USD", "buy", 1, 1
+    )  # integer tick: the prelude proves history coverage from it
     controller.mark_submitting(buy_id)
     controller.acknowledge_order(buy_id, broker_status="accepted")
     controller.record_fill(buy_id, "seed-buy-exec", 1, fee_in_asset="0")
@@ -781,7 +776,10 @@ def test_flatten_allows_exits_blocks_entries(
         assert call["symbol"] == "BTC/USD"
 
         # Now ask the controller to admit a BUY under FLATTEN: refused.
-        with pytest.raises(OrderSafetyError, match="buy blocked|broker reconciliation required|entry not authorized"):
+        with pytest.raises(
+            OrderSafetyError,
+            match="buy blocked|broker reconciliation required|entry not authorized",
+        ):
             controller.prepare_order("BTC/USD", "buy", 99, 1)
     finally:
         controller.close()
@@ -1056,6 +1054,7 @@ def test_killmode_error_fails_closed(
     # ``killmodes.apply`` at call time, so patching the module attribute
     # actually changes what the prelude sees.
     import reflective_loop_runtime.trading.killmodes as _killmodes_module
+
     monkeypatch.setattr(_killmodes_module, "apply", _boom)
 
     fault = FaultBroker()
@@ -1089,9 +1088,7 @@ def test_killmode_error_fails_closed(
         assert snap["mode"] == HALT_ENTRIES
         assert snap["reconciled"] is False
         assert snap["uncertain"] is True
-        assert snap["incident"], (
-            "controller must carry an incident after killmodes.apply raised"
-        )
+        assert snap["incident"], "controller must carry an incident after killmodes.apply raised"
 
         journal = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
@@ -1162,8 +1159,7 @@ def test_unknown_open_order_fails_closed(
 
         journal = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "prelude_failed"' in line
-            and '"stage": "unknown_open_order"' in line
+            '"kind": "prelude_failed"' in line and '"stage": "unknown_open_order"' in line
             for line in journal.splitlines()
         ), "expected a prelude_failed journal entry for the unknown_open_order stage"
 
@@ -1211,9 +1207,7 @@ def test_inactive_account_fails_closed(
         assert snap["mode"] == HALT_ENTRIES
         assert snap["reconciled"] is False
         assert snap["uncertain"] is True
-        assert snap["incident"], (
-            "controller must carry an incident when the account is inactive"
-        )
+        assert snap["incident"], "controller must carry an incident when the account is inactive"
 
         with pytest.raises(OrderSafetyError):
             controller.prepare_order("BTC/USD", "buy", 2, 1)
@@ -1259,23 +1253,20 @@ def test_missing_kill_dir_fails_closed(
         assert snap["mode"] == HALT_ENTRIES
         assert snap["reconciled"] is False
         assert snap["uncertain"] is True
-        assert snap["incident"], (
-            "controller must carry an incident when the kill dir is missing"
-        )
+        assert snap["incident"], "controller must carry an incident when the kill dir is missing"
 
         journal = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
             '"kind": "prelude_failed"' in line and '"stage": "no_kill_dir"' in line
             for line in journal.splitlines()
-        ), (
-            "expected a prelude_failed journal entry for the no_kill_dir stage"
-        )
+        ), "expected a prelude_failed journal entry for the no_kill_dir stage"
 
         with pytest.raises(OrderSafetyError):
             controller.prepare_order("BTC/USD", "buy", 2, 1)
     finally:
         controller.close()
         ledger.close()
+
 
 """A fill recovered after an unknown POST must be persisted to the Ledger.
 
@@ -1340,9 +1331,7 @@ def test_recovered_fill_persisted_to_ledger(
         assert broker_filled_px > 0
 
         # The recovery also wrote the Ledger: an open trade must now exist.
-        assert ledger.has_open("BTC/USD") is True, (
-            "recovery did not persist the fill to the Ledger"
-        )
+        assert ledger.has_open("BTC/USD") is True, "recovery did not persist the fill to the Ledger"
         positions = ledger.open_positions()
         assert "BTC/USD" in positions
         trade = positions["BTC/USD"]
@@ -1408,20 +1397,14 @@ def test_nonexistent_kill_dir_fails_closed(
         assert snap["mode"] != RUN or snap["incident"], (
             "controller must no longer be RUN-clean when kill dir is missing"
         )
-        assert snap["incident"], (
-            "controller must carry an incident when the kill dir is missing"
-        )
+        assert snap["incident"], "controller must carry an incident when the kill dir is missing"
         assert snap["mode"] == HALT_ENTRIES
 
         journal = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "prelude_failed"' in line
-            and '"stage": "kill_dir_unavailable"' in line
+            '"kind": "prelude_failed"' in line and '"stage": "kill_dir_unavailable"' in line
             for line in journal.splitlines()
-        ), (
-            "expected a prelude_failed journal entry for the "
-            "kill_dir_unavailable stage"
-        )
+        ), "expected a prelude_failed journal entry for the kill_dir_unavailable stage"
     finally:
         controller.close()
         ledger.close()
@@ -1466,21 +1449,15 @@ def test_symlinked_kill_dir_fails_closed(
             f"symlinked kill dir must block entries; got {fault.submit_calls!r}"
         )
         snap = controller.snapshot()
-        assert snap["incident"], (
-            "symlinked kill dir must trip the controller with an incident"
-        )
+        assert snap["incident"], "symlinked kill dir must trip the controller with an incident"
         assert snap["mode"] == HALT_ENTRIES
         assert snap["reconciled"] is False
 
         journal = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "prelude_failed"' in line
-            and '"stage": "kill_dir_unavailable"' in line
+            '"kind": "prelude_failed"' in line and '"stage": "kill_dir_unavailable"' in line
             for line in journal.splitlines()
-        ), (
-            "expected a prelude_failed journal entry for the "
-            "kill_dir_unavailable stage"
-        )
+        ), "expected a prelude_failed journal entry for the kill_dir_unavailable stage"
     finally:
         controller.close()
         ledger.close()
@@ -1541,9 +1518,7 @@ def test_journal_error_still_trips(
             "controller must be tripped into HALT_ENTRIES even when journal "
             "fails; got snapshot: " + repr(snap)
         )
-        assert snap["incident"], (
-            "controller must carry an incident even when journal fails"
-        )
+        assert snap["incident"], "controller must carry an incident even when journal fails"
         assert snap["reconciled"] is False
         assert snap["uncertain"] is True
 
@@ -1648,9 +1623,7 @@ def test_kill_between_prepare_and_submit_blocks_send(
     real_dir = tmp_path / "aux"  # not "kill": collides with KILL on case-insensitive filesystems
     real_dir.mkdir()
 
-    def _prepare_wrapper(
-        symbol: str, side: str, decision_tick: int, qty: float
-    ) -> str:
+    def _prepare_wrapper(symbol: str, side: str, decision_tick: int, qty: float) -> str:
         # The real prepare_order is monkey-patched below; call it first,
         # then drop the KILL file.  The KILL file must be visible to
         # ``_kill_blocks`` by the time mark_submitting runs.
@@ -1828,6 +1801,7 @@ def test_partial_fill_recovered(
         controller.close()
         ledger.close()
 
+
 # ---------------------------------------------------------------------------
 # G5 closure tests: I0 (controller_required) + I2 (controller storage fail-stop)
 # ---------------------------------------------------------------------------
@@ -1869,9 +1843,7 @@ def test_controller_storage_failure_fail_stops(
     try:
         with pytest.raises(ControllerFailStop):
             loop.tick(1000.0)
-        assert loop._fail_stopped is True, (
-            "tick() must remember the fail-stop for subsequent calls"
-        )
+        assert loop._fail_stopped is True, "tick() must remember the fail-stop for subsequent calls"
         assert fault.submit_calls == [], (
             f"no order may be admitted on a fail-stopped tick; got {fault.submit_calls!r}"
         )
@@ -1879,9 +1851,7 @@ def test_controller_storage_failure_fail_stops(
         # A second tick raises immediately without reaching the prelude.
         with pytest.raises(ControllerFailStop, match="fail-stopped earlier"):
             loop.tick(1000.0)
-        assert fault.submit_calls == [], (
-            "second fail-stopped tick must not submit anything either"
-        )
+        assert fault.submit_calls == [], "second fail-stopped tick must not submit anything either"
     finally:
         controller.close()
         ledger.close()
@@ -1930,8 +1900,7 @@ def test_mark_submitting_sqlite_error_fail_stops(
 
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
         assert any(
-            '"kind": "controller_storage_failed"' in line
-            and '"stage": "mark_submitting"' in line
+            '"kind": "controller_storage_failed"' in line and '"stage": "mark_submitting"' in line
             for line in journal_text.splitlines()
         ), "expected a controller_storage_failed journal entry for mark_submitting"
 
@@ -1975,9 +1944,9 @@ def test_require_controller_refuses_without_controller(
             f"safety-enabled mode must refuse without a controller; got {cfg.broker.submit_calls!r}"
         )
         journal_text = ledger.journal_path().read_text(encoding="utf-8")
-        assert any(
-            '"kind": "controller_required"' in line for line in journal_text.splitlines()
-        ), "expected a controller_required journal entry"
+        assert any('"kind": "controller_required"' in line for line in journal_text.splitlines()), (
+            "expected a controller_required journal entry"
+        )
     finally:
         ledger.close()
 
@@ -2063,9 +2032,7 @@ def test_partial_then_filled_recovery(
         }
         monkeypatch.setattr(fault, "orders_since", lambda *a, **k: [full])
         monkeypatch.setattr(fault, "open_orders", lambda: [])
-        monkeypatch.setattr(
-            fault, "positions", lambda: [{"symbol": "BTC/USD", "qty": "0.9975"}]
-        )
+        monkeypatch.setattr(fault, "positions", lambda: [{"symbol": "BTC/USD", "qty": "0.9975"}])
         loop.tick(now + 60)
 
         snap = controller.snapshot()
@@ -2343,7 +2310,9 @@ def test_controller_snapshot_sqlite_error_fail_stops(
         ledger.close()
 
 
-def _shadow_loop(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, autorun: bool, run_first: bool):
+def _shadow_loop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, autorun: bool, run_first: bool
+):
     _install_fake_features(monkeypatch, price=100.0)
     controller = _new_controller(tmp_path)
     if run_first:
@@ -2353,18 +2322,31 @@ def _shadow_loop(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, autorun: bo
     permits, tool_broker = _build_broker(tmp_path, fault.adapter())
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     loop = TraderLoop(
-        market_fn=_noop_market, broker=fault, permits=permits, tool_broker=tool_broker,
-        ledger=ledger, limits=Limits(), heartbeat_path=tmp_path / "hb.json",
-        kill_path=tmp_path / "KILL", decide_fn=_make_buy_decide(), review_fn=_approve,
-        symbols=("BTC/USD",), controller=controller, data_dir=tmp_path,
-        history_start_iso="2026-10-05T00:00:00+00:00", require_controller=True,
-        shadow=True, shadow_autorun=autorun,
+        market_fn=_noop_market,
+        broker=fault,
+        permits=permits,
+        tool_broker=tool_broker,
+        ledger=ledger,
+        limits=Limits(),
+        heartbeat_path=tmp_path / "hb.json",
+        kill_path=tmp_path / "KILL",
+        decide_fn=_make_buy_decide(),
+        review_fn=_approve,
+        symbols=("BTC/USD",),
+        controller=controller,
+        data_dir=tmp_path,
+        history_start_iso="2026-10-05T00:00:00+00:00",
+        require_controller=True,
+        shadow=True,
+        shadow_autorun=autorun,
     )
     return loop, controller, fault, ledger
 
 
 def test_shadow_never_sends_orders(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    loop, controller, fault, ledger = _shadow_loop(tmp_path, monkeypatch, autorun=False, run_first=True)
+    loop, controller, fault, ledger = _shadow_loop(
+        tmp_path, monkeypatch, autorun=False, run_first=True
+    )
     try:
         loop.tick(1000.0)
         assert fault.submit_calls == []
@@ -2376,8 +2358,12 @@ def test_shadow_never_sends_orders(tmp_path: Path, monkeypatch: pytest.MonkeyPat
         ledger.close()
 
 
-def test_shadow_autorun_enters_run_after_clean_reconcile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    loop, controller, fault, ledger = _shadow_loop(tmp_path, monkeypatch, autorun=True, run_first=False)
+def test_shadow_autorun_enters_run_after_clean_reconcile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    loop, controller, fault, ledger = _shadow_loop(
+        tmp_path, monkeypatch, autorun=True, run_first=False
+    )
     try:
         assert controller.snapshot()["mode"] != RUN
         loop.tick(1000.0)
@@ -2395,11 +2381,22 @@ def test_autorun_ignored_without_shadow(tmp_path: Path, monkeypatch: pytest.Monk
     permits, tool_broker = _build_broker(tmp_path, fault.adapter())
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     loop = TraderLoop(
-        market_fn=_noop_market, broker=fault, permits=permits, tool_broker=tool_broker,
-        ledger=ledger, limits=Limits(), heartbeat_path=tmp_path / "hb.json",
-        kill_path=tmp_path / "KILL", decide_fn=_make_buy_decide(), review_fn=_approve,
-        symbols=("BTC/USD",), controller=controller, data_dir=tmp_path,
-        history_start_iso="2026-10-05T00:00:00+00:00", shadow=False, shadow_autorun=True,
+        market_fn=_noop_market,
+        broker=fault,
+        permits=permits,
+        tool_broker=tool_broker,
+        ledger=ledger,
+        limits=Limits(),
+        heartbeat_path=tmp_path / "hb.json",
+        kill_path=tmp_path / "KILL",
+        decide_fn=_make_buy_decide(),
+        review_fn=_approve,
+        symbols=("BTC/USD",),
+        controller=controller,
+        data_dir=tmp_path,
+        history_start_iso="2026-10-05T00:00:00+00:00",
+        shadow=False,
+        shadow_autorun=True,
     )
     try:
         loop.tick(1000.0)
@@ -2409,19 +2406,32 @@ def test_autorun_ignored_without_shadow(tmp_path: Path, monkeypatch: pytest.Monk
         ledger.close()
 
 
-def test_paper_autorun_reenters_run_but_never_over_hard_incident(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_paper_autorun_reenters_run_but_never_over_hard_incident(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _install_fake_features(monkeypatch, price=100.0)
     controller = _new_controller(tmp_path)
     fault = FaultBroker()
     permits, tool_broker = _build_broker(tmp_path, fault.adapter())
     ledger = Ledger(tmp_path / "t.db", tmp_path / "j.jsonl")
     loop = TraderLoop(
-        market_fn=_noop_market, broker=fault, permits=permits, tool_broker=tool_broker,
-        ledger=ledger, limits=Limits(), heartbeat_path=tmp_path / "hb.json",
-        kill_path=tmp_path / "KILL", decide_fn=lambda *a, **k: Decision("BTC/USD", "hold", "x"),
-        review_fn=_approve, symbols=("BTC/USD",), controller=controller, data_dir=tmp_path,
-        history_start_iso="2026-10-05T00:00:00+00:00", require_controller=True,
-        paper_autorun=True, buy_fee_in_asset=0.0,
+        market_fn=_noop_market,
+        broker=fault,
+        permits=permits,
+        tool_broker=tool_broker,
+        ledger=ledger,
+        limits=Limits(),
+        heartbeat_path=tmp_path / "hb.json",
+        kill_path=tmp_path / "KILL",
+        decide_fn=lambda *a, **k: Decision("BTC/USD", "hold", "x"),
+        review_fn=_approve,
+        symbols=("BTC/USD",),
+        controller=controller,
+        data_dir=tmp_path,
+        history_start_iso="2026-10-05T00:00:00+00:00",
+        require_controller=True,
+        paper_autorun=True,
+        buy_fee_in_asset=0.0,
     )
     try:
         loop.tick(1000.0)

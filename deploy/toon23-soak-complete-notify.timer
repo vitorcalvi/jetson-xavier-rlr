@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic completion check without interrupting Stage2 or health watcher
+[Timer]
+OnActiveSec=45s
+OnUnitActiveSec=5min
+AccuracySec=10s
+Persistent=true
+Unit=toon23-soak-complete-notify.service
+[Install]
+WantedBy=timers.target

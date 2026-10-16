@@ -64,10 +64,8 @@ class TestBattleHarness:
         first = battle.run_battle(with_qwen=False, tmp_root=tmp_path / "a")
         second = battle.run_battle(with_qwen=False, tmp_root=tmp_path / "b")
         for name in ("opendecider_only", "lfm_opendecider", "rlr2_hybrid"):
-            assert (first["systems"][name]["ToolOver"]
-                    == second["systems"][name]["ToolOver"])
-            assert (first["systems"][name]["ToolUnder"]
-                    == second["systems"][name]["ToolUnder"])
+            assert first["systems"][name]["ToolOver"] == second["systems"][name]["ToolOver"]
+            assert first["systems"][name]["ToolUnder"] == second["systems"][name]["ToolUnder"]
 
 
 class TestCaseIsolation:
@@ -84,8 +82,12 @@ class TestCaseIsolation:
     def test_fresh_sample_defaults_to_fresh_only_when_the_case_is_silent(self):
         case = Case(
             name="silent",
-            sample={"temperature_c": 55.0, "zones_c": [55.0],
-                    "ram_used_mib": 2048.0, "ram_total_mib": 8192.0},
+            sample={
+                "temperature_c": 55.0,
+                "zones_c": [55.0],
+                "ram_used_mib": 2048.0,
+                "ram_total_mib": 8192.0,
+            },
             capabilities=["vision"],
         )
         sample = battle._fresh_sample(case)
@@ -117,8 +119,7 @@ class TestCaseIsolation:
 
     def test_each_case_runs_in_its_own_data_dir(self, tmp_path):
         runtimes = [
-            battle.isolated_runtime("probe", tmp_path, index, qwen=False)
-            for index in range(2)
+            battle.isolated_runtime("probe", tmp_path, index, qwen=False) for index in range(2)
         ]
         try:
             assert runtimes[0].run_id != runtimes[1].run_id

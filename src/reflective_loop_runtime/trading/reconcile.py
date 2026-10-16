@@ -242,9 +242,7 @@ def reconcile(
             reasons.append(f"missing_position:{sym}")
             uncertain = True
         else:
-            reasons.append(
-                f"qty_mismatch:{sym}:{broker_qty}:{ledger_qty}"
-            )
+            reasons.append(f"qty_mismatch:{sym}:{broker_qty}:{ledger_qty}")
             uncertain = True
 
     return ReconcileResult(

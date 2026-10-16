@@ -19,23 +19,25 @@ _SECRET_PATTERNS = (
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     re.compile(r"ssh-(rsa|ed25519|dss) "),
     re.compile(r"\b(?:AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|sk-[A-Za-z0-9]{20,})\b"),
-    re.compile(r'''(?i)\b(?:authorization|bearer|api[_-]?key|password|token)\b\s*[:=]\s*["'][^"'$]{8,}["']'''),
+    re.compile(
+        r"""(?i)\b(?:authorization|bearer|api[_-]?key|password|token)\b\s*[:=]\s*["'][^"'$]{8,}["']"""
+    ),
     # Unquoted config/header literals. Keep this line-oriented so Python keyword
     # arguments such as api_key=api_key, are not mistaken for credentials.
     re.compile(
-        r'''(?im)^[ \t-]*(?:authorization|api[_-]?key|password|token)'''
-        r'''(?![A-Za-z0-9_])\s*:\s*(?:bearer\s+)?(?=[^"'$#\s])\S+'''
+        r"""(?im)^[ \t-]*(?:authorization|api[_-]?key|password|token)"""
+        r"""(?![A-Za-z0-9_])\s*:\s*(?:bearer\s+)?(?=[^"'$#\s])\S+"""
     ),
     re.compile(
-        r'''(?im)^[ \t]*(?:api[_-]?key|password|token)'''
-        r'''(?![A-Za-z0-9_])=(?=[^"'$#\s])[^,\s#]+[ \t]*(?:#.*)?$'''
+        r"""(?im)^[ \t]*(?:api[_-]?key|password|token)"""
+        r"""(?![A-Za-z0-9_])=(?=[^"'$#\s])[^,\s#]+[ \t]*(?:#.*)?$"""
     ),
     # Exact credential segments in shell/env variable names. TOKEN does not
     # match TOKENS, so RLR_QWEN_MAX_TOKENS stays non-secret.
     re.compile(
-        r'''(?m)^[ \t]*(?:export[ \t]+)?'''
-        r'''(?:[A-Z0-9]+_)*(?:API_?KEY|PASSWORD|SECRET|TOKEN)(?:_[A-Z0-9]+)*'''
-        r'''[ \t]*=[ \t]*(?:["'][^"'$]+["']|(?=[^$#\s])\S+)'''
+        r"""(?m)^[ \t]*(?:export[ \t]+)?"""
+        r"""(?:[A-Z0-9]+_)*(?:API_?KEY|PASSWORD|SECRET|TOKEN)(?:_[A-Z0-9]+)*"""
+        r"""[ \t]*=[ \t]*(?:["'][^"'$]+["']|(?=[^$#\s])\S+)"""
     ),
 )
 
@@ -97,22 +99,22 @@ def test_secret_patterns_keep_old_coverage_and_add_unquoted_forms():
         'password = "verysecretvalue"',
         'client(authorization="Bearer verysecretvalue")',
         '  - Authorization: "Bearer verysecretvalue"',
-        'Authorization: Bearer x',
-        'password=x',
+        "Authorization: Bearer x",
+        "password=x",
         'RLR_LAN_LLM_API_KEY="secretvalue"',
-        'RLR_GITHUB_ISSUE_TOKEN=x',
+        "RLR_GITHUB_ISSUE_TOKEN=x",
     )
     for sample in hostile:
         assert any(pattern.search(sample) for pattern in _SECRET_PATTERNS), sample
 
     safe = (
-        'RLR_QWEN_MAX_TOKENS=121',
-        'RLR_LAN_LLM_MAX_TOKENS=768',
-        'RLR_LAN_LLM_API_KEY=',
-        'RLR_GITHUB_ISSUE_TOKEN=',
-        'token=$FROM_ENV',
+        "RLR_QWEN_MAX_TOKENS=121",
+        "RLR_LAN_LLM_MAX_TOKENS=768",
+        "RLR_LAN_LLM_API_KEY=",
+        "RLR_GITHUB_ISSUE_TOKEN=",
+        "token=$FROM_ENV",
         'api_key = os.environ.get("RLR_LAN_LLM_API_KEY", "")',
-        'api_key=api_key,',
+        "api_key=api_key,",
     )
     for sample in safe:
         assert not any(pattern.search(sample) for pattern in _SECRET_PATTERNS), sample

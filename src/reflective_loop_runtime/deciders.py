@@ -116,10 +116,7 @@ class DeterministicOpenDecider:
                 weight *= 1.2
             elif candidate.action in _BAND_THROTTLE_WEIGHTS:
                 # Rewarded in conserve only; neutral (1.0) in every other band.
-                weight *= (
-                    _BAND_THROTTLE_WEIGHTS[candidate.action]
-                    if thermal == "conserve" else 1.0
-                )
+                weight *= _BAND_THROTTLE_WEIGHTS[candidate.action] if thermal == "conserve" else 1.0
             elif candidate.action == "reflect":
                 weight *= 0.5 if len(active_goals) == 0 else 1.0
             # An advisor suggestion may only nudge the bounded set: it cannot

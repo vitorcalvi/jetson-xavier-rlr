@@ -5,7 +5,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from reflective_loop_runtime.trading.model import Limits, Position
-from reflective_loop_runtime.trading.orb5 import ORB5_LIMITS, ORB5_EXPLORE_LIMITS, completed_5m_bars, decide_orb5, decide_orb5_explore
+from reflective_loop_runtime.trading.orb5 import (
+    ORB5_EXPLORE_LIMITS,
+    ORB5_LIMITS,
+    completed_5m_bars,
+    decide_orb5,
+    decide_orb5_explore,
+)
 from reflective_loop_runtime.trading.types import Bar, Quote, Snapshot
 
 
@@ -21,8 +27,10 @@ LIMITS = Limits(**ORB5_LIMITS)
 def _prior_day() -> list[Bar]:
     """Friday 2026-10-09 regular session, gently oscillating (ATR history)."""
     start = _ts("2026-10-09T13:30:00")
-    return [Bar(start + 60 * i, 10.0, 10.02, 9.98, 10.0 + (0.01 if i % 2 else -0.01), 1000)
-            for i in range(390)]
+    return [
+        Bar(start + 60 * i, 10.0, 10.02, 9.98, 10.0 + (0.01 if i % 2 else -0.01), 1000)
+        for i in range(390)
+    ]
 
 
 def _today(closes_by_minute: dict[int, float], minutes: int, base: float = 10.0) -> list[Bar]:
@@ -34,8 +42,13 @@ def _today(closes_by_minute: dict[int, float], minutes: int, base: float = 10.0)
 
 
 def _snap(bars: list[Bar]) -> Snapshot:
-    return Snapshot(symbol="IREN", bars=tuple(bars), quote=Quote(bid=10.0, ask=10.003, ts=bars[-1].ts),
-                    fetched_at=bars[-1].ts, last_bar_ts=bars[-1].ts)
+    return Snapshot(
+        symbol="IREN",
+        bars=tuple(bars),
+        quote=Quote(bid=10.0, ask=10.003, ts=bars[-1].ts),
+        fetched_at=bars[-1].ts,
+        last_bar_ts=bars[-1].ts,
+    )
 
 
 def _breakout_day() -> list[Bar]:
@@ -75,8 +88,15 @@ def test_outside_signal_window_holds() -> None:
 
 def test_exit_on_completed_bucket_stop() -> None:
     bars = _breakout_day() + [Bar(OPEN + 60 * i, 9.5, 9.51, 9.49, 9.5, 1000) for i in range(10, 15)]
-    pos = Position(symbol="IREN", qty=49.0, entry_px=10.2, stop=10.1, target=10.36,
-                   entry_ts=OPEN + 11 * 60, atr=0.02)
+    pos = Position(
+        symbol="IREN",
+        qty=49.0,
+        entry_px=10.2,
+        stop=10.1,
+        target=10.36,
+        entry_ts=OPEN + 11 * 60,
+        atr=0.02,
+    )
     assert decide_orb5(_snap(bars), pos, LIMITS, now=OPEN + 16 * 60).reason == "stop"
     assert decide_orb5(_snap(bars), pos, LIMITS, now=OPEN + 17 * 60).reason == "in_position"
 
@@ -102,7 +122,9 @@ def test_incomplete_signal_bucket_holds() -> None:
 
 def test_price_below_five_holds() -> None:
     scale = 0.4  # same shape at ~$4
-    bars = [Bar(b.ts, b.o * scale, b.h * scale, b.l * scale, b.c * scale, b.v) for b in _breakout_day()]
+    bars = [
+        Bar(b.ts, b.o * scale, b.h * scale, b.l * scale, b.c * scale, b.v) for b in _breakout_day()
+    ]
     d = decide_orb5(_snap(bars), None, LIMITS, now=OPEN + 11 * 60)
     assert d.action == "hold" and d.reason == "atr_or_price_out_of_band"
 

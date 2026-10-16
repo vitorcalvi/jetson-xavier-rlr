@@ -227,8 +227,11 @@ def test_max_concurrent_veto() -> None:
         for sym in ("BTC/USD", "ETH/USD", "SOL/USD")
     }
     allowed, veto = review(
-        d, _features(symbol="XRP/USD"), _state(open_positions=open_positions),
-        _limits(max_concurrent=3), now=0.0,
+        d,
+        _features(symbol="XRP/USD"),
+        _state(open_positions=open_positions),
+        _limits(max_concurrent=3),
+        now=0.0,
     )
     assert allowed is False
     assert veto == VETO_MAX_CONCURRENT
@@ -236,8 +239,11 @@ def test_max_concurrent_veto() -> None:
     # Just under the cap is fine.
     open_positions.pop("SOL/USD")
     allowed, veto = review(
-        d, _features(symbol="XRP/USD"), _state(open_positions=open_positions),
-        _limits(max_concurrent=3), now=0.0,
+        d,
+        _features(symbol="XRP/USD"),
+        _state(open_positions=open_positions),
+        _limits(max_concurrent=3),
+        now=0.0,
     )
     assert allowed is True
     assert veto is None
@@ -262,7 +268,11 @@ def test_max_entries_per_day() -> None:
     d = _enter()
     state = _state(entries_today=10)
     allowed, veto = review(
-        d, _features(), state, _limits(max_entries_per_day=10), now=0.0,
+        d,
+        _features(),
+        state,
+        _limits(max_entries_per_day=10),
+        now=0.0,
     )
     assert allowed is False
     assert veto == VETO_MAX_ENTRIES
@@ -270,7 +280,11 @@ def test_max_entries_per_day() -> None:
     # One under the budget is still ok.
     state_ok = _state(entries_today=9)
     allowed, veto = review(
-        d, _features(), state_ok, _limits(max_entries_per_day=10), now=0.0,
+        d,
+        _features(),
+        state_ok,
+        _limits(max_entries_per_day=10),
+        now=0.0,
     )
     assert allowed is True
     assert veto is None
@@ -282,7 +296,11 @@ def test_daily_loss_halt() -> None:
     # Floor reached.
     state = _state(realized_r_today=-3.0)
     allowed, veto = review(
-        d, _features(), state, _limits(daily_loss_halt_r=-3.0), now=0.0,
+        d,
+        _features(),
+        state,
+        _limits(daily_loss_halt_r=-3.0),
+        now=0.0,
     )
     assert allowed is False
     assert veto == VETO_DAILY_LOSS
@@ -290,7 +308,11 @@ def test_daily_loss_halt() -> None:
     # Worse than the floor -- still halted.
     state_worse = _state(realized_r_today=-5.0)
     allowed, veto = review(
-        d, _features(), state_worse, _limits(daily_loss_halt_r=-3.0), now=0.0,
+        d,
+        _features(),
+        state_worse,
+        _limits(daily_loss_halt_r=-3.0),
+        now=0.0,
     )
     assert allowed is False
     assert veto == VETO_DAILY_LOSS
@@ -298,7 +320,11 @@ def test_daily_loss_halt() -> None:
     # Just above the floor -- still allowed.
     state_ok = _state(realized_r_today=-2.99)
     allowed, veto = review(
-        d, _features(), state_ok, _limits(daily_loss_halt_r=-3.0), now=0.0,
+        d,
+        _features(),
+        state_ok,
+        _limits(daily_loss_halt_r=-3.0),
+        now=0.0,
     )
     assert allowed is True
     assert veto is None
@@ -310,7 +336,11 @@ def test_loss_cooldown() -> None:
     now = 10_000.0
     state = _state(last_loss_ts={"BTC/USD": now - 100.0})
     allowed, veto = review(
-        d, _features(), state, _limits(loss_cooldown_s=1800.0), now=now,
+        d,
+        _features(),
+        state,
+        _limits(loss_cooldown_s=1800.0),
+        now=now,
     )
     assert allowed is False
     assert veto == VETO_LOSS_COOLDOWN
@@ -318,7 +348,11 @@ def test_loss_cooldown() -> None:
     # Outside the window -> allowed.
     state_old = _state(last_loss_ts={"BTC/USD": now - 10_000.0})
     allowed, veto = review(
-        d, _features(), state_old, _limits(loss_cooldown_s=1800.0), now=now,
+        d,
+        _features(),
+        state_old,
+        _limits(loss_cooldown_s=1800.0),
+        now=now,
     )
     assert allowed is True
     assert veto is None
@@ -326,7 +360,11 @@ def test_loss_cooldown() -> None:
     # No prior loss recorded for this symbol -> allowed (treated as -inf).
     state_none = _state(last_loss_ts={})
     allowed, veto = review(
-        d, _features(), state_none, _limits(loss_cooldown_s=1800.0), now=now,
+        d,
+        _features(),
+        state_none,
+        _limits(loss_cooldown_s=1800.0),
+        now=now,
     )
     assert allowed is True
     assert veto is None
@@ -385,8 +423,9 @@ def test_stale_threshold_is_240() -> None:
 
 
 def test_negative_spread_never_authorizes_entry() -> None:
-    from reflective_loop_runtime.trading.governor import review, VETO_SPREAD
+    from reflective_loop_runtime.trading.governor import VETO_SPREAD, review
     from reflective_loop_runtime.trading.model import Decision
+
     d = Decision(symbol="IREN", action="enter_long", reason="orb5", notional=500)
     f = _features(spread_pct=-200.0)
     allowed, veto = review(d, f, _state(), _limits(max_spread_pct=0.20), now=0.0)

@@ -89,8 +89,16 @@ def enforced_policy(tmp_path, *, name="faults-policy.json"):
     return MissionPolicyStore(secret=DEV_SECRET, allow_dev_hmac=True).load(path)
 
 
-def add_step(plan, *, goal_id="g-1", tool="state", op="set_load_target",
-             args=None, depends_on=(), step_id=None):
+def add_step(
+    plan,
+    *,
+    goal_id="g-1",
+    tool="state",
+    op="set_load_target",
+    args=None,
+    depends_on=(),
+    step_id=None,
+):
     return plan.add_step(
         goal_id=goal_id,
         tool=tool,
@@ -331,9 +339,7 @@ class TestExecutiveSafeStateIntegration:
         assert "observation only" in result.note
         assert calls["state"] == 0
 
-    def test_audit_failure_blocks_a2_but_allows_a1(
-        self, plan, permits, broker, audit, calls
-    ):
+    def test_audit_failure_blocks_a2_but_allows_a1(self, plan, permits, broker, audit, calls):
         controller = FaultController()
         executive = Executive(plan, permits, broker, audit=audit, faults=controller)
         controller.report("audit_failure")

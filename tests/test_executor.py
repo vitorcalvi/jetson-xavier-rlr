@@ -88,9 +88,9 @@ class TestExecutor:
         executor, _ = env
         before = dict(executor.control_state)
         assert executor.execute({"action": "observe", "rationale": "x"}).ok is True
-        assert executor.execute(
-            {"action": "abstain", "rationale": "x", "reason": "wait"}
-        ).ok is True
+        assert (
+            executor.execute({"action": "abstain", "rationale": "x", "reason": "wait"}).ok is True
+        )
         assert executor.control_state == before
 
     def test_set_vision_fps_updates_control_state(self, env):
@@ -151,9 +151,7 @@ def test_executor_requires_authority_for_side_effects(env):
     before = dict(executor.control_state)
 
     # 1. A side-effecting action with no permit performs nothing.
-    denied = executor.execute(
-        {"action": "set_load_target", "rationale": "sneak", "load": 0.5}
-    )
+    denied = executor.execute({"action": "set_load_target", "rationale": "sneak", "load": 0.5})
     assert denied.ok is False
     assert "permit" in denied.note
     assert executor.control_state == before
@@ -183,9 +181,7 @@ def test_executor_requires_authority_for_side_effects(env):
     assert executor.control_state["load_target"] == 0.5
 
     # 4. A permit is single-use: a replay performs no second effect.
-    tool, op, args = effect_request(
-        {"action": "set_vision_fps", "rationale": "x", "fps": 1.5}, 0
-    )
+    tool, op, args = effect_request({"action": "set_vision_fps", "rationale": "x", "fps": 1.5}, 0)
     permit = service.issue(tool=tool, op=op, args=args, goal_id="goal-exec")
     action = {"action": "set_vision_fps", "rationale": "x", "fps": 1.5}
     assert executor.execute(action, permit=permit).ok is True

@@ -288,7 +288,9 @@ class Store:
         return int(cur.lastrowid)
 
     # -- reads -------------------------------------------------------------
-    def recent_actions(self, limit: int = 5, *, exclude_vetoed: bool = True) -> list[dict[str, Any]]:
+    def recent_actions(
+        self, limit: int = 5, *, exclude_vetoed: bool = True
+    ) -> list[dict[str, Any]]:
         clause = "AND outcome!='vetoed'" if exclude_vetoed else ""
         rows = self.db.execute(
             f"SELECT id, tick, name, args_json, outcome FROM actions "
@@ -296,8 +298,13 @@ class Store:
             (self.run_id, int(limit)),
         ).fetchall()
         return [
-            {"id": r["id"], "tick": r["tick"], "name": r["name"],
-             "args": json.loads(r["args_json"]), "outcome": r["outcome"]}
+            {
+                "id": r["id"],
+                "tick": r["tick"],
+                "name": r["name"],
+                "args": json.loads(r["args_json"]),
+                "outcome": r["outcome"],
+            }
             for r in rows
         ]
 
@@ -311,8 +318,16 @@ class Store:
 
     def counts(self) -> dict[str, int]:
         out: dict[str, int] = {}
-        for table in ("telemetry", "episodes", "memories", "goals", "decisions",
-                      "actions", "vetoes", "outcomes"):
+        for table in (
+            "telemetry",
+            "episodes",
+            "memories",
+            "goals",
+            "decisions",
+            "actions",
+            "vetoes",
+            "outcomes",
+        ):
             out[table] = int(
                 self.db.execute(
                     f"SELECT COUNT(*) FROM {table} WHERE run_id=?", (self.run_id,)
@@ -321,8 +336,17 @@ class Store:
         return out
 
     def iter_table(self, table: str) -> Iterable[sqlite3.Row]:
-        allowed = {"telemetry", "episodes", "memories", "goals", "decisions",
-                   "actions", "vetoes", "outcomes", "runs"}
+        allowed = {
+            "telemetry",
+            "episodes",
+            "memories",
+            "goals",
+            "decisions",
+            "actions",
+            "vetoes",
+            "outcomes",
+            "runs",
+        }
         if table not in allowed:
             raise ValueError(f"unknown table {table!r}")
         return self.db.execute(f"SELECT * FROM {table} WHERE run_id=?", (self.run_id,)).fetchall()

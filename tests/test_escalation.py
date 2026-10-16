@@ -146,7 +146,6 @@ def test_transport_error_never_discloses_secret():
     assert secret not in (out.error or "")
 
 
-
 def test_litellm_client_drops_llama_specific_grammar(monkeypatch):
     captured = {}
 

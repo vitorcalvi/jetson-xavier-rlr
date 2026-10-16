@@ -67,9 +67,7 @@ except ImportError:  # run as a plain script from inside bench/heldout/
 
 #: sha256 of the canonical dump of the frozen set (ORACLE_SPEC.md §7). Frozen:
 #: a mismatch means the benchmark changed, so scoring it would be meaningless.
-FROZEN_MANIFEST_SHA256 = (
-    "a3867642bf01951847a5b4f90179d5bcfafe9ea5e0d07c3807bbcabc489f87ce"
-)
+FROZEN_MANIFEST_SHA256 = "a3867642bf01951847a5b4f90179d5bcfafe9ea5e0d07c3807bbcabc489f87ce"
 
 #: The cortex-only system every other system is measured against.
 BASELINE = "opendecider_only"
@@ -97,9 +95,9 @@ def wilson_interval(correct: int, total: int) -> tuple[float, float]:
     phat = correct / total
     denominator = 1.0 + Z95 * Z95 / total
     centre = (phat + Z95 * Z95 / (2 * total)) / denominator
-    margin = Z95 * math.sqrt(
-        phat * (1.0 - phat) / total + Z95 * Z95 / (4 * total * total)
-    ) / denominator
+    margin = (
+        Z95 * math.sqrt(phat * (1.0 - phat) / total + Z95 * Z95 / (4 * total * total)) / denominator
+    )
     return (
         round(max(0.0, centre - margin), 4),
         round(min(1.0, centre + margin), 4),
@@ -117,9 +115,9 @@ def mcnemar_exact(a_only: int, b_only: int) -> float:
     discordant = a_only + b_only
     if discordant == 0:
         return 1.0
-    tail = math.fsum(
-        math.comb(discordant, k) for k in range(min(a_only, b_only) + 1)
-    ) / (2 ** discordant)
+    tail = math.fsum(math.comb(discordant, k) for k in range(min(a_only, b_only) + 1)) / (
+        2**discordant
+    )
     return min(1.0, 2.0 * tail)
 
 
@@ -144,26 +142,30 @@ def score_system(report: SystemReport, cases: list[Case]) -> dict[str, Any]:
             # A case the system produced no result for (an unavailable system,
             # or a case that never ran) was not answered, so it is wrong.
             unfired += 1
-            per_case.append({
-                "case": case.name,
-                "expected": case.expected_action,
-                "executed": None,
-                "fired": False,
-                "correct": False,
-                "note": "no result",
-            })
+            per_case.append(
+                {
+                    "case": case.name,
+                    "expected": case.expected_action,
+                    "executed": None,
+                    "fired": False,
+                    "correct": False,
+                    "note": "no result",
+                }
+            )
             continue
         hit = is_correct(result)
         correct += int(hit)
         unfired += int(not result.fired)
-        per_case.append({
-            "case": case.name,
-            "expected": result.expected,
-            "executed": result.executed,
-            "fired": result.fired,
-            "correct": hit,
-            "note": result.note,
-        })
+        per_case.append(
+            {
+                "case": case.name,
+                "expected": result.expected,
+                "executed": result.executed,
+                "fired": result.fired,
+                "correct": hit,
+                "note": result.note,
+            }
+        )
 
     latencies = [result.latency_ms for result in report.cases]
     low, high = wilson_interval(correct, total)
@@ -331,13 +333,18 @@ def build_parser() -> argparse.ArgumentParser:
         description="Score the battle systems over the frozen held-out set",
     )
     parser.add_argument(
-        "out_path", nargs="?", default="", metavar="OUT",
+        "out_path",
+        nargs="?",
+        default="",
+        metavar="OUT",
         help="write the JSON report to this path (same as --out)",
     )
-    parser.add_argument("--out", dest="out_option", default="",
-                        help="write the JSON report to this path")
     parser.add_argument(
-        "--with-qwen", action="store_true",
+        "--out", dest="out_option", default="", help="write the JSON report to this path"
+    )
+    parser.add_argument(
+        "--with-qwen",
+        action="store_true",
         help="enable the scripted offline advisor in the hybrid system",
     )
     parser.add_argument("--tmp-root", default="", help="directory for per-system databases")

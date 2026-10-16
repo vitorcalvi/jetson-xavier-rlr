@@ -17,8 +17,16 @@ from reflective_loop_runtime.telemetry import (
 class TestStaticTelemetry:
     def test_canonical_shape(self):
         sample = StaticTelemetry().sample()
-        for key in ("temperature_c", "ram_used_mib", "ram_total_mib", "zones_c",
-                    "sampled_at", "sampled_monotonic", "age_seconds", "source"):
+        for key in (
+            "temperature_c",
+            "ram_used_mib",
+            "ram_total_mib",
+            "zones_c",
+            "sampled_at",
+            "sampled_monotonic",
+            "age_seconds",
+            "source",
+        ):
             assert key in sample
 
     def test_old_age_reported(self):
@@ -38,7 +46,9 @@ class TestNormalise:
     def test_nan_and_inf_become_none(self):
         sample = _normalise(
             {"temperature_c": float("nan"), "ram_used_mib": float("inf")},
-            now_wall=0.0, now_mono=0.0, source="t",
+            now_wall=0.0,
+            now_mono=0.0,
+            source="t",
         )
         assert sample["temperature_c"] is None
         assert sample["ram_used_mib"] is None
@@ -106,7 +116,9 @@ class TestFileTelemetry:
 
     def test_reads_sample_and_reports_age(self, tmp_path):
         path = tmp_path / "sample.json"
-        path.write_text(json.dumps({"temperature_c": 66.0, "ram_total_mib": 8192}), encoding="utf-8")
+        path.write_text(
+            json.dumps({"temperature_c": 66.0, "ram_total_mib": 8192}), encoding="utf-8"
+        )
         sample = FileTelemetry(path).sample()
         assert sample["temperature_c"] == 66.0
         assert sample["age_seconds"] is not None

@@ -167,9 +167,7 @@ def _load_configured_policy(config: Config) -> Any:
             raise PolicyEnforcementUnavailable(
                 f"configured operator public key could not be loaded: {exc}"
             ) from exc
-    policy = load_policy_bytes(
-        data, public_key=public_key, source_path=str(config.policy_path)
-    )
+    policy = load_policy_bytes(data, public_key=public_key, source_path=str(config.policy_path))
     if policy.mode != MODE_ENFORCE:
         raise PolicyEnforcementUnavailable(
             "configured policy did not verify as ENFORCE ("
@@ -318,9 +316,7 @@ class ReflectiveLoopRuntime:
             # A caller-supplied Governor must share the runtime's authority, or
             # it could not mint the permits the executor requires.
             governor.permits = permits
-        self.governor = governor or Governor(
-            self.store, self.config, clock=clock, permits=permits
-        )
+        self.governor = governor or Governor(self.store, self.config, clock=clock, permits=permits)
         self.audit: AuditLog | None = None
         if executor is None:
             # The runtime's sole tool path must carry a persistent, keyed audit
@@ -382,7 +378,8 @@ class ReflectiveLoopRuntime:
             "episode_digest": episode_digest,
             "recent_actions": [a["name"] for a in self.store.recent_actions(limit=5)],
             "cooldown_active": cooldown_active,
-            "goal_digest": goal_digest or (active_goals[0]["text"] if active_goals else "maintain stable operation"),
+            "goal_digest": goal_digest
+            or (active_goals[0]["text"] if active_goals else "maintain stable operation"),
             "raw_text": raw_text,
             "control_state": dict(self.executor.control_state),
             "structured": structured,
@@ -409,8 +406,11 @@ class ReflectiveLoopRuntime:
         # it counts for callers that invoke it without one.
         self.executor.set_tick(self.store.current_tick)
         state = self.build_state(
-            sample, capabilities=capabilities, structured=structured,
-            raw_text=raw_text, goal_digest=goal_digest,
+            sample,
+            capabilities=capabilities,
+            structured=structured,
+            raw_text=raw_text,
+            goal_digest=goal_digest,
         )
         thermal_level = state["thermal_level"]
         self.store.record_telemetry(sample)
@@ -431,7 +431,9 @@ class ReflectiveLoopRuntime:
                 state["structured"] = True if normalized.structured else state.get("structured")
                 state["ambiguity"] = normalized.ambiguity
                 self.store.add_episode(
-                    "normalized", normalized.summary or "normalized evidence", 1.0 - normalized.ambiguity
+                    "normalized",
+                    normalized.summary or "normalized evidence",
+                    1.0 - normalized.ambiguity,
                 )
             except Exception as exc:  # noqa: BLE001 - any normalizer failure fails closed
                 lfm_error = f"{type(exc).__name__}: {exc}"[:500]
@@ -450,16 +452,25 @@ class ReflectiveLoopRuntime:
         )
         if first is None:
             result = self._abstain_tick(
-                state, candidates, thermal_level, structured=bool(state.get("structured")),
-                used_lfm=used_lfm, lfm_error=lfm_error,
-                reason=f"opendecider failed closed: {first_error}", context=context,
+                state,
+                candidates,
+                thermal_level,
+                structured=bool(state.get("structured")),
+                used_lfm=used_lfm,
+                lfm_error=lfm_error,
+                reason=f"opendecider failed closed: {first_error}",
+                context=context,
             )
             return result
 
         self.store.record_decision(
-            phase="opendecider", engine=getattr(self.decider, "name", "opendecider"),
-            choice=first.choice, confidence=first.confidence,
-            probabilities=first.probabilities, mode="fast", latency_ms=first_latency,
+            phase="opendecider",
+            engine=getattr(self.decider, "name", "opendecider"),
+            choice=first.choice,
+            confidence=first.confidence,
+            probabilities=first.probabilities,
+            mode="fast",
+            latency_ms=first_latency,
         )
 
         # --- Confidence gate + optional Qwen advice/reframe -------------
@@ -487,9 +498,12 @@ class ReflectiveLoopRuntime:
                 # OpenDecider makes a fresh bounded decision after advice.
                 final = second
                 self.store.record_decision(
-                    phase="opendecider-final", engine=getattr(self.decider, "name", "opendecider"),
-                    choice=second.choice, confidence=second.confidence,
-                    probabilities=second.probabilities, mode="advised",
+                    phase="opendecider-final",
+                    engine=getattr(self.decider, "name", "opendecider"),
+                    choice=second.choice,
+                    confidence=second.confidence,
+                    probabilities=second.probabilities,
+                    mode="advised",
                     latency_ms=second_latency,
                 )
             else:
@@ -514,31 +528,52 @@ class ReflectiveLoopRuntime:
         if not veto.allowed:
             self.store.record_veto(veto.action["action"], veto_reason or "vetoed")
             self.store.record_decision(
-                phase="governor", engine="governor", choice=veto.action["action"],
-                confidence=None, probabilities=None, mode="veto", latency_ms=0.0,
+                phase="governor",
+                engine="governor",
+                choice=veto.action["action"],
+                confidence=None,
+                probabilities=None,
+                mode="veto",
+                latency_ms=0.0,
             )
             self.store.record_action(veto.action["action"], _action_args(veto.action), "vetoed")
             self.store.record_outcome(None, {"status": "vetoed", "reason": veto_reason})
             final_action = abstain_action(veto_reason or "vetoed")
-            self.store.record_action(final_action["action"], _action_args(final_action), "abstained")
+            self.store.record_action(
+                final_action["action"], _action_args(final_action), "abstained"
+            )
             outcome = self.executor.execute(final_action)
             self.store.record_outcome(None, outcome.__dict__)
             # ``execution`` reports what actually ran (the safe abstain), not the
             # vetoed proposal, so telemetry never claims a blocked action fired.
-            execution = {"ok": outcome.ok, "action": outcome.action,
-                         "applied": outcome.applied, "note": f"vetoed: {veto_reason}"}
+            execution = {
+                "ok": outcome.ok,
+                "action": outcome.action,
+                "applied": outcome.applied,
+                "note": f"vetoed: {veto_reason}",
+            }
             return TickResult(
-                tick=self.store.current_tick, thermal_level=thermal_level,
-                structured=bool(state.get("structured")), used_lfm=used_lfm, used_qwen=used_qwen,
-                low_confidence=low_confidence, lfm_error=lfm_error, qwen_error=qwen_error,
-                qwen_degraded=qwen_degraded, first_confidence=first.confidence,
+                tick=self.store.current_tick,
+                thermal_level=thermal_level,
+                structured=bool(state.get("structured")),
+                used_lfm=used_lfm,
+                used_qwen=used_qwen,
+                low_confidence=low_confidence,
+                lfm_error=lfm_error,
+                qwen_error=qwen_error,
+                qwen_degraded=qwen_degraded,
+                first_confidence=first.confidence,
                 final_confidence=final.confidence,
                 decision=_decision_dict(final, reframed=used_qwen),
-                execution=execution, vetoed=True, veto_reason=veto_reason,
+                execution=execution,
+                vetoed=True,
+                veto_reason=veto_reason,
             )
 
         # --- Execute under Governor-issued authority, persist outcome ---
-        action_id = self.store.record_action(veto.action["action"], _action_args(veto.action), "executed")
+        action_id = self.store.record_action(
+            veto.action["action"], _action_args(veto.action), "executed"
+        )
         # Every side effect needs a permit minted through the Governor. If none
         # can be issued the executor performs nothing and reports the refusal.
         permit = self.governor.authorize(
@@ -547,9 +582,7 @@ class ReflectiveLoopRuntime:
             goal_id=str(state.get("goal_digest") or "runtime"),
             state_version=str(self.store.current_tick),
         )
-        outcome = self.executor.execute(
-            veto.action, permit=permit, tick=self.store.current_tick
-        )
+        outcome = self.executor.execute(veto.action, permit=permit, tick=self.store.current_tick)
         self.store.record_outcome(action_id, outcome.__dict__)
         # A reflection is only a follow-up to an effect that actually landed:
         # when the reflect permit was refused or its effect failed, there is no
@@ -559,15 +592,26 @@ class ReflectiveLoopRuntime:
         self._control_state = dict(self.executor.control_state)
 
         return TickResult(
-            tick=self.store.current_tick, thermal_level=thermal_level,
-            structured=bool(state.get("structured")), used_lfm=used_lfm, used_qwen=used_qwen,
-            low_confidence=low_confidence, lfm_error=lfm_error, qwen_error=qwen_error,
-            qwen_degraded=qwen_degraded, first_confidence=first.confidence,
+            tick=self.store.current_tick,
+            thermal_level=thermal_level,
+            structured=bool(state.get("structured")),
+            used_lfm=used_lfm,
+            used_qwen=used_qwen,
+            low_confidence=low_confidence,
+            lfm_error=lfm_error,
+            qwen_error=qwen_error,
+            qwen_degraded=qwen_degraded,
+            first_confidence=first.confidence,
             final_confidence=final.confidence,
             decision=_decision_dict(final, reframed=used_qwen),
-            execution={"ok": outcome.ok, "action": outcome.action,
-                       "applied": outcome.applied, "note": outcome.note},
-            vetoed=False, veto_reason=None,
+            execution={
+                "ok": outcome.ok,
+                "action": outcome.action,
+                "applied": outcome.applied,
+                "note": outcome.note,
+            },
+            vetoed=False,
+            veto_reason=None,
         )
 
     # -- helpers -----------------------------------------------------------
@@ -606,19 +650,38 @@ class ReflectiveLoopRuntime:
     ) -> TickResult:
         action = abstain_action(reason)
         self.store.record_decision(
-            phase="opendecider", engine=getattr(self.decider, "name", "opendecider"),
-            choice=None, confidence=None, probabilities=None, mode="fail-closed", latency_ms=0.0,
+            phase="opendecider",
+            engine=getattr(self.decider, "name", "opendecider"),
+            choice=None,
+            confidence=None,
+            probabilities=None,
+            mode="fail-closed",
+            latency_ms=0.0,
         )
         action_id = self.store.record_action(action["action"], _action_args(action), "abstained")
         outcome = self.executor.execute(action)
         self.store.record_outcome(action_id, outcome.__dict__)
         return TickResult(
-            tick=self.store.current_tick, thermal_level=thermal_level, structured=structured,
-            used_lfm=used_lfm, used_qwen=False, low_confidence=True, lfm_error=lfm_error,
-            qwen_error=None, qwen_degraded=False, first_confidence=None, final_confidence=None,
-            decision={"choice": None, "confidence": None, "probabilities": {}, "mode": "fail-closed"},
+            tick=self.store.current_tick,
+            thermal_level=thermal_level,
+            structured=structured,
+            used_lfm=used_lfm,
+            used_qwen=False,
+            low_confidence=True,
+            lfm_error=lfm_error,
+            qwen_error=None,
+            qwen_degraded=False,
+            first_confidence=None,
+            final_confidence=None,
+            decision={
+                "choice": None,
+                "confidence": None,
+                "probabilities": {},
+                "mode": "fail-closed",
+            },
             execution={"ok": outcome.ok, "action": outcome.action, "note": outcome.note},
-            vetoed=False, veto_reason=reason,
+            vetoed=False,
+            veto_reason=reason,
         )
 
     def _do_reflection(self, state: dict[str, Any], context: str) -> None:
@@ -659,9 +722,16 @@ class ReflectiveLoopRuntime:
 
     def _bounded_state_for_model(self, state: dict[str, Any]) -> dict[str, Any]:
         keep = (
-            "thermal_level", "temperature_c", "ram_used_mib", "ram_total_mib",
-            "capabilities", "active_goals", "episode_count", "memory_count",
-            "recent_actions", "cooldown_active",
+            "thermal_level",
+            "temperature_c",
+            "ram_used_mib",
+            "ram_total_mib",
+            "capabilities",
+            "active_goals",
+            "episode_count",
+            "memory_count",
+            "recent_actions",
+            "cooldown_active",
         )
         return {key: state.get(key) for key in keep}
 

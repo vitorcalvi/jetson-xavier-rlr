@@ -115,9 +115,7 @@ class TestExplosionCaps:
 
     def test_default_cap_is_bounded(self):
         assert MAX_GOALS > 0
-        manager = GoalManager(
-            MissionPolicy.observation_only("x"), max_goals=4, max_depth=1
-        )
+        manager = GoalManager(MissionPolicy.observation_only("x"), max_goals=4, max_depth=1)
         manager.propose("a", parent_id=manager.root_id)
         manager.propose("b", parent_id=manager.root_id)
         manager.propose("c", parent_id=manager.root_id)
@@ -135,9 +133,7 @@ class TestConflictArbitration:
     def _compete(self, policy, order):
         manager = GoalManager(policy)
         for text in order:
-            goal = manager.propose(
-                text, parent_id=manager.root_id, priority=1, resource="cpu"
-            )
+            goal = manager.propose(text, parent_id=manager.root_id, priority=1, resource="cpu")
             try:
                 manager.commit(goal.goal_id)
             except GoalConflict:
@@ -156,12 +152,8 @@ class TestConflictArbitration:
 
     def test_priority_decides_the_winner(self, policy):
         manager = GoalManager(policy)
-        low = manager.propose(
-            "alpha", parent_id=manager.root_id, priority=0, resource="cpu"
-        )
-        high = manager.propose(
-            "zenith", parent_id=manager.root_id, priority=5, resource="cpu"
-        )
+        low = manager.propose("alpha", parent_id=manager.root_id, priority=0, resource="cpu")
+        high = manager.propose("zenith", parent_id=manager.root_id, priority=5, resource="cpu")
         manager.commit(low.goal_id)
         # The higher-priority goal takes the resource; committing it does not
         # raise because it is the winner, and the incumbent is paused.

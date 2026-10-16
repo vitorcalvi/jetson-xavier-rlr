@@ -42,15 +42,16 @@ def _env(path: Path) -> dict[str, str]:
 
 def _args(tmp_path):
     return [
-        "--operator-key-env", str(tmp_path / "operator-key.env"),
-        "--public-key-out", str(tmp_path / "operator-public.pem"),
-        "--policy-out", str(tmp_path / "policy.json"),
+        "--operator-key-env",
+        str(tmp_path / "operator-key.env"),
+        "--public-key-out",
+        str(tmp_path / "operator-public.pem"),
+        "--policy-out",
+        str(tmp_path / "policy.json"),
     ]
 
 
-def test_generate_keeps_private_key_only_in_0600_env_and_policy_is_dated(
-    tmp_path, capsys
-):
+def test_generate_keeps_private_key_only_in_0600_env_and_policy_is_dated(tmp_path, capsys):
     module = _load()
     args = _args(tmp_path)
     assert module.main(args + ["--generate", "--valid-hours", "24"]) == 0
@@ -112,24 +113,34 @@ def test_paths_must_be_distinct_and_symlink_free(tmp_path):
     module = _load()
     same = tmp_path / "same"
     with pytest.raises(SystemExit, match="distinct"):
-        module.main([
-            "--operator-key-env", str(same),
-            "--public-key-out", str(same),
-            "--policy-out", str(tmp_path / "policy.json"),
-            "--generate",
-        ])
+        module.main(
+            [
+                "--operator-key-env",
+                str(same),
+                "--public-key-out",
+                str(same),
+                "--policy-out",
+                str(tmp_path / "policy.json"),
+                "--generate",
+            ]
+        )
 
     real_dir = tmp_path / "real"
     real_dir.mkdir()
     link_dir = tmp_path / "link"
     link_dir.symlink_to(real_dir, target_is_directory=True)
     with pytest.raises(SystemExit, match="symlink"):
-        module.main([
-            "--operator-key-env", str(tmp_path / "key.env"),
-            "--public-key-out", str(link_dir / "public.pem"),
-            "--policy-out", str(tmp_path / "policy.json"),
-            "--generate",
-        ])
+        module.main(
+            [
+                "--operator-key-env",
+                str(tmp_path / "key.env"),
+                "--public-key-out",
+                str(link_dir / "public.pem"),
+                "--policy-out",
+                str(tmp_path / "policy.json"),
+                "--generate",
+            ]
+        )
 
 
 def test_valid_hours_must_stay_within_signed_deploy_ceiling(tmp_path):
