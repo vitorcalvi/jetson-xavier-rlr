@@ -26,6 +26,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4"]
+quant-bench = ["tiktoken>=0.12,<1"]
 # Optional ed25519 backend for signing/verifying mission policy bundles. When it
 # is absent the kernel falls back to the clearly-marked dev-only HMAC-SHA256 path.
 crypto = ["cryptography>=41.0"]
