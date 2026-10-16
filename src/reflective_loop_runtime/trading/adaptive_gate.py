@@ -1,9 +1,10 @@
-from __future__ import annotations
 """Fail-closed paper-entry research gate.
 
 No broker API or model call. Missing/corrupt/unapproved studies return NO_TRADE.
 The underlying signed mission policy and order governor remain authoritative.
 """
+
+from __future__ import annotations
 import base64
 import hashlib
 import json
