@@ -14,47 +14,10 @@ import json
 import sqlite3
 
 
-def _flatten(prefix:str,value:Any,output:list[str])->None:
-    if isinstance(value,dict):
-        if not value:output.append(f'{prefix}: {{}}');return
-        for k in sorted(value):
-            if not isinstance(k,str) or not k or any(c in k for c in '.:\n\r'):
-                raise ValueError('unsafe TOON field name')
-            _flatten(f'{prefix}.{k}' if prefix else k,value[k],output)
-    else:
-        if isinstance(value,(float,int)) and not isinstance(value,bool) and not isfinite(value):
-            raise ValueError('nonfinite TOON number')
-        if isinstance(value,list) and (len(value)>256 or any(isinstance(v,dict) for v in value)):
-            raise ValueError('list must be bounded scalar array')
-        if not (value is None or isinstance(value,(str,int,float,bool,list))):
-            raise ValueError('unsupported TOON type')
-        output.append(prefix+': '+json.dumps(value,sort_keys=True,ensure_ascii=False,allow_nan=False,separators=(',',':')))
-
-
-def toon_encode(data:dict[str,Any])->str:
-    if not isinstance(data,dict) or not data:raise ValueError('empty/nonmapping')
-    output:list[str]=[]
-    _flatten('',data,output)
-    return '\n'.join(output)+'\n'
-
-
-def toon_decode(source:str)->dict[str,Any]:
-    result:dict[str,Any]={}
-    if not source or len(source)>1_000_000:raise ValueError('invalid wire size')
-    for line in source.splitlines():
-        if not line or ': ' not in line:raise ValueError('invalid TOON line')
-        key,raw=line.split(': ',1)
-        path=key.split('.')
-        if any(not x or ':' in x for x in path):raise ValueError('invalid path')
-        value=json.loads(raw)
-        node=result
-        for name in path[:-1]:
-            if name not in node:node[name]={}
-            if not isinstance(node[name],dict):raise ValueError('conflicting path')
-            node=node[name]
-        if path[-1] in node:raise ValueError('duplicate key')
-        node[path[-1]]=value
-    return result
+from reflective_loop_runtime.quant.edge_jetson.tabular_v22 import (
+    decode as toon_decode,
+    encode as toon_encode,
+)
 
 
 def wire_metrics(payload:dict[str,Any])->dict[str,int]:
