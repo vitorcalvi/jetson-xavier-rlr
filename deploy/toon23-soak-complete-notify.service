@@ -1,0 +1,9 @@
+[Unit]
+Description=TOON v2.3 48-hour read-only Stage2 soak final verdict evaluator
+[Service]
+Type=oneshot
+ExecStart=/home/vitor/rlr/venv/bin/python /home/vitor/rlr/toon22-ci-format-20261016/scripts/toon23_soak_notifier.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=no
+ReadWritePaths=/home/vitor/rlr/monitoring

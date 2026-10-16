@@ -1,0 +1,75 @@
+contract_meta:
+  schema: TOON_v2.3
+  date: 2026-10-16
+  repo: vitorcalvi/jetson-xavier-rlr
+  branch: feature/toon-v2-production-wiring
+  mode: RESEARCH_SHADOW_ONLY
+  live_trading: FORBIDDEN
+  original_stage2_pid: 2355006
+  original_monitor_pid: 2423969
+  halt_entries: PRESERVED
+
+gate_results[4]{gate,status,evidence}
+  G2_48h_monitor,PENDING,timer_active_and_original_monitor_unchanged_sample_count_below_576
+  G3_30_real_Alpaca_fills,BLOCKED,certifier_keys_not_present_zero_real_orders_and_no_account_isolation_proof
+  G4_real_L1_L2_IC,PARTIAL,6072_genuine_L2_14679_genuine_L1_forward_IC_measured_net_fee_gate_FAIL
+  G5_TOON_compression,PARTIAL,69_real_Stage2_health_samples_lossless_but_N_below_100
+
+g2:
+  notifier_service: toon23-soak-complete-notify.service
+  notifier_timer: toon23-soak-complete-notify.timer
+  interval_seconds: 300
+  rule: elapsed>=48h AND records>=576 AND invariant_checks
+  final_verdict_location: /home/vitor/rlr/monitoring/toon23_soak_final_verdict.toon
+  no_restarts: true
+
+g3:
+  rest_allowed_host: paper-api.alpaca.markets
+  separate_certifier_credentials: ABSENT
+  separate_certifier_account_verified: false
+  genuine_broker_fills: 0
+  synthetic_lifecycles: 30
+  synthetic_maker_ratio: 0.50
+  maker_ratio_target: 0.70
+  shadow_stage2_flag: PRESENT
+  verdict: BLOCKED_NO_REAL_ORDER_TRANSPORT
+
+g4:
+  raw_provenance: Binance_public_spot_WebSocket
+  primary_file: /home/vitor/rlr/monitoring/real_l1_l2_sample.jsonl
+  toon_snapshot_file: /home/vitor/rlr/monitoring/real_l1_l2_sample.toon
+  l2_snapshots: 6072
+  l1_usable_observations: 14679
+  btcusdt_l2_5tick_spearman_ic: 0.493110
+  btcusdt_l2_5tick_t_iid_optimistic: 21.0486
+  btcusdt_l2_5tick_t_hac_approx: 6.7768
+  btcusdt_l2_hypothetical_mid_gross_bps: 0.0998
+  btcusdt_l2_hypothetical_net_after_40bps: -39.9002
+  real_order_queue_and_maker_fill_evidence: ABSENT
+  out_of_sample_forward_validation: ABSENT
+  profitability_gate: FAIL
+
+g5:
+  tokenizer: cl100k_base_exact
+  Stage2_health_record_count: 69
+  Stage2_health_lossless: true
+  Stage2_health_token_reduction_pct: 67.0482
+  Stage2_health_byte_reduction_pct: 82.2403
+  Schwab_closed_1min_bar_count: 3000
+  Schwab_bar_lossless: true
+  Schwab_bar_token_reduction_pct: 64.3063
+  Schwab_bar_byte_reduction_pct: 76.9633
+  Schwab_L1_quote_count: 3253
+  Schwab_L1_quote_lossless: true
+  Schwab_L1_quote_token_reduction_pct: 56.3538
+  Schwab_L1_quote_byte_reduction_pct: 69.6404
+  actual_W1_W2_trade_memory_count: 0
+  stage2_only_100_record_gate: PENDING
+  note: Real_Schwab_feed_records_are_not_Stage2_trade_memories
+
+safety:
+  main_service_changed: false
+  existing_monitor_restarted: false
+  broker_orders_sent: 0
+  certified_profitability: false
+  next_approval: operator_and_paper_isolation_before_any_broker_orders
