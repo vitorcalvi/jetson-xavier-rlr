@@ -142,6 +142,8 @@ class ShadowLedger:
         inputs = [product, campaign, variant, channel, account, slot]
         for k, v in zip(["product", "campaign", "variant", "channel", "account", "slot"], inputs):
             ident(v, k)
+        if product not in PRODUCTS:
+            raise ValueError("unknown_product")
         provider = provider or PROVIDERS.get(channel, "unsupported")
         state, reason = self.gate(product, channel, provider)
         payload = dict(product=product, campaign=campaign, variant=variant,
