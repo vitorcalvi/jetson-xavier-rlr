@@ -96,6 +96,16 @@ class GrowthShadowTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.os.simulate("missing")
 
+    def test_deterministic_local_health_watch(self):
+        sample = self.os.sample_local_health()
+        self.assertIn("free_disk_mib", sample)
+        self.assertGreater(sample["free_disk_mib"], 0)
+        self.assertIn("thermal_warning", sample)
+        self.assertIn("disk_warning", sample)
+        status = self.os.tick()
+        self.assertIsNotNone(status["local_watch"])
+        self.assertGreaterEqual(self.os.db.execute("SELECT COUNT(*) FROM watch_samples").fetchone()[0], 1)
+
     def test_tick_heartbeat(self):
         out = self.os.tick()
         self.assertTrue(out["heartbeat_utc"])
