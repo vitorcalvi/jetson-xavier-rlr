@@ -71,9 +71,9 @@ def evaluate_offline(candidate):
     if product == "mythoughs":
         errors.append("mythoughs_no_production_release")
     accepted = not errors
-    score = round(max(0, 1.0 - .16 * len(errors) +
+    score = round(min(1.0, max(0.0, 0.9 - .16 * len(errors) +
                       .05 * ("concise_copy" in observations) +
-                      .05 * ("invites_discussion" in observations)), 3) if accepted else 0.0
+                      .05 * ("invites_discussion" in observations))), 3) if accepted else 0.0
     return {"score": score, "accepted": accepted,
             "diagnostics": errors + observations,
             "optimization_tier": "OFFLINE_QA_ONLY",
