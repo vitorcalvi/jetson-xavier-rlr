@@ -1,0 +1,14 @@
+[Unit]
+Description=Jetson Growth OS shadow commander deterministic 5-minute tick
+After=default.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/vitor/agent-work/growth-os-shadow/growth_os_shadow.py tick
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/vitor/.local/share/jetson-growth-shadow
+ProtectHome=read-only
+PrivateTmp=true
+MemoryMax=128M
+CPUQuota=10%
+TimeoutStartSec=15
