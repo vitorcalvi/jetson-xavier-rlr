@@ -101,6 +101,12 @@ class ShadowLedger:
             object_key TEXT, decision TEXT NOT NULL, detail TEXT NOT NULL,
             occurred_at TEXT NOT NULL
           );
+          CREATE TABLE IF NOT EXISTS watch_samples(
+            id INTEGER PRIMARY KEY AUTOINCREMENT, recorded_at TEXT NOT NULL,
+            max_temperature_c REAL, free_disk_mib REAL NOT NULL,
+            thermal_warning INTEGER NOT NULL CHECK(thermal_warning IN(0,1)),
+            disk_warning INTEGER NOT NULL CHECK(disk_warning IN(0,1))
+          );
           CREATE TABLE IF NOT EXISTS health(
             id INTEGER PRIMARY KEY CHECK(id=1), last_tick TEXT NOT NULL,
             global_pause INTEGER NOT NULL CHECK(global_pause=1)
@@ -207,9 +213,32 @@ class ShadowLedger:
                        "synthetic_only")
         return {"event_key": event_key, "inserted": inserted, "synthetic": True}
 
+    def sample_local_health(self):
+        max_temp = None
+        for sensor in pathlib.Path("/sys/class/thermal").glob("thermal_zone*/temp"):
+            try:
+                reading = int(sensor.read_text().strip()) / 1000.0
+                if -20 <= reading <= 150:
+                    max_temp = reading if max_temp is None else max(max_temp, reading)
+            except (OSError, ValueError):
+                continue
+        disk = os.statvfs(self.path)
+        free_mib = disk.f_bavail * disk.f_frsize / (1024.0 * 1024.0)
+        return {"max_temperature_c": max_temp, "free_disk_mib": round(free_mib, 1),
+                "thermal_warning": max_temp is None or max_temp >= 75,
+                "disk_warning": free_mib < 1024}
+
     def tick(self):
         now = utcnow()
+        sample = self.sample_local_health()
         with self.db:
+            self.db.execute("""INSERT INTO watch_samples(
+                recorded_at,max_temperature_c,free_disk_mib,thermal_warning,disk_warning)
+                VALUES(?,?,?,?,?)""",
+                (now,sample["max_temperature_c"],sample["free_disk_mib"],
+                 int(sample["thermal_warning"]),int(sample["disk_warning"])))
+            if sample["thermal_warning"] or sample["disk_warning"]:
+                self.audit("watch", "jetson", "WARNING", json.dumps(sample, sort_keys=True))
             self.db.execute("UPDATE health SET last_tick=?, global_pause=1 WHERE id=1", (now,))
             self.audit("tick", "", "PASS", "shadow_mode_no_external_actions")
         return self.status()
@@ -222,9 +251,11 @@ class ShadowLedger:
         events = [dict(r) for r in self.db.execute(
             "SELECT event_type,count(*) AS n FROM events WHERE synthetic=1 GROUP BY event_type")]
         row = self.db.execute("SELECT last_tick,global_pause FROM health WHERE id=1").fetchone()
+        watch = self.db.execute("SELECT recorded_at,max_temperature_c,free_disk_mib,thermal_warning,disk_warning FROM watch_samples ORDER BY id DESC LIMIT 1").fetchone()
         return {"mode": "SHADOW_ONLY", "public_publish_enabled": False,
                 "external_paid_budget_usd": 0, "global_pause": bool(row["global_pause"]),
-                "heartbeat_utc": row["last_tick"], "products": products, "jobs": jobs,
+                "heartbeat_utc": row["last_tick"], "local_watch": dict(watch) if watch else None,
+                "products": products, "jobs": jobs,
                 "synthetic_events": events, "attribution_e2e_verified": False,
                 "app_telemetry_live": False, "gepa_live_promotion_enabled": False,
                 "channels": PROVIDERS}
