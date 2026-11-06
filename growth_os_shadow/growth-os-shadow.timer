@@ -1,0 +1,9 @@
+[Unit]
+Description=Jetson Growth OS shadow cadence (no media/publishing)
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+RandomizedDelaySec=10
+Unit=growth-os-shadow.service
+[Install]
+WantedBy=timers.target
