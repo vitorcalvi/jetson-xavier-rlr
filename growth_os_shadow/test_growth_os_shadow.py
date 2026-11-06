@@ -50,6 +50,10 @@ class GrowthShadowTests(unittest.TestCase):
         self.assertEqual(out["state"], "BLOCKED_PRODUCT")
         self.assertEqual(out["reason"], "publisher_ownership_mismatch")
 
+    def test_unknown_product_fails_cleanly(self):
+        with self.assertRaisesRegex(ValueError, "unknown_product"):
+            self.job(product="mythoughts")
+
     def test_nonproduction_product_blocked(self):
         out = self.job(product="mythoughs")
         self.assertEqual(out["state"], "BLOCKED_PRODUCT")
