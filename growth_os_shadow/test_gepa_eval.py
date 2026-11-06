@@ -20,6 +20,8 @@ class OfflineOptimizerTests(unittest.TestCase):
         self.assertTrue(result["accepted"])
         self.assertFalse(result["public_promotion_allowed"])
         self.assertEqual(result["optimization_tier"], "OFFLINE_QA_ONLY")
+        self.assertGreaterEqual(result["score"], 0.0)
+        self.assertLessEqual(result["score"], 1.0)
 
     def test_unsupported_claim_rejected(self):
         item = dict(GOOD, content=GOOD["content"] + " Vendas garantidas.")
